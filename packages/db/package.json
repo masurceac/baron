@@ -1,0 +1,26 @@
+{
+  "name": "@baron/db",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./schema": "./src/schema.ts",
+    "./client": "./src/client.ts",
+    "./enum": "./src/enum.ts"
+  },
+  "scripts": {
+    "migrate:dev": "drizzle-kit generate",
+    "migrate": "npx drizzle-kit migrate",
+    "push": "npx drizzle-kit push",
+    "lint": "eslint . --max-warnings 0"
+  },
+  "dependencies": {
+    "@baron/common": "workspace:*",
+    "@paralleldrive/cuid2": "^2.2.2",
+    "drizzle-orm": "^0.43.1",
+    "postgres": "^3.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "drizzle-kit": "^0.31.1"
+  }
+}

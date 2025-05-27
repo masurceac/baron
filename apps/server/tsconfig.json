@@ -1,0 +1,10 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"jsx": "react-jsx",
+		"baseUrl": ".",
+		"types": ["./worker-configuration.d.ts"]
+	},
+	"include": ["*.ts", "src"],
+	"exclude": ["node_modules"]
+}

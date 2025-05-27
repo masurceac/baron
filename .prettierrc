@@ -1,0 +1,16 @@
+{
+  "singleQuote": true,
+  "jsxSingleQuote": false,
+  "trailingComma": "all",
+  "semi": true,
+  "printWidth": 80,
+  "tabWidth": 2,
+  "overrides": [
+    {
+      "files": ["*.jsonc", "*.json"],
+      "options": {
+        "trailingComma": "none"
+      }
+    }
+  ]
+}

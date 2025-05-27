@@ -1,0 +1,21 @@
+{
+	"name": "@baron/server",
+	"version": "0.0.0",
+	"private": true,
+	"exports": {
+		".": "./src/trpc/lib.ts"
+	},
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev --port 4000",
+		"start": "wrangler dev",
+		"test": "vitest",
+		"gen-types": "wrangler types"
+	},
+	"devDependencies": {
+		"@baron/trpc-server": "workspace:*",
+		"typescript": "catalog:",
+		"@trpc/server": "catalog:",
+		"wrangler": "catalog:"
+	}
+}

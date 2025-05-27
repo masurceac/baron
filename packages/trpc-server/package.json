@@ -1,0 +1,23 @@
+{
+  "name": "@baron/trpc-server",
+  "version": "1.0.0",
+  "description": "",
+  "exports": {
+    ".": "./src/index.ts",
+    "./async-storage/getters": "./src/async-storage/getters.ts"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@baron/db": "workspace:*",
+    "@clerk/backend": "catalog:",
+    "@trpc/server": "catalog:",
+    "@types/node": "catalog:",
+    "superjson": "catalog:",
+    "zod": "catalog:"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

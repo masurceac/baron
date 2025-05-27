@@ -1,0 +1,21 @@
+{
+  "name": "@baron/ui-spa",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./spa-pagination": "./src/components/spa-pagination.tsx",
+    "./select-with-search": "./src/components/select-with-search.tsx",
+    "./theme-provider": "./src/components/theme-provider.tsx",
+    "./redirect-to": "./src/components/redirect-to.tsx"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0"
+  },
+  "dependencies": {
+    "@baron/ui": "workspace:*",
+    "react-dom": "catalog:",
+    "react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@types/react": "catalog:"
+  }
+}

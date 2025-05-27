@@ -1,0 +1,16 @@
+{
+  "name": "@baron/routes",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./spa": "./src/spa.ts",
+    "./utils": "./src/utils.ts",
+    "./types": "./src/types.ts"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0"
+  },
+  "dependencies": {
+    "react-router-dom": "catalog:"
+  }
+}

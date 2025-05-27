@@ -1,0 +1,15 @@
+{
+  "name": "@baron/vite",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "import": "./lib/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint . --max-warnings 0"
+  },
+  "devDependencies": {
+    "vite": "catalog:"
+  }
+}
