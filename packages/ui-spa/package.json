@@ -3,10 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
-    "./spa-pagination": "./src/components/spa-pagination.tsx",
-    "./select-with-search": "./src/components/select-with-search.tsx",
-    "./theme-provider": "./src/components/theme-provider.tsx",
-    "./redirect-to": "./src/components/redirect-to.tsx"
+    "./*": "./src/components/*.tsx"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0"
@@ -16,6 +13,7 @@
     "react-dom": "catalog:",
     "react": "catalog:",
     "@types/react-dom": "catalog:",
+    "lucide-react": "catalog:",
     "@types/react": "catalog:"
   }
 }

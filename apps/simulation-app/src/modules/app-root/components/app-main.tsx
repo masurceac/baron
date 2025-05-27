@@ -1,5 +1,5 @@
-import { UserButton, UserProfile, useUser } from '@clerk/clerk-react';
-import { TypographyH2 } from '@baron/ui/typography/typography-h2';
+import { useUser } from '@clerk/clerk-react';
+import { Link } from 'react-router-dom';
 
 export function AppHomepage() {
   const details = useUser();
@@ -9,16 +9,8 @@ export function AppHomepage() {
   }
 
   return (
-    <>
-      <TypographyH2 className="flex justify-between items-center w-full">
-        <span>
-          Welcome back,<b> {details.user.firstName}</b>!
-        </span>
-        <UserButton />
-      </TypographyH2>
-      <div className="flex justify-center">
-        <UserProfile />
-      </div>
-    </>
+    <div>
+      <Link to="/">Link to latest sessions</Link>
+    </div>
   );
 }
