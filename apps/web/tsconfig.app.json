@@ -33,6 +33,6 @@
     "src",
     "../server/worker-configuration.d.ts",
     "../server/src/**/*",
-    "../../packages/ui/src/lib/react-table.d.ts"
+    "../../packages/ui/src/components/ui/*"
   ]
 }

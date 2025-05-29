@@ -14,7 +14,10 @@
 	},
 	"devDependencies": {
 		"@baron/trpc-server": "workspace:*",
+		"@baron/db": "workspace:",
+		"@baron/schema": "workspace:",
 		"typescript": "catalog:",
+		"drizzle-orm": "catalog:",
 		"@trpc/server": "catalog:",
 		"wrangler": "catalog:"
 	}

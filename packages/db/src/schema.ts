@@ -65,15 +65,6 @@ export const volumeProfileConfig = pgTable(
     historicalTimeToConsiderAmount: integer(
       'historical_time_to_consider_amount',
     ).notNull(),
-    historicalTimeToConsiderUnit: text('historical_time_to_consider_unit', {
-      enum: [
-        TimeUnit.Min,
-        TimeUnit.Hour,
-        TimeUnit.Day,
-        TimeUnit.Week,
-        TimeUnit.Month,
-      ],
-    }).notNull(),
   },
   (table) => [unique().on(table.timeframeUnit, table.timeframeAmount)],
 );

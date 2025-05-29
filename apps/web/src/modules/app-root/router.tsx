@@ -1,6 +1,6 @@
 import { defineModuleRouting } from '@baron/routes/utils';
 import { RouteObject } from 'react-router-dom';
-import { AppHomepage } from './components/app-main';
+import { vpcRouter } from '../volume-profile-config';
 import { AuthGuard } from './components/auth-guard';
 import { MainPage } from './pages/main-page';
 
@@ -11,13 +11,8 @@ export const appRouter = defineModuleRouting([
       {
         path: '',
         Component: MainPage,
-        children: [
-          {
-            path: '',
-            Component: AppHomepage,
-          },
-        ],
       },
+      ...vpcRouter,
     ],
   },
 ] as const satisfies RouteObject[]);
