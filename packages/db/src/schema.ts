@@ -43,6 +43,61 @@ export const zoneVolumeProfile = pgTable('zone_volume_profile', {
   minimumBarsToConsider: integer('minimum_bars_to_consider').notNull(),
 });
 
+export const volumeProfileConfig = pgTable(
+  'volume_profile_config',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    name: text('name').notNull(),
+    timeframeUnit: text('timeframe_unit', {
+      enum: [
+        TimeUnit.Min,
+        TimeUnit.Hour,
+        TimeUnit.Day,
+        TimeUnit.Week,
+        TimeUnit.Month,
+      ],
+    }).notNull(),
+    timeframeAmount: integer('timeframe_amount').notNull(),
+    maxDeviationPercent: real('max_deviation_percent').notNull(),
+    minimumBarsToConsider: integer('minimum_bars_to_consider').notNull(),
+    historicalTimeToConsiderAmount: integer(
+      'historical_time_to_consider_amount',
+    ).notNull(),
+    historicalTimeToConsiderUnit: text('historical_time_to_consider_unit', {
+      enum: [
+        TimeUnit.Min,
+        TimeUnit.Hour,
+        TimeUnit.Day,
+        TimeUnit.Week,
+        TimeUnit.Month,
+      ],
+    }).notNull(),
+  },
+  (table) => [unique().on(table.timeframeUnit, table.timeframeAmount)],
+);
+
+export const informativeBarConfig = pgTable('informative_bar_config', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  name: text('name').notNull(),
+  timeframeUnit: text('timeframe_unit', {
+    enum: [
+      TimeUnit.Min,
+      TimeUnit.Hour,
+      TimeUnit.Day,
+      TimeUnit.Week,
+      TimeUnit.Month,
+    ],
+  }).notNull(),
+  timeframeAmount: integer('timeframe_amount').notNull(),
+  historicalBarsToConsiderAmount: integer(
+    'historical_bars_to_consider_amount',
+  ).notNull(),
+});
+
 export const simulationRoom = pgTable('simulation_room', {
   id: text('id')
     .primaryKey()
@@ -71,86 +126,6 @@ export const simulationSetup = pgTable('simulation_setup', {
       onDelete: 'cascade',
       onUpdate: 'cascade',
     }),
-});
-
-export const setupVolumeProfileConfig = pgTable(
-  'setup_volume_profile_config',
-  {
-    id: text('id')
-      .primaryKey()
-      .$defaultFn(() => createId()),
-    simulationSetupId: text('simulation_setup_id')
-      .notNull()
-      .references(() => simulationSetup.id, {
-        onDelete: 'cascade',
-        onUpdate: 'cascade',
-      }),
-    timeframeUnit: text('timeframe_unit', {
-      enum: [
-        TimeUnit.Min,
-        TimeUnit.Hour,
-        TimeUnit.Day,
-        TimeUnit.Week,
-        TimeUnit.Month,
-      ],
-    }).notNull(),
-    timeframeAmount: integer('timeframe_amount').notNull(),
-    maxDeviationPercent: real('max_deviation_percent').notNull(),
-    minimumBarsToConsider: integer('minimum_bars_to_consider').notNull(),
-    historicalTimeToConsiderAmount: integer(
-      'historical_time_to_consider_amount',
-    ).notNull(),
-    historicalTtimeToConsiderUnit: text('historical_time_to_consider_unit', {
-      enum: [
-        TimeUnit.Min,
-        TimeUnit.Hour,
-        TimeUnit.Day,
-        TimeUnit.Week,
-        TimeUnit.Month,
-      ],
-    }).notNull(),
-  },
-  (table) => [
-    unique().on(
-      table.simulationSetupId,
-      table.timeframeUnit,
-      table.timeframeAmount,
-    ),
-  ],
-);
-
-export const setupBarInfoConfig = pgTable('setup_bar_info_config', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => createId()),
-  simulationSetupId: text('simulation_setup_id')
-    .notNull()
-    .references(() => simulationSetup.id, {
-      onDelete: 'cascade',
-      onUpdate: 'cascade',
-    }),
-  timeframeUnit: text('timeframe_unit', {
-    enum: [
-      TimeUnit.Min,
-      TimeUnit.Hour,
-      TimeUnit.Day,
-      TimeUnit.Week,
-      TimeUnit.Month,
-    ],
-  }).notNull(),
-  timeframeAmount: integer('timeframe_amount').notNull(),
-  historicalTimeToConsiderAmount: integer(
-    'historical_time_to_consider_amount',
-  ).notNull(),
-  historicalTimeToConsiderUnit: text('historical_time_to_consider_unit', {
-    enum: [
-      TimeUnit.Min,
-      TimeUnit.Hour,
-      TimeUnit.Day,
-      TimeUnit.Week,
-      TimeUnit.Month,
-    ],
-  }).notNull(),
 });
 
 export const simulationExecution = pgTable('simulation_execution', {
