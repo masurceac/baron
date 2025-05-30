@@ -1,11 +1,10 @@
 'use client';
 
 import {
-  BarChartIcon,
-  ChartLineIcon,
+  ChartBarStackedIcon,
+  ChartCandlestickIcon,
   FolderIcon,
   LayoutDashboardIcon,
-  ListIcon,
   UsersIcon,
 } from 'lucide-react';
 import * as React from 'react';
@@ -22,6 +21,7 @@ import {
 } from '@baron/ui/components/sidebar';
 import { UserButton } from '@clerk/clerk-react';
 import { NavMain } from './nav-main';
+import { ThemeSwitcher } from '@baron/ui-spa/theme-switcher';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const nav = React.useMemo(
@@ -29,26 +29,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {
         title: 'Dashboard',
         url: getAppRoute('/app'),
+        end: true,
         icon: LayoutDashboardIcon,
       },
       {
-        title: 'Volume Profile Config',
+        title: 'VPC',
         url: getAppRoute('/app/volume-profile-config'),
-        icon: ListIcon,
+        end: false,
+        icon: ChartBarStackedIcon,
       },
       {
-        title: 'Analytics',
-        url: '#',
-        icon: BarChartIcon,
+        title: 'Info Bars',
+        url: getAppRoute('/app/info-bars/list'),
+        end: true,
+        icon: ChartCandlestickIcon,
       },
       {
-        title: 'Projects',
-        url: '#',
+        title: 'Simulation',
+        url: getAppRoute('/app/simulation'),
         icon: FolderIcon,
       },
       {
         title: 'Team',
-        url: '#',
+        end: true,
+        url: '/app/team',
         icon: UsersIcon,
       },
     ],
@@ -64,8 +68,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <a href="#">
-                <ChartLineIcon className="h-5 w-5" />
-                <span className="text-base font-semibold">Baron App.</span>
+                <img src="/logo.png" className="h-5 w-5" />
+                <span className="text-base font-semibold">Baron Trade</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -78,6 +82,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter>
         <UserButton />
+        <ThemeSwitcher />
       </SidebarFooter>
     </Sidebar>
   );

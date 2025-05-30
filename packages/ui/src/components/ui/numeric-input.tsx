@@ -1,29 +1,13 @@
-import { cva } from 'class-variance-authority';
 import { FC, FocusEventHandler, useCallback, useEffect, useRef } from 'react';
 import {
   NumericFormat,
   NumericFormatProps,
   OnValueChange,
 } from 'react-number-format';
-import { cn } from '../../lib/utils';
 import { Input } from '../ui/input';
 
 const isNullishValue = (value: unknown): value is undefined | null | '' =>
   value === undefined || value === null || value === '';
-
-const inputVariants = cva('', {
-  variants: {
-    size: {
-      sm: 'h-8 text-sm',
-      default: 'h-10 text-base',
-      lg: 'h-12 text-lg',
-      xl: 'h-12 text-lg',
-    },
-  },
-  defaultVariants: {
-    size: 'default',
-  },
-});
 
 export type NumericInputProps = Omit<
   NumericFormatProps,

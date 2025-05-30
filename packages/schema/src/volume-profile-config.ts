@@ -19,4 +19,6 @@ export const volumeProfileConfigSchema = z.object({
     .number()
     .int()
     .min(1, 'Historical time to consider amount must be at least 1'),
+
+  volumeProfilePercentage: z.number().min(0).optional(),
 });

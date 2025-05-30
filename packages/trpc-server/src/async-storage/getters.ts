@@ -13,6 +13,5 @@ export const getOptionalAuth = () => {
   return result;
 };
 export const getClerkClient = () => factoryGetter('clerkClient');
-export const getRecaptchaSecretKey = () => factoryGetter('recaptchaSecretKey');
 export const getRequest = () => factoryGetter('request');
 export const getDatabase = () => factoryGetter('db');

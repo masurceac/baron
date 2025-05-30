@@ -28,12 +28,12 @@ export function createBarsStack() {
     },
     maxPrice() {
       return this.bars.reduce((max, bar) => {
-        return bar.Close > max ? bar.Close : max;
+        return bar.High > max ? bar.High : max;
       }, 0);
     },
     minPrice() {
       return bars.reduce((min, bar) => {
-        return bar.Close < min ? bar.Close : min;
+        return bar.Low < min ? bar.Low : min;
       }, Infinity);
     },
   };
@@ -57,4 +57,4 @@ export function getBarEnd(date: Date, unit: TimeUnit): Date {
   }
 }
 
-export type BarsBuffer = ReturnType<typeof createBarsStack>;
+export type BarsStack = ReturnType<typeof createBarsStack>;

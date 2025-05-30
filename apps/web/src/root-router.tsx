@@ -1,8 +1,9 @@
 import { defineModuleRouting } from '@baron/routes/utils';
 import { createBrowserRouter, RouteObject } from 'react-router-dom';
 import { CoreProviders } from './core/providers';
-import { AppRedirect, appRouter } from './modules/app-root';
+import { AppRedirect } from './modules/app-root';
 import { authRouter } from './modules/auth';
+import { appRouter } from './modules/router';
 
 export const routes = defineModuleRouting([
   {

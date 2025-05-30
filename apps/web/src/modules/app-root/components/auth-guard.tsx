@@ -2,7 +2,7 @@ import { getAppRoute } from '@/core/route';
 import { SignedIn, SignedOut } from '@clerk/clerk-react';
 import { RedirectTo } from '@baron/ui-spa/redirect-to';
 import { Outlet } from 'react-router-dom';
-import { SidebarInset, SidebarProvider } from '@baron/ui/components/ui/sidebar';
+import { SidebarInset, SidebarProvider } from '@baron/ui/components/sidebar';
 import { AppSidebar } from '@/modules/shared/components/app-sidebar';
 
 export function AuthGuard() {

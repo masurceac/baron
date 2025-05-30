@@ -1,4 +1,4 @@
-import { useUser } from '@clerk/clerk-react';
+import { getAppRoute } from '@/core/route';
 import {
   Card,
   CardContent,
@@ -6,10 +6,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@baron/ui/components/card';
-import { Link } from 'react-router-dom';
-import { getAppRoute } from '@/core/route';
 import { Separator } from '@baron/ui/components/separator';
+import { useUser } from '@clerk/clerk-react';
 import { ArrowRightIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export function AppHomepage() {
   const details = useUser();
@@ -36,7 +36,7 @@ export function AppHomepage() {
         </CardContent>
         <CardContent>
           <Link
-            to={getAppRoute('/app/volume-profile-config/create')}
+            to={getAppRoute('/app/volume-profile-config/list')}
             className="flex"
           >
             Volume Profile Config

@@ -160,7 +160,7 @@ export function getDrizzleClient(connectionString: string) {
     max: 1,
   });
 
-  const db = drizzle({ client: queryClient, schema, logger: true });
+  const db = drizzle({ client: queryClient, schema });
 
   return db;
 }

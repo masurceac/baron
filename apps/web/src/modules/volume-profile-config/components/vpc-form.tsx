@@ -6,13 +6,6 @@ import { Form } from '@baron/ui/components/form';
 import { FormFieldWrapper } from '@baron/ui/components/form-field-wrapper';
 import { Input } from '@baron/ui/components/input';
 import { NumericInput } from '@baron/ui/components/numeric-input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@baron/ui/components/select';
 import { Separator } from '@baron/ui/components/separator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ForwardedRef, useImperativeHandle } from 'react';
@@ -109,21 +102,32 @@ export function VPCForm(props: {
             />
             <Separator className="col-span-2" />
 
-            <div className="col-span-2">
-              <FormFieldWrapper
-                control={form.control}
-                name="historicalTimeToConsiderAmount"
-                label="Historical bars to consider"
-                description="How many historical bars should be considered for building Volume Profiles."
-                render={({ field }) => (
-                  <NumericInput
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Enter max amount of bars for calculating historical Volume Profile"
-                  />
-                )}
-              />
-            </div>
+            <FormFieldWrapper
+              control={form.control}
+              name="historicalTimeToConsiderAmount"
+              label="Historical bars to consider"
+              description="How many historical bars should be considered for building VP."
+              render={({ field }) => (
+                <NumericInput
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Enter max amount of bars for calculating historical Volume Profile"
+                />
+              )}
+            />
+            <FormFieldWrapper
+              control={form.control}
+              name="volumeProfilePercentage"
+              label="Volume Profile Percentage"
+              description="Optional. Defaults to 70."
+              render={({ field }) => (
+                <NumericInput
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Enter volume profile percentage"
+                />
+              )}
+            />
           </div>
           <Button type="submit" className="w-full">
             Submit

@@ -10,6 +10,7 @@ import {
   SidebarMenuItem,
 } from '@baron/ui/components/sidebar';
 import { NavLink } from 'react-router-dom';
+
 export function NavMain({
   items,
 }: {
@@ -17,6 +18,7 @@ export function NavMain({
     title: string;
     url: string;
     icon?: LucideIcon;
+    end?: boolean;
   }[];
 }) {
   return (
@@ -44,12 +46,17 @@ export function NavMain({
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton tooltip={item.title} asChild>
-                <NavLink to={item.url} className="text-foreground!">
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
-                </NavLink>
-              </SidebarMenuButton>
+              <NavLink to={item.url} end={item.end ?? false}>
+                {({ isActive }) => (
+                  <SidebarMenuButton
+                    tooltip={item.title}
+                    variant={isActive ? 'outline' : 'default'}
+                  >
+                    {item.icon && <item.icon />}
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                )}
+              </NavLink>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>

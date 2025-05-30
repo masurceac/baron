@@ -42,7 +42,9 @@ const FormFieldWrapper = <
           <div className="flex justify-between">
             {label && <FormLabel className="text-nowrap">{label}</FormLabel>}
             {rightLabel && (
-              <FormLabel className="text-nowrap">{rightLabel}</FormLabel>
+              <FormLabel className="text-nowrap text-muted-foreground">
+                {rightLabel}
+              </FormLabel>
             )}
           </div>
 

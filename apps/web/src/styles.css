@@ -3,7 +3,3 @@
 
 @source "../../../packages/ui/src";
 @source "../../../packages/ui-spa/src";
-
-a {
-  @apply text-blue-500
-}

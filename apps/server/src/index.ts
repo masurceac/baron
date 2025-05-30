@@ -1,9 +1,11 @@
 import { asyncLocalStorage, createAsyncStorageContext, createTrpcContext } from '@baron/trpc-server';
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import { appRouter } from './trpc';
+import { eventBus } from './events';
+import { cronHandler } from './cron';
 
 const worker = {
-	async fetch(request, env, ctx): Promise<Response> {
+	async fetch(request, env): Promise<Response> {
 		if (request.method === 'OPTIONS') {
 			return handleCORSPreflight();
 		}
@@ -16,7 +18,7 @@ const worker = {
 					clerkPublicKey: env.CLERK_PUBLISHABLE_KEY,
 					databaseConnectionString: env.DATABASE_CONNECTION_STRING,
 				},
-				() => Promise.resolve({ env }),
+				() => Promise.resolve({ env, eventBus }),
 			),
 			async () =>
 				addCORSHeaders(
@@ -35,6 +37,27 @@ const worker = {
 						createContext: createTrpcContext,
 					}),
 				),
+		);
+	},
+	async scheduled(
+		_,
+		env: Env,
+		ctx: {
+			waitUntil: (promise: Promise<any>) => void;
+		},
+	) {
+		await ctx.waitUntil(
+			asyncLocalStorage.run(
+				await createAsyncStorageContext(
+					{
+						clerkSecretKey: env.CLERK_SECRET_KEY,
+						clerkPublicKey: env.CLERK_PUBLISHABLE_KEY,
+						databaseConnectionString: env.DATABASE_CONNECTION_STRING,
+					},
+					() => Promise.resolve({ env, eventBus }),
+				),
+				cronHandler,
+			),
 		);
 	},
 } satisfies ExportedHandler<Env>;

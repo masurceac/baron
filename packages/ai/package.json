@@ -1,0 +1,17 @@
+{
+  "name": "@baron/ai",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./api": "./src/api/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./prompt": "./src/prompt/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0"
+  },
+  "dependencies": {
+    "@baron/common": "workspace:*",
+    "openai": "^5.0.1"
+  }
+}

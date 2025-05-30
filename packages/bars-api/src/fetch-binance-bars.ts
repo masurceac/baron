@@ -18,8 +18,8 @@ function convertToBinanceFormat(amount: number, unit: TimeUnit): string {
 }
 
 export async function fetchBinanceBars(input: {
-  start: string;
-  end: string;
+  start: Date;
+  end: Date;
   timeframeAmount: number;
   timeframeUnit: TimeUnit;
   pair: TradingPair;
@@ -29,8 +29,8 @@ export async function fetchBinanceBars(input: {
     input.timeframeAmount,
     input.timeframeUnit,
   );
-  const startTime = new Date(input.start).getTime();
-  const endTime = new Date(input.end).getTime();
+  const startTime = input.start.getTime();
+  const endTime = input.end.getTime();
 
   if (isNaN(startTime) || isNaN(endTime)) {
     throw new Error('Invalid start or end date');
@@ -78,7 +78,7 @@ export async function fetchBinanceBars(input: {
           Close: parseFloat(kline[4]),
           Volume,
           TradeCount: TradeCount,
-          VWAP: quoteAssetVolume / Volume, // Binance does not provide VWAP, using Close as a placeholder
+          VWAP: quoteAssetVolume / Volume,
         } satisfies ChartBar;
       });
 

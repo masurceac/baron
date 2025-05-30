@@ -1,0 +1,16 @@
+{
+  "name": "@baron/fixed-range-volume-profile",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0"
+  },
+  "dependencies": {
+    "@baron/common": "workspace:*",
+    "@baron/bars-api": "workspace:*",
+    "@baron/volume-profile": "workspace:*"
+  }
+}

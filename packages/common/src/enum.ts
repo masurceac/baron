@@ -33,3 +33,13 @@ export enum TradeDirection {
   Buy = 'buy',
   Sell = 'sell',
 }
+
+export enum SortDirectionEnum {
+  Asc = 'asc',
+  Desc = 'desc',
+}
+
+export enum TradeResult {
+  Success = 'success',
+  Failure = 'failure',
+}

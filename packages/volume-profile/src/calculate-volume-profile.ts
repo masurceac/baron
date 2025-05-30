@@ -1,64 +1,98 @@
-import { ZoneVolumeProfile } from '@baron/common';
+import { ChartBar, ZoneVolumeProfile } from '@baron/common';
 
 export function calculateVolumeProfile(
-  vpMap: Map<number, number>, // price -> volume pair. Price step is 0.1
-  targetPercentage: number,
-): ZoneVolumeProfile | null {
-  if (!vpMap || vpMap.size === 0) return null;
-
-  // Convert Map to array and sort by price
-  const sortedData = Array.from(vpMap.entries()).sort((a, b) => a[0] - b[0]);
+  data: ChartBar[],
+  priceStep: number = 0.01,
+  volumePercentage: number = 0.7,
+): ZoneVolumeProfile {
+  // Step 1: Build the volume profile
+  const volumeProfile: Map<number, number> = new Map();
 
   // Calculate total volume
-  const totalVolume = sortedData.reduce((sum, [, volume]) => sum + volume, 0);
-  const targetVolume = totalVolume * targetPercentage;
-
-  let minRangeWidth = Infinity;
-  // let resultRange: [number, number] | null = null;
-  let VAH = 0;
-  let VAL = 0;
-  let POC = 0;
-  let pocMaxVolume = 0;
-
-  // Iterate over possible start points
-  for (let i = 0; i < sortedData.length; i++) {
-    const [iPrice] = sortedData[i]!;
-
-    let currentVolume = 0;
-
-    // Iterate over possible end points
-    for (let j = i; j < sortedData.length; j++) {
-      const [jPrice, jVolume] = sortedData[j]!;
-      currentVolume += jVolume; // Add volume at current price
-
-      // Check if we've reached or exceeded the target volume
-      if (currentVolume >= targetVolume) {
-        const rangeWidth = jPrice - iPrice;
-        // Update result if this range is smaller
-        if (rangeWidth < minRangeWidth) {
-          minRangeWidth = rangeWidth;
-          // resultRange = [price, jPrice];
-          VAH = jPrice; // Value Area High
-          VAL = iPrice; // Value Area Low
-        }
-        break; // No need to check larger ranges from this start point
+  let totalVolume = 0;
+  for (const bar of data) {
+    totalVolume += bar.Volume;
+    const priceRange = bar.High - bar.Low;
+    if (priceRange === 0) {
+      // Single price level
+      const priceKey = Math.round(bar.Low / priceStep) * priceStep;
+      volumeProfile.set(
+        priceKey,
+        (volumeProfile.get(priceKey) || 0) + bar.Volume,
+      );
+    } else {
+      // Distribute volume linearly across price levels
+      const volumePerPrice = bar.Volume / (priceRange / priceStep);
+      for (let price = bar.Low; price <= bar.High; price += priceStep) {
+        const priceKey = Math.round(price / priceStep) * priceStep;
+        volumeProfile.set(
+          priceKey,
+          (volumeProfile.get(priceKey) || 0) + volumePerPrice,
+        );
       }
     }
   }
 
-  for (let i = 0; i < sortedData.length; i++) {
-    const [price, volume] = sortedData[i]!;
+  // Step 2: Find POC (price with highest volume)
+  let pocPrice = 0;
+  let maxVolume = 0;
+  for (const [price, volume] of volumeProfile) {
+    if (volume > maxVolume) {
+      maxVolume = volume;
+      pocPrice = price;
+    }
+  }
 
-    // Check if this price has the maximum volume
-    if (volume > pocMaxVolume && price >= VAL && price <= VAH) {
-      pocMaxVolume = volume;
-      POC = price; // Point of Control
+  // Step 3: Calculate Value Area (70% of total volume)
+  const targetVolume = totalVolume * volumePercentage;
+  let currentVolume = maxVolume;
+  let lowerPrice = pocPrice;
+  let upperPrice = pocPrice;
+
+  // Sort prices for systematic expansion
+  const sortedPrices = Array.from(volumeProfile.keys()).sort((a, b) => a - b);
+  let lowerIndex = sortedPrices.indexOf(pocPrice);
+  let upperIndex = lowerIndex;
+
+  while (
+    currentVolume < targetVolume &&
+    (lowerIndex > 0 || upperIndex < sortedPrices.length - 1)
+  ) {
+    let nextLowerVolume = 0;
+    let nextUpperVolume = 0;
+
+    // Check volume at next lower price
+    if (lowerIndex > 0) {
+      nextLowerVolume = volumeProfile.get(sortedPrices[lowerIndex - 1]!) || 0;
+    }
+
+    // Check volume at next upper price
+    if (upperIndex < sortedPrices.length - 1) {
+      nextUpperVolume = volumeProfile.get(sortedPrices[upperIndex + 1]!) || 0;
+    }
+
+    // Choose the side with higher volume to expand
+    if (nextLowerVolume > nextUpperVolume && lowerIndex > 0) {
+      lowerIndex--;
+      currentVolume += nextLowerVolume;
+      lowerPrice = sortedPrices[lowerIndex]!;
+    } else if (upperIndex < sortedPrices.length - 1) {
+      upperIndex++;
+      currentVolume += nextUpperVolume;
+      upperPrice = sortedPrices[upperIndex]!;
+    } else if (lowerIndex > 0) {
+      // If upper is exhausted, expand lower
+      lowerIndex--;
+      currentVolume += nextLowerVolume;
+      lowerPrice = sortedPrices[lowerIndex]!;
+    } else {
+      break; // No more prices to expand
     }
   }
 
   return {
-    VAH,
-    VAL,
-    POC,
+    POC: Number(pocPrice.toFixed(2)),
+    VAL: Number(lowerPrice.toFixed(2)),
+    VAH: Number(upperPrice.toFixed(2)),
   };
 }

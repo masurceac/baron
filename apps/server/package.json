@@ -7,17 +7,22 @@
 	},
 	"scripts": {
 		"deploy": "wrangler deploy",
-		"dev": "wrangler dev --port 4000",
+		"dev": "wrangler dev --port 4000 --test-scheduled",
 		"start": "wrangler dev",
 		"test": "vitest",
 		"gen-types": "wrangler types"
 	},
 	"devDependencies": {
 		"@baron/trpc-server": "workspace:*",
+		"@baron/ai": "workspace:",
+		"@baron/bars-api": "workspace:",
 		"@baron/db": "workspace:",
+		"@baron/fixed-range-volume-profile": "workspace:",
 		"@baron/schema": "workspace:",
+		"@baron/common": "workspace:",
 		"typescript": "catalog:",
 		"drizzle-orm": "catalog:",
+		"date-fns": "catalog:",
 		"@trpc/server": "catalog:",
 		"wrangler": "catalog:"
 	}

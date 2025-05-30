@@ -1,8 +1,10 @@
 import { defineModuleRouting } from '@baron/routes/utils';
 import { RouteObject } from 'react-router-dom';
-import { vpcRouter } from '../volume-profile-config';
-import { AuthGuard } from './components/auth-guard';
-import { MainPage } from './pages/main-page';
+import { AuthGuard } from './app-root/components/auth-guard';
+import { MainPage } from './app-root/pages/main-page';
+import { infoBarsRouter } from './info-bars';
+import { vpcRouter } from './volume-profile-config';
+import { simulationRoomsRouter } from './simulation-room';
 
 export const appRouter = defineModuleRouting([
   {
@@ -13,6 +15,8 @@ export const appRouter = defineModuleRouting([
         Component: MainPage,
       },
       ...vpcRouter,
+      ...infoBarsRouter,
+      ...simulationRoomsRouter,
     ],
   },
 ] as const satisfies RouteObject[]);
