@@ -23,7 +23,7 @@ export function VPCForm(props: {
   onSubmit: SubmitHandler<VPCSchema>;
 }) {
   const form = useForm<VPCSchema>({
-    // defaultValues: props.defaultValues,
+    defaultValues: props.defaultValues ?? {},
     resolver: zodResolver(volumeProfileConfigSchema),
   });
 
@@ -67,14 +67,11 @@ export function VPCForm(props: {
                 <NumericInput
                   value={field.value}
                   onChange={field.onChange}
-                  placeholder="Enter max deviation percent"
+                  placeholder="Enter minimum bars amount"
                 />
               )}
             />
             <Separator className="col-span-2" />
-            <p className="col-span-2">
-              Choose amount and unit for one bar for the Volume Profile.
-            </p>
             <FormFieldWrapper
               control={form.control}
               name="timeframeAmount"
@@ -83,7 +80,7 @@ export function VPCForm(props: {
                 <NumericInput
                   value={field.value}
                   onChange={field.onChange}
-                  placeholder="Minimum bars to consider for a Volume Profile"
+                  placeholder="Time amount to build this Volume Profile"
                 />
               )}
             />
@@ -110,7 +107,7 @@ export function VPCForm(props: {
                 <NumericInput
                   value={field.value}
                   onChange={field.onChange}
-                  placeholder="Enter max amount of bars for calculating historical Volume Profile"
+                  placeholder="FRVP will be calculated based on this many historical bars"
                 />
               )}
             />

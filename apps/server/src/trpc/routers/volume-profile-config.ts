@@ -90,17 +90,7 @@ export const volumeProfileConfigRouter = {
 				},
 				query: async ({ take, skip }) => {
 					return db
-						.select({
-							id: volumeProfileConfig.id,
-							name: volumeProfileConfig.name,
-							createdAt: volumeProfileConfig.createdAt,
-							timeframeUnit: volumeProfileConfig.timeframeUnit,
-							timeframeAmount: volumeProfileConfig.timeframeAmount,
-							maxDeviationPercent: volumeProfileConfig.maxDeviationPercent,
-							minimumBarsToConsider: volumeProfileConfig.minimumBarsToConsider,
-							historicalTimeToConsiderAmount: volumeProfileConfig.historicalTimeToConsiderAmount,
-							volumeProfilePercentage: volumeProfileConfig.volumeProfilePercentage,
-						})
+						.select()
 						.from(volumeProfileConfig)
 						.where(and(...where))
 						.orderBy(desc(volumeProfileConfig.createdAt))

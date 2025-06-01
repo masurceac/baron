@@ -1,4 +1,5 @@
 import {
+  EntityFlagEnum,
   TimeUnit,
   TradeDirection,
   TradeLogDirection,
@@ -73,6 +74,9 @@ export const volumeProfileConfig = pgTable(
       'historical_time_to_consider_amount',
     ).notNull(),
     volumeProfilePercentage: real('volume_profile_percentage').default(70),
+    flag: text('flag', {
+      enum: [EntityFlagEnum.Deafult],
+    }),
   },
   (table) => [
     unique().on(
@@ -105,6 +109,9 @@ export const informativeBarConfig = pgTable('informative_bar_config', {
   historicalBarsToConsiderAmount: integer(
     'historical_bars_to_consider_amount',
   ).notNull(),
+  flag: text('flag', {
+    enum: [EntityFlagEnum.Deafult],
+  }),
 });
 
 export const simulationRoom = pgTable('simulation_room', {

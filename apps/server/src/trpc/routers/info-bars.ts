@@ -85,14 +85,7 @@ export const infoBarsRouter = {
 				},
 				query: async ({ take, skip }) => {
 					return db
-						.select({
-							id: informativeBarConfig.id,
-							name: informativeBarConfig.name,
-							createdAt: informativeBarConfig.createdAt,
-							timeframeUnit: informativeBarConfig.timeframeUnit,
-							timeframeAmount: informativeBarConfig.timeframeAmount,
-							historicalBarsToConsiderAmount: informativeBarConfig.historicalBarsToConsiderAmount,
-						})
+						.select()
 						.from(informativeBarConfig)
 						.where(and(...where))
 						.orderBy(desc(informativeBarConfig.createdAt))

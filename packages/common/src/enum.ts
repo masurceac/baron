@@ -49,3 +49,7 @@ export enum TradeResult {
   Success = 'success',
   Failure = 'failure',
 }
+
+export enum EntityFlagEnum {
+  Deafult = 'default',
+}

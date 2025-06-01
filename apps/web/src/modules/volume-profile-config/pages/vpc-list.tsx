@@ -10,6 +10,7 @@ import { PlusCircleIcon } from 'lucide-react';
 import { Suspense, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { VPCActions } from '../components/vpc-actions';
+import { Badge } from '@baron/ui/components/badge';
 
 type TableItem = RouterOutput['volumeProfileConfig']['list']['data'][number];
 
@@ -41,6 +42,11 @@ function VPCListData() {
         cell: ({ row: { original } }) => (
           <div>
             <p>{original.name}</p>
+            {original.flag && (
+              <Badge variant="default" className="capitalize">
+                {original.flag}
+              </Badge>
+            )}
           </div>
         ),
       },
