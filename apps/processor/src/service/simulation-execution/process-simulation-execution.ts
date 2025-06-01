@@ -105,6 +105,7 @@ export async function processSimulationExecution(
           acc.replace(`{{${key}}}`, systemKeys[key as keyof typeof systemKeys]),
         executionConfig.systemPrompt,
       );
+      console.log('Asking AI...');
 
       const aiResponse = await getDeepSeekResponse({
         prompt,
