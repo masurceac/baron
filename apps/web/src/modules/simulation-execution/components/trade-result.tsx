@@ -1,4 +1,4 @@
-import { cn } from '@baron/ui/lib/utils';
+import { RedGreenHighlight } from '@/modules/shared';
 
 export function TradeResult(props: {
   trades: Array<{ balanceResult: number }>;
@@ -7,13 +7,27 @@ export function TradeResult(props: {
     (acc, trade) => acc + trade.balanceResult,
     0,
   );
+  const positiveTrades = props.trades.filter(
+    (trade) => trade.balanceResult > 0,
+  ).length;
+  const negativeTrades = props.trades.filter(
+    (trade) => trade.balanceResult < 0,
+  ).length;
+
   return (
     <div className="flex items-center space-x-2">
       <p>{props.trades.length} trades</p>
       <span>/</span>
-      <p className={cn(result < 0 ? 'text-red-500' : 'text-green-500')}>
-        {result > 0 ? '+' : ''}
-        {result.toFixed(2)}$
+      <p>
+        <RedGreenHighlight variant={result < 0 ? 'red' : 'green'}>
+          {result > 0 ? '+' : ''}
+          {result.toFixed(2)}$
+        </RedGreenHighlight>
+      </p>
+      <span>/</span>
+      <p>
+        <RedGreenHighlight variant="green">{positiveTrades}</RedGreenHighlight>/
+        <RedGreenHighlight variant="red">{negativeTrades}</RedGreenHighlight>
       </p>
     </div>
   );
