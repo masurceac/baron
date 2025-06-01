@@ -57,7 +57,6 @@ export async function getSimulationExecutionFrvpProfiles(
 				{
 					writeFrvp: async (input) => {
 						try {
-							console.log('inserting');
 							await db.insert(zoneVolumeProfile).values({
 								volumeAreaHigh: input.zone.VAH,
 								volumeAreaLow: input.zone.VAL,
