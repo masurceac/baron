@@ -6,7 +6,7 @@ import { spawn } from 'child_process';
 
 const app = new Hono();
 
-app.get('/', (c) => {
+app.get('/process', (c) => {
   // spawn an sh script and run `npm run dev`in it
   const child = spawn('sh', ['-c', 'cd .. && npm run dev'], {
     stdio: 'inherit',
