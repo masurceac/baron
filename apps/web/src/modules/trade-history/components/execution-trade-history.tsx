@@ -1,10 +1,12 @@
 import { trpc } from '@/core/trpc';
-import { Suspense, useMemo } from 'react';
-import { ColumnDef } from '@tanstack/react-table';
-import { RouterOutput } from '@baron/server';
-import { FormatDate } from '@baron/ui/components/format-date';
-import { DataTable } from '@/modules/shared';
+import { DataTable, RedGreenHighlight } from '@/modules/shared';
+import { DetailedTextDialog } from '@/modules/shared/components/detailed-text-dialog';
 import { TradeDirection } from '@baron/common';
+import { RouterOutput } from '@baron/server';
+import { Button } from '@baron/ui/components/button';
+import { FormatDate } from '@baron/ui/components/format-date';
+import { ColumnDef } from '@tanstack/react-table';
+import { Suspense, useMemo } from 'react';
 
 type TableItem = RouterOutput['tradeHistory']['list'][number];
 
@@ -32,11 +34,13 @@ function ExecutionTradeHistoryItems(props: { executionId: string }) {
         header: 'Created At',
         cell: ({ row: { original } }) => (
           <div>
-            {original.direction === TradeDirection.Buy ? (
-              <span className="text-green-500">BUY</span>
-            ) : (
-              <span className="text-red-500">SELL</span>
-            )}
+            <RedGreenHighlight
+              variant={
+                original.direction === TradeDirection.Buy ? 'green' : 'red'
+              }
+            >
+              {original.direction === TradeDirection.Buy ? 'BUY' : 'SELL'}
+            </RedGreenHighlight>
           </div>
         ),
       },
@@ -46,7 +50,7 @@ function ExecutionTradeHistoryItems(props: { executionId: string }) {
         header: 'Entry Date',
         cell: ({ row: { original } }) => (
           <div>
-            <FormatDate date={original.entryDate} format="long" />
+            <FormatDate date={original.entryDate} utc />
           </div>
         ),
       },
@@ -64,7 +68,7 @@ function ExecutionTradeHistoryItems(props: { executionId: string }) {
         header: 'Exit Date',
         cell: ({ row: { original } }) => (
           <div>
-            <FormatDate date={original.exitDate} format="long" />
+            <FormatDate date={original.exitDate} utc />
           </div>
         ),
       },
@@ -82,8 +86,49 @@ function ExecutionTradeHistoryItems(props: { executionId: string }) {
         header: 'TP/SL',
         cell: ({ row: { original } }) => (
           <div>
-            {original.takeProfitPrice.toFixed(2)}/
+            ${original.takeProfitPrice.toFixed(2)}/ $
             {original.stopLossPrice.toFixed(2)}
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'balanceResult',
+        enableSorting: false,
+        header: 'Result',
+        cell: ({ row: { original } }) => (
+          <div>
+            <RedGreenHighlight
+              variant={original.balanceResult > 0 ? 'green' : 'red'}
+            >
+              {original.balanceResult > 0
+                ? `+${original.balanceResult.toFixed(2)}`
+                : `-${Math.abs(original.balanceResult).toFixed(2)}`}
+            </RedGreenHighlight>
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'reason',
+        enableSorting: false,
+        header: 'Reason',
+        cell: ({ row: { original } }) => (
+          <div>
+            <DetailedTextDialog
+              title="This is the reason AI gave for this trade"
+              content={original.reason}
+              label="Reason"
+            />
+          </div>
+        ),
+      },
+      {
+        enableSorting: false,
+        header: 'Info',
+        cell: () => (
+          <div>
+            <Button variant="link" disabled>
+              View S/R Zones
+            </Button>
           </div>
         ),
       },

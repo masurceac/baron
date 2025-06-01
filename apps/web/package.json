@@ -41,6 +41,8 @@
     "js-cookie": "^3.0.5",
     "lucide-react": "catalog:",
     "clsx": "catalog:",
+    "date-fns": "catalog:",
+    "date-fns-tz": "catalog:",
     "sonner": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

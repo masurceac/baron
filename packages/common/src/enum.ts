@@ -34,6 +34,12 @@ export enum TradeDirection {
   Sell = 'sell',
 }
 
+export enum TradeLogDirection {
+  Buy = 'buy',
+  Sell = 'sell',
+  Hold = 'hold',
+}
+
 export enum SortDirectionEnum {
   Asc = 'asc',
   Desc = 'desc',

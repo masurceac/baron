@@ -9,6 +9,7 @@ import {
 	simulationSetup,
 	volumeProfileConfigToSimulationSetup,
 } from '@baron/db/schema';
+import { simulationRunSchema } from '@baron/schema';
 import { protectedProcedure } from '@baron/trpc-server';
 import { getDatabase } from '@baron/trpc-server/async-storage/getters';
 import { TRPCError } from '@trpc/server';
@@ -16,97 +17,89 @@ import { and, count, desc, eq, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 
 export const simulationExecutionRouter = {
-	runSimulationSetup: protectedProcedure
-		.input(
-			z.object({
-				simulationSetupId: z.string(),
-				startDate: z.date(),
-				iterations: z.number().min(1).max(1000).optional(),
-			}),
-		)
-		.mutation(async ({ input }) => {
-			const db = getDatabase();
+	runSimulationSetup: protectedProcedure.input(simulationRunSchema).mutation(async ({ input }) => {
+		const db = getDatabase();
 
-			const [simulationSetupResult] = await db
-				.select({
-					id: simulationSetup.id,
-					simulationRoomId: simulationSetup.simulationRoomId,
-					aiPrompt: simulationSetup.aiPrompt,
-					systemPrompt: simulationSetup.systemPrompt,
-					pair: simulationSetup.pair,
-					trailingStop: simulationSetup.trailingStop,
-					volumeProfiles: queryJoin(
-						db,
-						{
-							id: volumeProfileConfigToSimulationSetup.id,
-							volumeProfileConfigId: volumeProfileConfigToSimulationSetup.volumeProfileConfigId,
-						},
-						(query) =>
-							query
-								.from(volumeProfileConfigToSimulationSetup)
-								.where(eq(volumeProfileConfigToSimulationSetup.simulationSetupId, simulationSetup.id)),
-					),
-					infoBars: queryJoin(
-						db,
-						{
-							id: informativeBarConfigToSimulationSetup.id,
-							informativeBarConfigId: informativeBarConfigToSimulationSetup.informativeBarConfigId,
-						},
-						(query) =>
-							query
-								.from(informativeBarConfigToSimulationSetup)
-								.where(eq(informativeBarConfigToSimulationSetup.simulationSetupId, simulationSetup.id)),
-					),
+		const [simulationSetupResult] = await db
+			.select({
+				id: simulationSetup.id,
+				simulationRoomId: simulationSetup.simulationRoomId,
+				aiPrompt: simulationSetup.aiPrompt,
+				systemPrompt: simulationSetup.systemPrompt,
+				pair: simulationSetup.pair,
+				trailingStop: simulationSetup.trailingStop,
+				volumeProfiles: queryJoin(
+					db,
+					{
+						id: volumeProfileConfigToSimulationSetup.id,
+						volumeProfileConfigId: volumeProfileConfigToSimulationSetup.volumeProfileConfigId,
+					},
+					(query) =>
+						query
+							.from(volumeProfileConfigToSimulationSetup)
+							.where(eq(volumeProfileConfigToSimulationSetup.simulationSetupId, simulationSetup.id)),
+				),
+				infoBars: queryJoin(
+					db,
+					{
+						id: informativeBarConfigToSimulationSetup.id,
+						informativeBarConfigId: informativeBarConfigToSimulationSetup.informativeBarConfigId,
+					},
+					(query) =>
+						query
+							.from(informativeBarConfigToSimulationSetup)
+							.where(eq(informativeBarConfigToSimulationSetup.simulationSetupId, simulationSetup.id)),
+				),
+			})
+			.from(simulationSetup)
+			.where(eq(simulationSetup.id, input.simulationSetupId))
+			.limit(1);
+
+		if (!simulationSetupResult || !simulationSetupResult.infoBars?.length || !simulationSetupResult.volumeProfiles?.length) {
+			throw new TRPCError({
+				code: 'NOT_FOUND',
+			});
+		}
+
+		const executionResult = await db.transaction(async (tx) => {
+			const [execution] = await tx
+				.insert(simulationExecution)
+				.values({
+					simulationSetupId: input.simulationSetupId,
+					simulationRoomId: simulationSetupResult.simulationRoomId,
+					startDate: input.startDate,
+					tradesToExecute: input.iterations ?? 10,
+					aiPrompt: simulationSetupResult.aiPrompt,
+					systemPrompt: simulationSetupResult.systemPrompt,
+					pair: simulationSetupResult.pair,
+					trailingStop: simulationSetupResult.trailingStop,
 				})
-				.from(simulationSetup)
-				.where(eq(simulationSetup.id, input.simulationSetupId))
-				.limit(1);
+				.returning();
 
-			if (!simulationSetupResult || !simulationSetupResult.infoBars?.length || !simulationSetupResult.volumeProfiles?.length) {
+			if (!execution) {
 				throw new TRPCError({
-					code: 'NOT_FOUND',
+					code: 'INTERNAL_SERVER_ERROR',
 				});
 			}
+			await tx.insert(simulationExecutionToVolumeProfileConfig).values(
+				simulationSetupResult.volumeProfiles!.map((profile) => ({
+					simulationExecutionId: execution.id,
+					volumeProfileConfigId: profile.volumeProfileConfigId,
+				})),
+			);
 
-			const executionResult = await db.transaction(async (tx) => {
-				const [execution] = await tx
-					.insert(simulationExecution)
-					.values({
-						simulationSetupId: input.simulationSetupId,
-						simulationRoomId: simulationSetupResult.simulationRoomId,
-						startDate: input.startDate,
-						tradesToExecute: input.iterations ?? 10,
-						aiPrompt: simulationSetupResult.aiPrompt,
-						systemPrompt: simulationSetupResult.systemPrompt,
-						pair: simulationSetupResult.pair,
-						trailingStop: simulationSetupResult.trailingStop,
-					})
-					.returning();
+			await tx.insert(simulationExecutionToInformativeBarConfig).values(
+				simulationSetupResult.infoBars!.map((bar) => ({
+					simulationExecutionId: execution.id,
+					informativeBarConfigId: bar.informativeBarConfigId,
+				})),
+			);
 
-				if (!execution) {
-					throw new TRPCError({
-						code: 'INTERNAL_SERVER_ERROR',
-					});
-				}
-				await tx.insert(simulationExecutionToVolumeProfileConfig).values(
-					simulationSetupResult.volumeProfiles!.map((profile) => ({
-						simulationExecutionId: execution.id,
-						volumeProfileConfigId: profile.volumeProfileConfigId,
-					})),
-				);
+			return execution;
+		});
 
-				await tx.insert(simulationExecutionToInformativeBarConfig).values(
-					simulationSetupResult.infoBars!.map((bar) => ({
-						simulationExecutionId: execution.id,
-						informativeBarConfigId: bar.informativeBarConfigId,
-					})),
-				);
-
-				return execution;
-			});
-
-			return executionResult;
-		}),
+		return executionResult;
+	}),
 
 	list: protectedProcedure.input(z.object({ simulationSetupId: z.string() }).merge(paginatedSchema)).query(async ({ input }) => {
 		const db = getDatabase();
@@ -136,7 +129,8 @@ export const simulationExecutionRouter = {
 								id: simulationExecutionTrade.id,
 								balanceResult: simulationExecutionTrade.balanceResult,
 							},
-							(query) => query.from(simulationExecutionTrade),
+							(query) =>
+								query.from(simulationExecutionTrade).where(eq(simulationExecutionTrade.simulationExecutionId, simulationExecution.id)),
 						),
 					})
 					.from(simulationExecution)
@@ -162,6 +156,7 @@ export const simulationExecutionRouter = {
 				systemPrompt: simulationExecution.systemPrompt,
 				tradesToExecute: simulationExecution.tradesToExecute,
 				trailingStop: simulationExecution.trailingStop,
+				status: simulationExecution.status,
 				stepMinutes: simulationExecution.stepMinutes,
 				trades: queryJoin(
 					db,
@@ -169,7 +164,7 @@ export const simulationExecutionRouter = {
 						id: simulationExecutionTrade.id,
 						balanceResult: simulationExecutionTrade.balanceResult,
 					},
-					(query) => query.from(simulationExecutionTrade),
+					(query) => query.from(simulationExecutionTrade).where(eq(simulationExecutionTrade.simulationExecutionId, simulationExecution.id)),
 				),
 				volumeProfiles: queryJoin(
 					db,

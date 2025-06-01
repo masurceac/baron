@@ -12,6 +12,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '../ui/tooltip';
+import { formatInTimeZone } from 'date-fns-tz';
 
 export type DateInputType = string | Date | null | number;
 const formats = {
@@ -104,18 +105,28 @@ export const FormatDate = ({
   format: displayFormat = 'short',
   asString,
   className,
+  utc,
 }: {
   date: DateInputType;
   leftDate?: string;
   format?: keyof typeof formats;
   asString?: boolean;
   className?: string;
+  utc?: boolean;
 }) => {
-  const formattedDate = useFormatedDate({
+  const firstFormatting = useFormatedDate({
     date,
     leftDate,
     variant: displayFormat,
   });
+
+  const dateAsUtc = formatInTimeZone(
+    date ?? new Date(date ?? ''),
+    'UTC',
+    'PPP kk:mm',
+  );
+
+  const formattedDate = utc ? `${dateAsUtc} (UTC)` : firstFormatting;
 
   if (!formattedDate) {
     return null;

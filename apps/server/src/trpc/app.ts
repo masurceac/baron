@@ -1,5 +1,6 @@
 import { router } from '@baron/trpc-server';
 import { infoBarsRouter } from './routers/info-bars';
+import { logHistoryRouter } from './routers/log-history';
 import { simulationRoomRouter } from './routers/simulation';
 import { simulationExecutionRouter } from './routers/simulation-execution';
 import { simulationSetupRouter } from './routers/simulation-setup';
@@ -13,4 +14,5 @@ export const appRouter = router({
 	simulationSetup: simulationSetupRouter,
 	simulationExecution: simulationExecutionRouter,
 	tradeHistory: tradeHistoryRouter,
+	logHistory: logHistoryRouter,
 });

@@ -3,8 +3,15 @@ import { trpc } from '@/core/trpc';
 import { InfoBarList } from '@/modules/info-bars/components/info-bar-list';
 import { PageLayout } from '@/modules/shared';
 import { DetailedTextDialog } from '@/modules/shared/components/detailed-text-dialog';
+import { ExecutionTradeHistory } from '@/modules/trade-history';
 import { VolumeProfileList } from '@/modules/volume-profile-config/components/volume-profile-list';
 import { Button } from '@baron/ui/components/button';
+import {
+  Tabs,
+  TabsTrigger,
+  TabsList,
+  TabsContent,
+} from '@baron/ui/components/tabs';
 import {
   Card,
   CardContent,
@@ -22,9 +29,9 @@ import {
 import { ArrowLeftIcon } from 'lucide-react';
 import { Suspense } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { FormatDate } from 'src/components/ui/format-date';
 import { TradeResult } from '../components/trade-result';
-import { ExecutionTradeHistory } from '@/modules/trade-history';
+import { ExecutionLogs } from '@/modules/trade-history/components/execution-logs';
+import { FormatDate } from 'src/components/ui/format-date';
 
 function DetailsData() {
   const params =
@@ -100,19 +107,30 @@ function DetailsData() {
         </CardContent>
         <CardContent>
           <div>
+            <p>Status: {data.status}</p>
             <p>
-              Start date: <FormatDate date={data.startDate} />
+              Start date: <FormatDate date={data.startDate} utc />
             </p>
             <p>Trailing stop: {data.trailingStop ? 'Enabled' : 'Disabled'}</p>
             <p>Step: {data.stepMinutes} minutes</p>
-            <p>
-              <TradeResult trades={data.trades ?? []} />
-            </p>
+            <TradeResult trades={data.trades ?? []} />
           </div>
         </CardContent>
       </Card>
 
-      <ExecutionTradeHistory executionId={params.executionId ?? ''} />
+      <Tabs defaultValue="trades">
+        <TabsList>
+          <TabsTrigger value="trades">Trades List</TabsTrigger>
+          <TabsTrigger value="logs">Logs</TabsTrigger>
+        </TabsList>
+        <TabsContent value="trades">
+          <ExecutionTradeHistory executionId={params.executionId ?? ''} />
+        </TabsContent>
+
+        <TabsContent value="logs">
+          <ExecutionLogs executionId={params.executionId ?? ''} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

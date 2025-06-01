@@ -1,4 +1,9 @@
-import { TimeUnit, TradeDirection, TradingPair } from '@baron/common';
+import {
+  TimeUnit,
+  TradeDirection,
+  TradeLogDirection,
+  TradingPair,
+} from '@baron/common';
 import { createId } from '@paralleldrive/cuid2';
 import {
   boolean,
@@ -213,6 +218,7 @@ export const simulationExecution = pgTable('simulation_execution', {
       SimulationExecutionStatus.Pending,
       SimulationExecutionStatus.Running,
       SimulationExecutionStatus.Completed,
+      SimulationExecutionStatus.Failed,
     ],
   })
     .notNull()
@@ -297,4 +303,39 @@ export const simulationExecutionTrade = pgTable('simulation_execution_trade', {
   takeProfitPrice: real('take_profit_price').notNull(),
   balanceResult: real('balance_result').notNull(),
   reason: text('reason'),
+});
+
+export const simulationExecutionLog = pgTable('simulation_execution_log', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+
+  date: timestamp('date').notNull(),
+
+  simulationExecutionId: text('simulation_execution_id')
+    .notNull()
+    .references(() => simulationExecution.id, {
+      onDelete: 'cascade',
+      onUpdate: 'cascade',
+    }),
+
+  direction: text('direction', {
+    enum: [
+      TradeLogDirection.Buy,
+      TradeLogDirection.Sell,
+      TradeLogDirection.Hold,
+    ],
+  }).notNull(),
+
+  // trade id
+  simulationExecutionTradeId: text('simulation_execution_trade_id').references(
+    () => simulationExecutionTrade.id,
+    {
+      onDelete: 'cascade',
+      onUpdate: 'cascade',
+    },
+  ),
+
+  reason: text('reason').notNull(),
 });
