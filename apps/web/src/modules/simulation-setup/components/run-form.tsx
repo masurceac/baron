@@ -3,10 +3,10 @@ import { Button } from '@baron/ui/components/button';
 import { DateTimeInput } from '@baron/ui/components/date-time-input';
 import { Form } from '@baron/ui/components/form';
 import { FormFieldWrapper } from '@baron/ui/components/form-field-wrapper';
+import { FormatDate } from '@baron/ui/components/format-date';
 import { NumericInput } from '@baron/ui/components/numeric-input';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ForwardedRef, useImperativeHandle } from 'react';
-import { formatInTimeZone } from 'date-fns-tz';
 import { SubmitHandler, useForm, UseFormReturn } from 'react-hook-form';
 
 export type VPCFormRef = {
@@ -48,7 +48,7 @@ export function RunSimulationForm(props: {
                 />
                 {field.value && (
                   <p className="text-sm text-muted-foreground ml-2 mt-1">
-                    UTC: {formatInTimeZone(field.value, 'UTC', 'PPP p')}
+                    <FormatDate date={field.value} utc />
                   </p>
                 )}
               </div>

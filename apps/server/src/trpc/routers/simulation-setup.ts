@@ -26,7 +26,7 @@ export const simulationSetupRouter = {
 					pair: input.tradingPair,
 					aiPrompt: input.aiPrompt.trim(),
 					systemPrompt: input.systemPrompt.trim(),
-					trailingStop: input.trailingStop,
+					trailingStop: input.trailingStop ?? false,
 					simulationRoomId: input.simulationRoomId,
 				})
 				.returning();
