@@ -4,6 +4,7 @@ import { RedirectToList } from './components/redirect-to-list';
 import { SimulationSetupCreatePage } from './pages/create';
 import { SimulationSetupsListPage } from './pages/list';
 import { simulationExecutionRouter } from '../simulation-execution';
+import { SimulationSetupEditPage } from './pages/edit';
 
 export const simulationSetupRouter = defineModuleRouting([
   {
@@ -20,6 +21,10 @@ export const simulationSetupRouter = defineModuleRouting([
       {
         path: 'create',
         Component: SimulationSetupCreatePage,
+      },
+      {
+        path: 'edit/:setupId',
+        Component: SimulationSetupEditPage,
       },
       {
         path: 'setup/:setupId',

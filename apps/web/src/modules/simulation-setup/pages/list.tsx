@@ -7,7 +7,7 @@ import { RouterOutput } from '@baron/server';
 import { Button } from '@baron/ui/components/button';
 import { FormatDate } from '@baron/ui/components/format-date';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowRightIcon, PlusCircleIcon } from 'lucide-react';
+import { ArrowRightIcon, PencilIcon, PlusCircleIcon } from 'lucide-react';
 import { Suspense, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ExecuteSetup } from '../components/execute-setup';
@@ -79,10 +79,21 @@ function ListData() {
       {
         accessorKey: 'id',
         enableSorting: false,
-        header: 'Execute',
+        header: 'Actions',
         cell: ({ row: { original } }) => (
-          <div>
+          <div className="space-x-4">
             <ExecuteSetup simulationSetupId={original.id} />
+            <Button variant="link" asChild>
+              <Link
+                to={getAppRoute('/app/simulation/room/:roomId/edit/:setupId', {
+                  setupId: original.id,
+                  roomId: params.roomId ?? '',
+                })}
+              >
+                Edit
+                <PencilIcon className="w-4 ml-2" />
+              </Link>
+            </Button>
           </div>
         ),
       },
