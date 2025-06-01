@@ -19,9 +19,7 @@
     "@baron/db": "workspace:",
     "@baron/fixed-range-volume-profile": "workspace:",
     "@baron/trpc-server": "workspace:",
-    "@hono/node-server": "^1.14.3",
     "dotenv": "^16.5.0",
-    "hono": "^4.7.11",
     "drizzle-orm": "catalog:",
     "date-fns": "catalog:",
     "zod": "catalog:"
