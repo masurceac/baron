@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx src/index.ts",
+    "server": "tsx src/server.ts",
     "build": "tsc",
     "start:prod": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -19,9 +20,11 @@
     "@baron/db": "workspace:",
     "@baron/fixed-range-volume-profile": "workspace:",
     "@baron/trpc-server": "workspace:",
+    "@hono/node-server": "^1.14.3",
+    "date-fns": "catalog:",
     "dotenv": "^16.5.0",
     "drizzle-orm": "catalog:",
-    "date-fns": "catalog:",
+    "hono": "^4.7.11",
     "zod": "catalog:"
   },
   "devDependencies": {
