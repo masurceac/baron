@@ -2,7 +2,6 @@ import { asyncLocalStorage, createAsyncStorageContext, createTrpcContext } from 
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import { appRouter } from './trpc';
 import { eventBus } from './events';
-import { cronHandler } from './cron';
 
 const worker = {
 	async fetch(request, env): Promise<Response> {
@@ -37,27 +36,6 @@ const worker = {
 						createContext: createTrpcContext,
 					}),
 				),
-		);
-	},
-	async scheduled(
-		_,
-		env: Env,
-		ctx: {
-			waitUntil: (promise: Promise<any>) => void;
-		},
-	) {
-		await ctx.waitUntil(
-			asyncLocalStorage.run(
-				await createAsyncStorageContext(
-					{
-						clerkSecretKey: env.CLERK_SECRET_KEY,
-						clerkPublicKey: env.CLERK_PUBLISHABLE_KEY,
-						databaseConnectionString: env.DATABASE_CONNECTION_STRING,
-					},
-					() => Promise.resolve({ env, eventBus }),
-				),
-				cronHandler,
-			),
 		);
 	},
 } satisfies ExportedHandler<Env>;

@@ -70,9 +70,11 @@ export async function getFrvpProfiles(
     .map((b) => b.length())
     .sort((a, b) => a - b);
 
+  console.log(
+    `Processing  ${consolidationBuffers.length} consolidation buffers`,
+  );
   for (let i = 0; i < consolidationBuffers.length; i++) {
     const barsStack = consolidationBuffers[i]!;
-    console.log(barsStack.bars.length);
     const stackStart = barsStack.bars.at(0)?.Timestamp ?? '';
     const stackEnd = barsStack.bars.at(-1)?.Timestamp ?? '';
     const alreadyParsed = await methods.readFrvp({

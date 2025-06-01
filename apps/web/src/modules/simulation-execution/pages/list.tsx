@@ -59,7 +59,7 @@ function ListData() {
               to={getAppRoute(
                 '/app/simulation/room/:roomId/setup/:setupId/view/:executionId',
                 {
-                  setupId: original.id,
+                  setupId: params.setupId ?? '',
                   roomId: params.roomId ?? '',
                   executionId: original.id,
                 },

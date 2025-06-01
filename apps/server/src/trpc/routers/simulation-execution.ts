@@ -1,5 +1,6 @@
 import { paginate, paginatedSchema } from '@baron/common';
-import { queryJoin } from '@baron/db/client';
+import { queryJoin, queryJoinOne } from '@baron/db/client';
+import { SimulationExecutionStatus } from '@baron/db/enum';
 import {
 	informativeBarConfigToSimulationSetup,
 	simulationExecution,
@@ -200,5 +201,51 @@ export const simulationExecutionRouter = {
 		}
 
 		return execution;
+	}),
+
+	getAppStats: protectedProcedure.query(async () => {
+		const db = getDatabase();
+
+		const [stats] = await db
+			.select({
+				total: count(simulationExecution.id),
+				pending: queryJoinOne(
+					db,
+					{
+						count: count(simulationExecution.id),
+					},
+					(query) => query.from(simulationExecution).where(eq(simulationExecution.status, SimulationExecutionStatus.Pending)),
+				),
+				completed: queryJoinOne(
+					db,
+					{
+						count: count(simulationExecution.id),
+					},
+					(query) => query.from(simulationExecution).where(eq(simulationExecution.status, SimulationExecutionStatus.Completed)),
+				),
+				failed: queryJoinOne(
+					db,
+					{
+						count: count(simulationExecution.id),
+					},
+					(query) => query.from(simulationExecution).where(eq(simulationExecution.status, SimulationExecutionStatus.Failed)),
+				),
+				running: queryJoinOne(
+					db,
+					{
+						count: count(simulationExecution.id),
+					},
+					(query) => query.from(simulationExecution).where(eq(simulationExecution.status, SimulationExecutionStatus.Running)),
+				),
+			})
+			.from(simulationExecution);
+
+		if (!stats) {
+			throw new TRPCError({
+				code: 'NOT_FOUND',
+			});
+		}
+
+		return stats;
 	}),
 };
