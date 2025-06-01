@@ -3,15 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "exports": {
-    ".": "./src/index.ts",
-    "./async-storage/getters": "./src/async-storage/getters.ts"
+    ".": "./src/index.ts"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@baron/common": "workspace:*",
-    "@baron/db": "workspace:*",
     "zod": "catalog:"
   },
   "keywords": [],

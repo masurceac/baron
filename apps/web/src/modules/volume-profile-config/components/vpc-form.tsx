@@ -1,5 +1,4 @@
 import { TimeUnitSelect } from '@/modules/inputs/time-unit-select';
-import { TimeUnit } from '@baron/common';
 import { volumeProfileConfigSchema } from '@baron/schema';
 import { Button } from '@baron/ui/components/button';
 import { Form } from '@baron/ui/components/form';
@@ -24,7 +23,7 @@ export function VPCForm(props: {
   onSubmit: SubmitHandler<VPCSchema>;
 }) {
   const form = useForm<VPCSchema>({
-    defaultValues: props.defaultValues,
+    // defaultValues: props.defaultValues,
     resolver: zodResolver(volumeProfileConfigSchema),
   });
 

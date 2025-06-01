@@ -22,18 +22,12 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
-    "rootDirs": ["src", "../server/src"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "src/lib/*": ["../../packages/ui/src/lib/*"],
-      "src/hooks/*": ["../../packages/ui/src/hooks/*"],
-      "src/components/*": ["../../packages/ui/src/components/*"]
-    }
+      "@/*": ["./src/*", "./node_modules/@baron/server/src/*"]
+    },
+    "rootDirs": ["src"]
   },
-  "include": [
-    "src",
-    "../server/worker-configuration.d.ts",
-    "../server/src/*"
-  ]
+  "include": ["src"],
+  "exclude": ["../server/worker-configuration.d.ts", "../server/src/**/*"]
 }

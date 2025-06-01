@@ -1,5 +1,5 @@
 import { RouterOutput } from '@baron/server';
-import { FormatDate } from 'src/components/ui/format-date';
+import { FormatDate } from '@baron/ui/components/format-date';
 
 export function TradeItem({
   trade,

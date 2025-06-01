@@ -23,6 +23,7 @@
 		"typescript": "catalog:",
 		"drizzle-orm": "catalog:",
 		"date-fns": "catalog:",
+		"zod": "catalog:",
 		"@trpc/server": "catalog:",
 		"wrangler": "catalog:"
 	}
