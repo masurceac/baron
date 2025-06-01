@@ -11,6 +11,7 @@
   "dependencies": {
     "@baron/common": "workspace:*",
     "@baron/bars-api": "workspace:*",
-    "@baron/volume-profile": "workspace:*"
+    "@baron/volume-profile": "workspace:*",
+    "date-fns": "catalog:"
   }
 }
