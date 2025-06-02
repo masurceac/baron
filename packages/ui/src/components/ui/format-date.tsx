@@ -123,7 +123,7 @@ export const FormatDate = ({
   const dateAsUtc = formatInTimeZone(
     date ?? new Date(date ?? ''),
     'UTC',
-    'PPP kk:mm',
+    'PPP HH:mm',
   );
 
   const formattedDate = utc ? `${dateAsUtc} (UTC)` : firstFormatting;
