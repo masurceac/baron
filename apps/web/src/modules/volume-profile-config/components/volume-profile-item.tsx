@@ -3,15 +3,7 @@ import { TrashIcon } from 'lucide-react';
 import { VPCType } from '../types';
 
 export function VolumeProfileItem(
-  props: Pick<
-    VPCType,
-    | 'id'
-    | 'name'
-    | 'timeframeUnit'
-    | 'timeframeAmount'
-    | 'maxDeviationPercent'
-    | 'volumeProfilePercentage'
-  > & {
+  props: VPCType & {
     onDelete?: (id: string) => void;
   },
 ) {
@@ -26,6 +18,7 @@ export function VolumeProfileItem(
           {props.timeframeAmount} {props.timeframeUnit}
         </p>
         <p>Price range {props.maxDeviationPercent}%</p>
+        <p>{props.historicalTimeToConsiderAmount} bars</p>
       </div>
       <p>Volume Profile {props.volumeProfilePercentage}%</p>
       {props.onDelete && (
