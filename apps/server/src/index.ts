@@ -2,6 +2,7 @@ import { asyncLocalStorage, createAsyncStorageContext, createTrpcContext } from 
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import { appRouter } from './trpc';
 import { eventBus } from './events';
+import { ProcessSimulationExecutionWorkflow } from './workflows/process-simulation-execution';
 
 const worker = {
 	async fetch(request, env): Promise<Response> {
@@ -55,5 +56,7 @@ const handleCORSPreflight = () => {
 
 	return addCORSHeaders(rs);
 };
+
+export { ProcessSimulationExecutionWorkflow };
 
 export default worker;

@@ -14,6 +14,7 @@ import { simulationRunSchema } from '@baron/schema';
 import { protectedProcedure } from '@baron/trpc-server';
 import { getDatabase } from '@baron/trpc-server/async-storage/getters';
 import { TRPCError } from '@trpc/server';
+import { env } from 'cloudflare:workers';
 import { and, count, desc, eq, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -99,7 +100,14 @@ export const simulationExecutionRouter = {
 			return execution;
 		});
 
-		return executionResult;
+		const instance = await env.PROCESS_SIMULATION_EXECUTION.create({
+			id: executionResult.id,
+			params: {
+				simulationExecutionId: executionResult.id,
+			},
+		});
+
+		return { ...executionResult, instanceStatus: await instance.status() };
 	}),
 
 	list: protectedProcedure.input(z.object({ simulationSetupId: z.string() }).merge(paginatedSchema)).query(async ({ input }) => {

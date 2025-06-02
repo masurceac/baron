@@ -11,6 +11,14 @@
 	"observability": {
 		"enabled": true,
 	},
+
+	"workflows": [
+		{
+			"name": "process-simulation-execution",
+			"binding": "PROCESS_SIMULATION_EXECUTION",
+			"class_name": "ProcessSimulationExecutionWorkflow",
+		},
+	],
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
