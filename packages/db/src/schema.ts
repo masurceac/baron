@@ -21,15 +21,19 @@ export const zoneVolumeProfile = pgTable('zone_volume_profile', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => createId()),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(
+    () => new Date(),
+  ),
 
   volumeAreaHigh: real('volume_area_high').notNull(),
   volumeAreaLow: real('volume_area_low').notNull(),
   pointOfControl: real('point_of_control').notNull(),
 
-  zoneStartAt: timestamp('zone_start_at').notNull(),
-  zoneEndAt: timestamp('zone_end_at').notNull(),
+  zoneStartAt: timestamp('zone_start_at', { withTimezone: true }).notNull(),
+  zoneEndAt: timestamp('zone_end_at', { withTimezone: true }).notNull(),
 
   tradingPair: text('trading_pair', {
     enum: [TradingPair.BTCUSDT, TradingPair.ETHUSDT],
@@ -56,7 +60,9 @@ export const volumeProfileConfig = pgTable(
     id: text('id')
       .primaryKey()
       .$defaultFn(() => createId()),
-    createdAt: timestamp('created_at').notNull().defaultNow(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
     name: text('name').notNull(),
     timeframeUnit: text('timeframe_unit', {
       enum: [
@@ -94,7 +100,9 @@ export const informativeBarConfig = pgTable('informative_bar_config', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => createId()),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
   name: text('name').notNull(),
   timeframeUnit: text('timeframe_unit', {
     enum: [
@@ -120,8 +128,12 @@ export const simulationRoom = pgTable('simulation_room', {
     .$defaultFn(() => createId()),
   name: text('name').notNull(),
   description: text('description').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(
+    () => new Date(),
+  ),
   authorName: text('author_name').notNull(),
   authorId: text('author_id').notNull(),
 });
@@ -130,7 +142,9 @@ export const simulationSetup = pgTable('simulation_setup', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => createId()),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
   pair: text('pair', {
     enum: [TradingPair.BTCUSDT, TradingPair.ETHUSDT],
   }).notNull(),
@@ -196,8 +210,12 @@ export const simulationExecution = pgTable('simulation_execution', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => createId()),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(
+    () => new Date(),
+  ),
 
   pair: text('pair', {
     enum: [TradingPair.BTCUSDT, TradingPair.ETHUSDT],
@@ -231,7 +249,7 @@ export const simulationExecution = pgTable('simulation_execution', {
     .notNull()
     .default(SimulationExecutionStatus.Pending),
 
-  startDate: timestamp('start_date').notNull(),
+  startDate: timestamp('start_date', { withTimezone: true }).notNull(),
   tradesToExecute: integer('trades_to_execute').notNull().default(10),
   stepMinutes: integer('step_minutes').notNull().default(1),
 });
@@ -286,8 +304,12 @@ export const simulationExecutionTrade = pgTable('simulation_execution_trade', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => createId()),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(
+    () => new Date(),
+  ),
 
   simulationExecutionId: text('simulation_execution_id')
     .notNull()
@@ -301,10 +323,10 @@ export const simulationExecutionTrade = pgTable('simulation_execution_trade', {
   }).notNull(),
 
   entryPrice: real('entry_price').notNull(),
-  entryDate: timestamp('entry_date').notNull(),
+  entryDate: timestamp('entry_date', { withTimezone: true }).notNull(),
 
   exitPrice: real('exit_price').notNull(),
-  exitDate: timestamp('exit_date').notNull(),
+  exitDate: timestamp('exit_date', { withTimezone: true }).notNull(),
 
   stopLossPrice: real('stop_loss_price').notNull(),
   takeProfitPrice: real('take_profit_price').notNull(),
@@ -316,9 +338,11 @@ export const simulationExecutionLog = pgTable('simulation_execution_log', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => createId()),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 
-  date: timestamp('date').notNull(),
+  date: timestamp('date', { withTimezone: true }).notNull(),
 
   simulationExecutionId: text('simulation_execution_id')
     .notNull()

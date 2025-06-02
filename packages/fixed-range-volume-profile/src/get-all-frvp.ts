@@ -18,6 +18,7 @@ type GetFrvpProfilesInput = {
   minBarsToConsiderConsolidation: number;
   pair: TradingPair;
   volumePercentageRange: number;
+  currentPrice: number;
 };
 
 type MethodInput = {
@@ -73,8 +74,44 @@ export async function getFrvpProfiles(
   console.log(
     `Processing  ${consolidationBuffers.length} consolidation buffers`,
   );
-  for (let i = 0; i < consolidationBuffers.length; i++) {
-    const barsStack = consolidationBuffers[i]!;
+
+  const conslidationBuffersToProcess: BarsStack[] = [];
+  // find one buffer that includes current price
+
+  const containingCurrentPrice = consolidationBuffers.filter(
+    (barsStack) =>
+      barsStack.minPrice() <= input.currentPrice &&
+      barsStack.maxPrice() >= input.currentPrice,
+  );
+
+  // push first buffer that contains current price
+  const mostRecentBuffer = containingCurrentPrice.length
+    ? containingCurrentPrice.reduce((mostRecent, current) => {
+        const currentStart = new Date(current.bars[0]?.Timestamp ?? '');
+        const mostRecentStart = new Date(mostRecent.bars[0]?.Timestamp ?? '');
+        return currentStart > mostRecentStart ? current : mostRecent;
+      }, containingCurrentPrice[0]!)
+    : null;
+
+  if (mostRecentBuffer) {
+    conslidationBuffersToProcess.push(mostRecentBuffer);
+  }
+  const higherBuffers = consolidationBuffers
+    .filter((barsStack) => barsStack.minPrice() > input.currentPrice)
+    // sort ascending by lower price
+    .sort((a, b) => a.minPrice() - b.minPrice());
+
+  conslidationBuffersToProcess.push(...higherBuffers.slice(0, 2));
+
+  const lowerBuffers = consolidationBuffers
+    .filter((barsStack) => barsStack.maxPrice() < input.currentPrice)
+    // sort descending by higher price
+    .sort((a, b) => b.maxPrice() - a.maxPrice());
+
+  conslidationBuffersToProcess.push(...lowerBuffers.slice(0, 2));
+
+  for (let i = 0; i < conslidationBuffersToProcess.length; i++) {
+    const barsStack = conslidationBuffersToProcess[i]!;
     const stackStart = barsStack.bars.at(0)?.Timestamp ?? '';
     const stackEnd = barsStack.bars.at(-1)?.Timestamp ?? '';
     const alreadyParsed = await methods.readFrvp({
