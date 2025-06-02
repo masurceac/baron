@@ -15,6 +15,19 @@ type TableItem = RouterOutput['simulationExecution']['list']['data'][number];
 
 const TAKE = 10;
 
+function Info() {
+  const params =
+    useParams<
+      GetRouteParams<'/app/simulation/room/:roomId/setup/:setupId/list'>
+    >();
+
+  const [setup] = trpc.simulationSetup.getById.useSuspenseQuery({
+    id: params.setupId ?? '',
+  });
+
+  return <span>{setup.pair}</span>;
+}
+
 function ListData() {
   const pagination = useCurrentPagination({ take: TAKE });
   const params =
@@ -96,27 +109,27 @@ export function SimulationExececutionListPage() {
       GetRouteParams<'/app/simulation/room/:roomId/setup/:setupId/list'>
     >();
   return (
-    <PageLayout
-      title={
-        <p>
-          <Button asChild variant="link" size="sm">
-            <Link
-              to={getAppRoute('/app/simulation/room/:roomId/list', {
-                roomId: params.roomId ?? '',
-              })}
-            >
-              <ArrowLeftIcon className="w-4 mr-2" /> Back to Setups
-            </Link>
-          </Button>
-          Simulation Executions List.
-        </p>
-      }
-    >
-      <div>
-        <Suspense>
+    <Suspense>
+      <PageLayout
+        title={
+          <p>
+            <Button asChild variant="link" size="sm">
+              <Link
+                to={getAppRoute('/app/simulation/room/:roomId/list', {
+                  roomId: params.roomId ?? '',
+                })}
+              >
+                <ArrowLeftIcon className="w-4 mr-2" /> Back
+              </Link>
+            </Button>
+            <Info />
+          </p>
+        }
+      >
+        <div>
           <ListData />
-        </Suspense>
-      </div>
-    </PageLayout>
+        </div>
+      </PageLayout>
+    </Suspense>
   );
 }

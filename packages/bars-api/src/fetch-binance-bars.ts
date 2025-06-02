@@ -36,7 +36,7 @@ export async function fetchBinanceBars(input: {
     throw new Error('Invalid start or end date');
   }
 
-  const baseUrl = 'http://localhost:4400/binance/api/v3/klines'; // proxy server
+  const baseUrl = 'https://api.binance.com/api/v3/klines'; // proxy server
 
   const bars: ChartBar[] = [];
   const limit = 1000; // Binance max limit per request
@@ -55,7 +55,13 @@ export async function fetchBinanceBars(input: {
     });
 
     try {
-      const response = await fetch(`${baseUrl}?${params}`);
+      const headers = new Headers();
+      headers.set('User-Agent', 'curl/8.7.1');
+      headers.set('Accept', '*/*');
+
+      const response = await fetch(`${baseUrl}?${params}`, {
+        headers: headers,
+      });
       if (!response.ok) {
         throw new Error(`Binance API error: ${response.statusText}`);
       }

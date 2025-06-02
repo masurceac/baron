@@ -22,7 +22,7 @@ export function AppHomepage() {
   return (
     <div>
       <Card>
-        <CardHeader className="flex items-center justify-between space-x-8">
+        <CardHeader className="block lg:flex items-center justify-between space-x-8">
           <div>
             <CardTitle>Quick Navigation</CardTitle>
             <CardDescription>

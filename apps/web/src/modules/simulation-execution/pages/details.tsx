@@ -52,7 +52,7 @@ function DetailsData() {
             These are the details used for the AI in this simulation execution.
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex space-x-8">
+        <CardContent className="grid md:grid-cols-2 gap-4 lg:flex space-x-8">
           <DetailedTextDialog
             title="This is the default AI prompt used for open orders"
             content={data.aiPrompt}
@@ -107,6 +107,7 @@ function DetailsData() {
         </CardContent>
         <CardContent>
           <div>
+            <p>Pair: {data.pair}</p>
             <p>Status: {data.status}</p>
             <p>
               Start date: <FormatDate date={data.startDate} utc />

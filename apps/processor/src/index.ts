@@ -20,7 +20,6 @@ async function processItems() {
       () => Promise.resolve({ env }),
     ),
     async () => {
-      console.log('start');
       await checkSimulationExecution();
     },
   );

@@ -21,10 +21,10 @@ export function DetailedTextDialog(props: {
           {props.label ?? 'View Default'}
         </Button>
       </DialogTrigger>
-      <DialogContent className="overflow-hidden w-full sm:max-w-screen-lg">
+      <DialogContent className="w-full sm:max-w-screen-lg">
         <DialogHeader>
           <DialogTitle>{props.title}</DialogTitle>
-          <DialogDescription className="whitespace-pre-wrap overflow-y-auto p-4 border rounded-lg bg-muted mt-8">
+          <DialogDescription className="whitespace-pre-wrap p-4 border rounded-lg bg-muted mt-8">
             {props.content}
           </DialogDescription>
         </DialogHeader>

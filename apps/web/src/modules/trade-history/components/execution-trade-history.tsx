@@ -28,6 +28,19 @@ function ExecutionTradeHistoryItems(props: { executionId: string }) {
           </div>
         ),
       },
+
+      {
+        accessorKey: 'entryDate',
+        enableSorting: false,
+        header: 'Trade Dates',
+        cell: ({ row: { original } }) => (
+          <div>
+            <FormatDate date={original.entryDate} utc />
+            <br />
+            <FormatDate date={original.exitDate} utc />
+          </div>
+        ),
+      },
       {
         accessorKey: 'direction',
         enableSorting: false,
@@ -45,16 +58,6 @@ function ExecutionTradeHistoryItems(props: { executionId: string }) {
         ),
       },
       {
-        accessorKey: 'entryDate',
-        enableSorting: false,
-        header: 'Entry Date',
-        cell: ({ row: { original } }) => (
-          <div>
-            <FormatDate date={original.entryDate} utc />
-          </div>
-        ),
-      },
-      {
         accessorKey: 'entryPrice',
         enableSorting: false,
         header: 'Entry Price',
@@ -63,12 +66,13 @@ function ExecutionTradeHistoryItems(props: { executionId: string }) {
         ),
       },
       {
-        accessorKey: 'exitDate',
+        accessorKey: 'takeProfitPrice',
         enableSorting: false,
-        header: 'Exit Date',
+        header: 'TP/SL',
         cell: ({ row: { original } }) => (
           <div>
-            <FormatDate date={original.exitDate} utc />
+            ${original.takeProfitPrice.toFixed(2)}&nbsp;/ $
+            {original.stopLossPrice.toFixed(2)}
           </div>
         ),
       },
@@ -77,18 +81,19 @@ function ExecutionTradeHistoryItems(props: { executionId: string }) {
         enableSorting: false,
         header: 'Exit Price',
         cell: ({ row: { original } }) => (
-          <div>${original.exitPrice.toFixed(2)}</div>
-        ),
-      },
-      {
-        accessorKey: 'takeProfitPrice',
-        enableSorting: false,
-        header: 'TP/SL',
-        cell: ({ row: { original } }) => (
-          <div>
-            ${original.takeProfitPrice.toFixed(2)}/ $
-            {original.stopLossPrice.toFixed(2)}
-          </div>
+          <RedGreenHighlight
+            variant={
+              original.direction === TradeDirection.Buy
+                ? original.exitPrice < original.entryPrice
+                  ? 'red'
+                  : 'green'
+                : original.exitPrice > original.entryPrice
+                  ? 'red'
+                  : 'green'
+            }
+          >
+            ${original.exitPrice.toFixed(2)}
+          </RedGreenHighlight>
         ),
       },
       {
