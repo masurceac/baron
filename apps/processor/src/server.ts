@@ -1,29 +1,12 @@
 import { serve } from '@hono/node-server';
-import { exec, spawn } from 'child_process';
+import { exec } from 'child_process';
 import { Hono } from 'hono';
 import { promisify } from 'util';
-import { getEnv } from './async-storage';
 
 const execPromise = promisify(exec);
 
 const app = new Hono();
 const BINANCE_API = 'https://api.binance.com';
-
-app.get('/process', (c) => {
-  // spawn an sh script and run `npm run dev`in it
-  const child = spawn('sh', ['-c', 'cd .. && npm run dev'], {
-    stdio: 'inherit',
-    shell: true,
-  });
-  child.on('error', (err) => {
-    console.error('Failed to start subprocess:', err);
-  });
-  child.on('exit', (code) => {
-    console.log(`Subprocess exited with code ${code}`);
-  });
-
-  return c.text('Hello, Hono ' + getEnv().CLERK_PUBLISHABLE_KEY);
-});
 
 app.get('/binance/*', async (c) => {
   const search = new URLSearchParams(c.req.query());

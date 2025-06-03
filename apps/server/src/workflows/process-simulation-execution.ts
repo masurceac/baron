@@ -31,105 +31,14 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 		const db = getDrizzleClient(env.DATABASE_CONNECTION_STRING);
 
 		const executionConfig = await step.do('get simulation execution', async () => {
-			const [executionConfigResult] = await db
-				.select({
-					id: simulationExecution.id,
-					startDate: simulationExecution.startDate,
-					stepMinutes: simulationExecution.stepMinutes,
-					tradesToExecute: simulationExecution.tradesToExecute,
-					status: simulationExecution.status,
-					pair: simulationExecution.pair,
-					aiPrompt: simulationExecution.aiPrompt,
-					systemPrompt: simulationExecution.systemPrompt,
-					trailingStop: simulationExecution.trailingStop,
-					vpc: queryJoin(
-						db,
-						{
-							id: simulationExecutionToVolumeProfileConfig.volumeProfileConfigId,
-							vpcId: volumeProfileConfig.id,
-							vpcTimeframeUnit: volumeProfileConfig.timeframeUnit,
-							vpcTimeframeAmount: volumeProfileConfig.timeframeAmount,
-							vpcMaxDeviationPercent: volumeProfileConfig.maxDeviationPercent,
-							vpcMinimumBarsToConsider: volumeProfileConfig.minimumBarsToConsider,
-							vpcHistoricalTimeToConsiderAmount: volumeProfileConfig.historicalTimeToConsiderAmount,
-							vpcVolumeProfilePercentage: volumeProfileConfig.volumeProfilePercentage,
-						},
-						(query) =>
-							query
-								.from(simulationExecutionToVolumeProfileConfig)
-								.leftJoin(volumeProfileConfig, eq(volumeProfileConfig.id, simulationExecutionToVolumeProfileConfig.volumeProfileConfigId)),
-					),
-					infoBars: queryJoin(
-						db,
-						{
-							id: informativeBarConfig.id,
-							timeframeAmount: informativeBarConfig.timeframeAmount,
-							timeframeUnit: informativeBarConfig.timeframeUnit,
-							historicalBarsToConsiderAmount: informativeBarConfig.historicalBarsToConsiderAmount,
-						},
-						(query) =>
-							query
-								.from(simulationExecutionToInformativeBarConfig)
-								.leftJoin(
-									informativeBarConfig,
-									eq(informativeBarConfig.id, simulationExecutionToInformativeBarConfig.informativeBarConfigId),
-								),
-					),
-					trades: queryJoinOne(
-						db,
-						{
-							count: count(simulationExecutionTrade.id),
-						},
-						(query) =>
-							query.from(simulationExecutionTrade).where(eq(simulationExecutionTrade.simulationExecutionId, simulationExecution.id)),
-					),
-					lastTrade: queryJoinOne(
-						db,
-						{
-							id: simulationExecutionTrade.id,
-							exitDate: simulationExecutionTrade.exitDate,
-						},
-						(query) =>
-							query
-								.from(simulationExecutionTrade)
-								.where(eq(simulationExecutionTrade.simulationExecutionId, simulationExecution.id))
-								.orderBy(desc(simulationExecutionTrade.exitDate))
-								.limit(1),
-					),
-					lastLog: queryJoinOne(db, { id: simulationExecutionLog.id, date: simulationExecutionLog.date }, (query) =>
-						query
-							.from(simulationExecutionLog)
-							.where(eq(simulationExecutionLog.simulationExecutionId, simulationExecution.id))
-							.orderBy(desc(simulationExecutionLog.date))
-							.limit(1),
-					),
-				})
-				.from(simulationExecution)
-				.where(
-					and(
-						eq(simulationExecution.id, event.payload.simulationExecutionId),
-						eq(simulationExecution.status, SimulationExecutionStatus.Pending),
-					),
-				);
-
-			if (
-				!executionConfigResult ||
-				!executionConfigResult.vpc ||
-				executionConfigResult.vpc.length === 0 ||
-				!executionConfigResult.infoBars ||
-				executionConfigResult.infoBars.length === 0
-			) {
-				throw new NonRetryableError(`Simulation execution with ID ${event.payload.simulationExecutionId} not found or not pending.`);
-			}
-
-			return executionConfigResult;
+			return await this.getSimulationExecutionConfig(event.payload.simulationExecutionId);
 		});
 
 		await step.do('update simulation execution status to running', async () => {
 			await db
 				.update(simulationExecution)
 				.set({
-					status: 'TEST',
+					status: SimulationExecutionStatus.Running,
 				})
 				.where(eq(simulationExecution.id, executionConfig.id));
 		});
@@ -184,109 +93,106 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 				return result;
 			});
 			const entryPrice = bars[bars.length - 1]?.Close ?? 0;
-			const vrpList = await step.do(
-				`get simulation execution volume profile configs ${tradeTime.toISOString()} ${executionConfig.id}`,
-				async () => {
-					if (!executionConfig.vpc || executionConfig.vpc.length === 0) {
-						throw 'VPC';
-					}
-					return Promise.all(
-						executionConfig.vpc.map(async (vpc) => {
-							console.log('Processing VPC:', vpc.vpcId);
-							const getStartDate = () => {
-								switch (vpc.vpcTimeframeUnit) {
-									case TimeUnit.Min:
-										return sub(tradeTime, {
-											minutes: vpc.vpcHistoricalTimeToConsiderAmount,
+			if (!executionConfig.vpc || executionConfig.vpc.length === 0) {
+				throw new NonRetryableError(`No volume profile configs found for simulation execution ${executionConfig.id}`);
+			}
+			const vpcList = await Promise.all(
+				executionConfig.vpc.map((vpc) =>
+					step.do(`get VPC ${vpc.vpcId} ${tradeTime.toISOString()} ${executionConfig.id}`, async () => {
+						console.log('Processing VPC:', vpc.vpcId);
+						const getStartDate = () => {
+							switch (vpc.vpcTimeframeUnit) {
+								case TimeUnit.Min:
+									return sub(tradeTime, {
+										minutes: vpc.vpcHistoricalTimeToConsiderAmount,
+									});
+								case TimeUnit.Hour:
+									return sub(tradeTime, {
+										hours: vpc.vpcHistoricalTimeToConsiderAmount,
+									});
+								case TimeUnit.Day:
+									return sub(tradeTime, {
+										days: vpc.vpcHistoricalTimeToConsiderAmount,
+									});
+								case TimeUnit.Week:
+									return sub(tradeTime, {
+										days: vpc.vpcHistoricalTimeToConsiderAmount,
+									});
+								case TimeUnit.Month:
+									return sub(tradeTime, {
+										days: vpc.vpcHistoricalTimeToConsiderAmount,
+									});
+								default:
+									assertNever(vpc.vpcTimeframeUnit);
+							}
+						};
+						const profiles = await getFrvpProfiles(
+							{
+								start: getStartDate(),
+								end: tradeTime,
+								pair: executionConfig.pair,
+								timeframeUnit: vpc.vpcTimeframeUnit,
+								timeframeAmount: vpc.vpcTimeframeAmount,
+								maxDeviationPercent: vpc.vpcMaxDeviationPercent,
+								minBarsToConsiderConsolidation: vpc.vpcMinimumBarsToConsider,
+								volumePercentageRange: vpc.vpcVolumeProfilePercentage,
+								currentPrice: bars.at(-1)?.Close ?? 0,
+							},
+							{
+								writeFrvp: async (input) => {
+									try {
+										await db.insert(zoneVolumeProfile).values({
+											volumeAreaHigh: input.zone.VAH,
+											volumeAreaLow: input.zone.VAL,
+											pointOfControl: input.zone.POC,
+											zoneStartAt: input.start,
+											zoneEndAt: input.end,
+											tradingPair: input.pair,
+											timeUnit: input.timeframeUnit,
+											timeAmount: input.timeframeAmount,
+											maxDeviationPercent: input.maxDeviationPercent,
+											minimumBarsToConsider: input.minBarsToConsider,
+											volumeProfilePercentage: input.volumePercentageRange,
 										});
-									case TimeUnit.Hour:
-										return sub(tradeTime, {
-											hours: vpc.vpcHistoricalTimeToConsiderAmount,
-										});
-									case TimeUnit.Day:
-										return sub(tradeTime, {
-											days: vpc.vpcHistoricalTimeToConsiderAmount,
-										});
-									case TimeUnit.Week:
-										return sub(tradeTime, {
-											days: vpc.vpcHistoricalTimeToConsiderAmount,
-										});
-									case TimeUnit.Month:
-										return sub(tradeTime, {
-											days: vpc.vpcHistoricalTimeToConsiderAmount,
-										});
-									default:
-										assertNever(vpc.vpcTimeframeUnit);
-								}
-							};
-							const profiles = await getFrvpProfiles(
-								{
-									start: getStartDate(),
-									end: tradeTime,
-									pair: executionConfig.pair,
-									timeframeUnit: vpc.vpcTimeframeUnit,
-									timeframeAmount: vpc.vpcTimeframeAmount,
-									maxDeviationPercent: vpc.vpcMaxDeviationPercent,
-									minBarsToConsiderConsolidation: vpc.vpcMinimumBarsToConsider,
-									volumePercentageRange: vpc.vpcVolumeProfilePercentage,
-									currentPrice: bars.at(-1)?.Close ?? 0,
+									} catch (e) {
+										console.log(e);
+									}
 								},
-								{
-									writeFrvp: async (input) => {
-										try {
-											await db.insert(zoneVolumeProfile).values({
-												volumeAreaHigh: input.zone.VAH,
-												volumeAreaLow: input.zone.VAL,
-												pointOfControl: input.zone.POC,
-												zoneStartAt: input.start,
-												zoneEndAt: input.end,
-												tradingPair: input.pair,
-												timeUnit: input.timeframeUnit,
-												timeAmount: input.timeframeAmount,
-												maxDeviationPercent: input.maxDeviationPercent,
-												minimumBarsToConsider: input.minBarsToConsider,
-												volumeProfilePercentage: input.volumePercentageRange,
-											});
-										} catch (e) {
-											console.log(e);
-										}
-									},
-									readFrvp: async (input) => {
-										const [exist] = await db
-											.select()
-											.from(zoneVolumeProfile)
-											.where(
-												and(
-													eq(zoneVolumeProfile.tradingPair, input.pair),
-													eq(zoneVolumeProfile.timeUnit, input.timeframeUnit),
-													eq(zoneVolumeProfile.timeAmount, input.timeframeAmount),
-													eq(zoneVolumeProfile.zoneStartAt, input.start),
-													eq(zoneVolumeProfile.zoneEndAt, input.end),
-												),
-											);
-										if (!exist) {
-											return null;
-										}
-										return {
-											VAH: exist.volumeAreaHigh,
-											VAL: exist.volumeAreaLow,
-											POC: exist.pointOfControl,
-										};
-									},
+								readFrvp: async (input) => {
+									const [exist] = await db
+										.select()
+										.from(zoneVolumeProfile)
+										.where(
+											and(
+												eq(zoneVolumeProfile.tradingPair, input.pair),
+												eq(zoneVolumeProfile.timeUnit, input.timeframeUnit),
+												eq(zoneVolumeProfile.timeAmount, input.timeframeAmount),
+												eq(zoneVolumeProfile.zoneStartAt, input.start),
+												eq(zoneVolumeProfile.zoneEndAt, input.end),
+											),
+										);
+									if (!exist) {
+										return null;
+									}
+									return {
+										VAH: exist.volumeAreaHigh,
+										VAL: exist.volumeAreaLow,
+										POC: exist.pointOfControl,
+									};
 								},
-							);
+							},
+						);
 
-							return {
-								key: `${vpc.vpcTimeframeAmount}_${vpc.vpcTimeframeUnit}`,
-								profiles,
-							};
-						}),
-					);
-				},
+						return {
+							key: `${vpc.vpcTimeframeAmount}_${vpc.vpcTimeframeUnit}`,
+							profiles,
+						};
+					}),
+				),
 			);
 
 			const infoBars = await step.do(
-				`get simulation execution informative bars ${tradeTime.toISOString()} ${executionConfig.id}`,
+				`get informative bars ${tradeTime.toISOString()} ${executionConfig.id}`,
 				async () => {
 					if (!executionConfig.infoBars || executionConfig.infoBars.length === 0) {
 						throw new NonRetryableError('InfoBars');
@@ -316,7 +222,7 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 				const orderKeys: OpenOrderVariables = {
 					json_input: JSON.stringify(
 						{
-							support_resistance_zones: vrpList.reduce((acc, vpc) => ({ ...acc, [vpc.key]: vpc.profiles }), {}),
+							support_resistance_zones: vpcList.reduce((acc, vpc) => ({ ...acc, [vpc.key]: vpc.profiles }), {}),
 							bars: infoBars.reduce((acc, ib) => ({ ...acc, [ib.key]: ib.bars }), {}),
 							current_price: entryPrice,
 						},
@@ -401,5 +307,94 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 				status: SimulationExecutionStatus.Completed,
 			})
 			.where(eq(simulationExecution.id, event.payload.simulationExecutionId));
+	}
+
+	private async getSimulationExecutionConfig(simulationExecutionId: string) {
+		const db = getDrizzleClient(env.DATABASE_CONNECTION_STRING);
+		const [executionConfigResult] = await db
+			.select({
+				id: simulationExecution.id,
+				startDate: simulationExecution.startDate,
+				stepMinutes: simulationExecution.stepMinutes,
+				tradesToExecute: simulationExecution.tradesToExecute,
+				status: simulationExecution.status,
+				pair: simulationExecution.pair,
+				aiPrompt: simulationExecution.aiPrompt,
+				systemPrompt: simulationExecution.systemPrompt,
+				trailingStop: simulationExecution.trailingStop,
+				vpc: queryJoin(
+					db,
+					{
+						id: volumeProfileConfig.id,
+						vpcId: volumeProfileConfig.id,
+						vpcTimeframeUnit: volumeProfileConfig.timeframeUnit,
+						vpcTimeframeAmount: volumeProfileConfig.timeframeAmount,
+						vpcMaxDeviationPercent: volumeProfileConfig.maxDeviationPercent,
+						vpcMinimumBarsToConsider: volumeProfileConfig.minimumBarsToConsider,
+						vpcHistoricalTimeToConsiderAmount: volumeProfileConfig.historicalTimeToConsiderAmount,
+						vpcVolumeProfilePercentage: volumeProfileConfig.volumeProfilePercentage,
+					},
+					(query) =>
+						query
+							.from(simulationExecutionToVolumeProfileConfig)
+							.leftJoin(volumeProfileConfig, eq(volumeProfileConfig.id, simulationExecutionToVolumeProfileConfig.volumeProfileConfigId))
+							.where(eq(simulationExecutionToVolumeProfileConfig.simulationExecutionId, simulationExecution.id)),
+				),
+				infoBars: queryJoin(
+					db,
+					{
+						id: informativeBarConfig.id,
+						timeframeAmount: informativeBarConfig.timeframeAmount,
+						timeframeUnit: informativeBarConfig.timeframeUnit,
+						historicalBarsToConsiderAmount: informativeBarConfig.historicalBarsToConsiderAmount,
+					},
+					(query) =>
+						query
+							.from(simulationExecutionToInformativeBarConfig)
+							.leftJoin(informativeBarConfig, eq(informativeBarConfig.id, simulationExecutionToInformativeBarConfig.informativeBarConfigId))
+							.where(eq(simulationExecutionToInformativeBarConfig.simulationExecutionId, simulationExecution.id)),
+				),
+				trades: queryJoinOne(
+					db,
+					{
+						count: count(simulationExecutionTrade.id),
+					},
+					(query) => query.from(simulationExecutionTrade).where(eq(simulationExecutionTrade.simulationExecutionId, simulationExecution.id)),
+				),
+				lastTrade: queryJoinOne(
+					db,
+					{
+						id: simulationExecutionTrade.id,
+						exitDate: simulationExecutionTrade.exitDate,
+					},
+					(query) =>
+						query
+							.from(simulationExecutionTrade)
+							.where(eq(simulationExecutionTrade.simulationExecutionId, simulationExecution.id))
+							.orderBy(desc(simulationExecutionTrade.exitDate))
+							.limit(1),
+				),
+				lastLog: queryJoinOne(db, { id: simulationExecutionLog.id, date: simulationExecutionLog.date }, (query) =>
+					query
+						.from(simulationExecutionLog)
+						.where(eq(simulationExecutionLog.simulationExecutionId, simulationExecution.id))
+						.orderBy(desc(simulationExecutionLog.date))
+						.limit(1),
+				),
+			})
+			.from(simulationExecution)
+			.where(and(eq(simulationExecution.id, simulationExecutionId), eq(simulationExecution.status, SimulationExecutionStatus.Pending)));
+
+		if (
+			!executionConfigResult ||
+			!executionConfigResult.vpc ||
+			executionConfigResult.vpc.length === 0 ||
+			!executionConfigResult.infoBars ||
+			executionConfigResult.infoBars.length === 0
+		) {
+			throw new NonRetryableError(`Simulation execution with ID ${simulationExecutionId} not found or not pending.`);
+		}
+
+		return executionConfigResult;
 	}
 }

@@ -100,14 +100,14 @@ export const simulationExecutionRouter = {
 			return execution;
 		});
 
-		const instance = await env.PROCESS_SIMULATION_EXECUTION.create({
+		await env.PROCESS_SIMULATION_EXECUTION.create({
 			id: executionResult.id,
 			params: {
 				simulationExecutionId: executionResult.id,
 			},
 		});
 
-		return { ...executionResult, instanceStatus: await instance.status() };
+		return executionResult;
 	}),
 
 	list: protectedProcedure.input(z.object({ simulationSetupId: z.string() }).merge(paginatedSchema)).query(async ({ input }) => {

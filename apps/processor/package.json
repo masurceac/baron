@@ -14,18 +14,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@baron/ai": "workspace:",
-    "@baron/bars-api": "workspace:",
-    "@baron/common": "workspace:",
-    "@baron/db": "workspace:",
-    "@baron/fixed-range-volume-profile": "workspace:",
-    "@baron/trpc-server": "workspace:",
     "@hono/node-server": "^1.14.3",
-    "date-fns": "catalog:",
-    "dotenv": "^16.5.0",
-    "drizzle-orm": "catalog:",
-    "hono": "^4.7.11",
-    "zod": "catalog:"
+    "hono": "^4.7.11"
   },
   "devDependencies": {
     "@types/dotenv": "^8.2.3",

@@ -114,6 +114,7 @@ function DetailsData() {
             </p>
             <p>Trailing stop: {data.trailingStop ? 'Enabled' : 'Disabled'}</p>
             <p>Step: {data.stepMinutes} minutes</p>
+            <p>Target: {data.tradesToExecute} trades</p>
             <TradeResult trades={data.trades ?? []} />
           </div>
         </CardContent>

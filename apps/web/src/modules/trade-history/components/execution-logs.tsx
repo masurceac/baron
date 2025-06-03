@@ -30,7 +30,7 @@ function ExecutionLogsItems(props: { executionId: string }) {
       {
         accessorKey: 'direction',
         enableSorting: false,
-        header: 'Created At',
+        header: 'Direction',
         cell: ({ row: { original } }) => (
           <div>
             {original.direction !== TradeLogDirection.Hold ? (
