@@ -6,7 +6,6 @@ import { Button } from '@baron/ui/components/button';
 import { ColumnDef } from '@tanstack/react-table';
 import { TrashIcon } from 'lucide-react';
 import { Suspense, useMemo } from 'react';
-import { VolumeProfileItem } from './volume-profile-item';
 
 type TableItem = RouterOutput['volumeProfileConfig']['list']['data'][number];
 

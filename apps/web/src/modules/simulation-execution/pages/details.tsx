@@ -79,7 +79,6 @@ function DetailsData() {
               Trades Progress
               <Progress
                 value={(data.trades?.length ?? 0 / data.tradesToExecute) * 100}
-                max={data.tradesToExecute}
               />
             </p>
             <div className="flex items-center space-x-2">
@@ -90,15 +89,15 @@ function DetailsData() {
               />
               <ExecutionStatus status={data.status} />
               <Badge>
-                <TargetIcon className="w-4 mr-2" /> {data.tradesToExecute}{' '}
+                <TargetIcon className="w-4 mr-1" /> {data.tradesToExecute}{' '}
                 trades
               </Badge>
               <Badge>
-                <StepForwardIcon className="w-4 mr-2" /> {data.stepMinutes}{' '}
+                <StepForwardIcon className="w-4 mr-1" /> {data.stepMinutes}{' '}
                 minute(s)
               </Badge>
               <Badge title="Trailing Stop">
-                <OctagonMinusIcon className="w-4 mr-2" />{' '}
+                <OctagonMinusIcon className="w-4 mr-1" />{' '}
                 {data.trailingStop ? 'Enabled' : 'Disabled'}
               </Badge>
             </div>
@@ -164,7 +163,7 @@ function DetailsData() {
           <TabsTrigger value="trades">Trades List</TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
         </TabsList>
-        <TabsContent value="trades">
+        <TabsContent value="trades" className="space-y-6">
           <TradeResult trades={data.trades ?? []} />
 
           <ExecutionTradeHistory executionId={params.executionId ?? ''} />
