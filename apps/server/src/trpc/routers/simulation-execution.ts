@@ -1,3 +1,4 @@
+import { getEnv } from '@/async-storage';
 import { paginate, paginatedSchema } from '@baron/common';
 import { queryJoin, queryJoinOne } from '@baron/db/client';
 import { SimulationExecutionStatus } from '@baron/db/enum';
@@ -14,7 +15,6 @@ import { simulationRunSchema } from '@baron/schema';
 import { protectedProcedure } from '@baron/trpc-server';
 import { getDatabase } from '@baron/trpc-server/async-storage/getters';
 import { TRPCError } from '@trpc/server';
-import { env } from 'cloudflare:workers';
 import { and, count, desc, eq, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -99,6 +99,8 @@ export const simulationExecutionRouter = {
 
 			return execution;
 		});
+
+		const env = getEnv();
 
 		await env.PROCESS_SIMULATION_EXECUTION.create({
 			id: executionResult.id,
