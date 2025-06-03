@@ -78,7 +78,9 @@ function DetailsData() {
             <p className="max-w-lg text-sm">
               Trades Progress
               <Progress
-                value={(data.trades?.length ?? 0 / data.tradesToExecute) * 100}
+                value={
+                  ((data.trades?.length ?? 0) / data.tradesToExecute) * 100
+                }
               />
             </p>
             <div className="flex items-center space-x-2">
