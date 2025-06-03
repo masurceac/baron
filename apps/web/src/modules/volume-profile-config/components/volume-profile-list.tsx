@@ -97,8 +97,6 @@ function VolumeProfileItems(props: Props) {
     [],
   );
 
-  return <DataTable columns={columns} data={response.data} />;
-
   if (props.items.length === 0) {
     return (
       <div className="text-muted-foreground p-2 rounded-md border">
@@ -107,13 +105,7 @@ function VolumeProfileItems(props: Props) {
     );
   }
 
-  return (
-    <div>
-      {response.data.map((item) => (
-        <VolumeProfileItem {...item} key={item.id} onDelete={props.onDelete} />
-      ))}
-    </div>
-  );
+  return <DataTable columns={columns} data={response.data} />;
 }
 
 export function VolumeProfileList(props: Props) {

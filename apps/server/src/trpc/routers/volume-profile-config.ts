@@ -73,6 +73,8 @@ export const volumeProfileConfigRouter = {
 
 			if (input.ids && input.ids.length > 0) {
 				where.push(inArray(volumeProfileConfig.id, input.ids));
+			} else if (input.ids?.length === 0) {
+				where.push(eq(volumeProfileConfig.id, 'never'));
 			}
 
 			return paginate({
