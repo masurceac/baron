@@ -191,32 +191,29 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 				),
 			);
 
-			const infoBars = await step.do(
-				`get informative bars ${tradeTime.toISOString()} ${executionConfig.id}`,
-				async () => {
-					if (!executionConfig.infoBars || executionConfig.infoBars.length === 0) {
-						throw new NonRetryableError('InfoBars');
-					}
-					return Promise.all(
-						executionConfig.infoBars.map(async (infoBar) => {
-							const start = sub(tradeTime, {
-								minutes: infoBar.historicalBarsToConsiderAmount,
-							});
-							const bars = await fetchBars({
-								start,
-								end: tradeTime,
-								timeframeAmount: infoBar.timeframeAmount,
-								timeframeUnit: infoBar.timeframeUnit,
-								pair: executionConfig.pair,
-							});
-							return {
-								key: `${infoBar.timeframeAmount}_${infoBar.timeframeUnit}`,
-								bars,
-							};
-						}),
-					);
-				},
-			);
+			const infoBars = await step.do(`get informative bars ${tradeTime.toISOString()} ${executionConfig.id}`, async () => {
+				if (!executionConfig.infoBars || executionConfig.infoBars.length === 0) {
+					throw new NonRetryableError('InfoBars');
+				}
+				return Promise.all(
+					executionConfig.infoBars.map(async (infoBar) => {
+						const start = sub(tradeTime, {
+							minutes: infoBar.historicalBarsToConsiderAmount,
+						});
+						const bars = await fetchBars({
+							start,
+							end: tradeTime,
+							timeframeAmount: infoBar.timeframeAmount,
+							timeframeUnit: infoBar.timeframeUnit,
+							pair: executionConfig.pair,
+						});
+						return {
+							key: `${infoBar.timeframeAmount}_${infoBar.timeframeUnit}`,
+							bars,
+						};
+					}),
+				);
+			});
 
 			const aiPromptResult = await step.do(`generate AI prompt for simulation execution ${executionConfig.id}`, async () => {
 				const orderKeys: OpenOrderVariables = {
@@ -258,19 +255,7 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 				return aiResponse;
 			});
 
-			await step.do('handle prompt result', async () => {
-				await db.insert(simulationExecutionLog).values({
-					simulationExecutionId: executionConfig.id,
-					direction:
-						aiPromptResult.type === 'buy'
-							? TradeLogDirection.Buy
-							: aiPromptResult.type === 'sell'
-								? TradeLogDirection.Sell
-								: TradeLogDirection.Hold,
-					reason: aiPromptResult.reason ?? '',
-					date: tradeTime,
-				});
-			});
+			await step.do('handle prompt result', async () => {});
 
 			if (aiPromptResult.type !== 'hold') {
 				await step.do('insert trade', async () => {
@@ -281,22 +266,43 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 						entryPrice: entryPrice,
 					});
 
-					await db.insert(simulationExecutionTrade).values({
+					const [trade] = await db
+						.insert(simulationExecutionTrade)
+						.values({
+							simulationExecutionId: executionConfig.id,
+							direction: success.order.aiOrder.type === 'buy' ? TradeDirection.Buy : TradeDirection.Sell,
+							entryPrice: entryPrice,
+							entryDate: tradeTime,
+							exitPrice: success.exitPrice,
+							exitDate: new Date(success.timestamp),
+							stopLossPrice: success.order.aiOrder.stopLossPrice ?? -1,
+							takeProfitPrice: success.order.aiOrder.takeProfitPrice ?? -1,
+							balanceResult: success.resultBalance,
+							reason: aiPromptResult.reason ?? '',
+						})
+						.returning();
+					await db.insert(simulationExecutionLog).values({
 						simulationExecutionId: executionConfig.id,
-						direction: success.order.aiOrder.type === 'buy' ? TradeDirection.Buy : TradeDirection.Sell,
-						entryPrice: entryPrice,
-						entryDate: tradeTime,
-						exitPrice: success.exitPrice,
-						exitDate: new Date(success.timestamp),
-						stopLossPrice: success.order.aiOrder.stopLossPrice ?? -1,
-						takeProfitPrice: success.order.aiOrder.takeProfitPrice ?? -1,
-						balanceResult: success.resultBalance,
+						direction:
+							aiPromptResult.type === 'buy'
+								? TradeLogDirection.Buy
+								: aiPromptResult.type === 'sell'
+									? TradeLogDirection.Sell
+									: TradeLogDirection.Hold,
 						reason: aiPromptResult.reason ?? '',
+						date: tradeTime,
+						simulationExecutionTradeId: trade?.id,
 					});
 					tradesCount++;
 					tradeTime = addMinutes(new Date(success.timestamp), 1);
 				});
 			} else {
+				await db.insert(simulationExecutionLog).values({
+					simulationExecutionId: executionConfig.id,
+					direction: TradeLogDirection.Hold,
+					reason: aiPromptResult.reason ?? '',
+					date: tradeTime,
+				});
 				tradeTime = addMinutes(tradeTime, executionConfig.stepMinutes);
 			}
 		}

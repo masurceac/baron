@@ -3,13 +3,13 @@ import { paginate, paginatedSchema } from '@baron/common';
 import { queryJoin, queryJoinOne } from '@baron/db/client';
 import { SimulationExecutionStatus } from '@baron/db/enum';
 import {
-	informativeBarConfigToSimulationSetup,
 	simulationExecution,
 	simulationExecutionToInformativeBarConfig,
 	simulationExecutionToVolumeProfileConfig,
 	simulationExecutionTrade,
-	simulationSetup,
-	volumeProfileConfigToSimulationSetup,
+	simulationRoom,
+	simulationRoomToInformativeBar,
+	simulationRoomToVolumeProfileConfig,
 } from '@baron/db/schema';
 import { simulationRunSchema } from '@baron/schema';
 import { protectedProcedure } from '@baron/trpc-server';
@@ -19,45 +19,42 @@ import { and, count, desc, eq, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 
 export const simulationExecutionRouter = {
-	runSimulationSetup: protectedProcedure.input(simulationRunSchema).mutation(async ({ input }) => {
+	runSimulation: protectedProcedure.input(simulationRunSchema).mutation(async ({ input }) => {
 		const db = getDatabase();
 
-		const [simulationSetupResult] = await db
+		const [roomResult] = await db
 			.select({
-				id: simulationSetup.id,
-				simulationRoomId: simulationSetup.simulationRoomId,
-				aiPrompt: simulationSetup.aiPrompt,
-				systemPrompt: simulationSetup.systemPrompt,
-				pair: simulationSetup.pair,
-				trailingStop: simulationSetup.trailingStop,
+				id: simulationRoom.id,
+				aiPrompt: simulationRoom.aiPrompt,
+				systemPrompt: simulationRoom.systemPrompt,
+				pair: simulationRoom.pair,
+				trailingStop: simulationRoom.trailingStop,
 				volumeProfiles: queryJoin(
 					db,
 					{
-						id: volumeProfileConfigToSimulationSetup.id,
-						volumeProfileConfigId: volumeProfileConfigToSimulationSetup.volumeProfileConfigId,
+						id: simulationRoomToVolumeProfileConfig.id,
+						volumeProfileConfigId: simulationRoomToVolumeProfileConfig.volumeProfileConfigId,
 					},
 					(query) =>
 						query
-							.from(volumeProfileConfigToSimulationSetup)
-							.where(eq(volumeProfileConfigToSimulationSetup.simulationSetupId, simulationSetup.id)),
+							.from(simulationRoomToVolumeProfileConfig)
+							.where(eq(simulationRoomToVolumeProfileConfig.simulationRoomId, simulationRoom.id)),
 				),
 				infoBars: queryJoin(
 					db,
 					{
-						id: informativeBarConfigToSimulationSetup.id,
-						informativeBarConfigId: informativeBarConfigToSimulationSetup.informativeBarConfigId,
+						id: simulationRoomToInformativeBar.id,
+						informativeBarConfigId: simulationRoomToInformativeBar.informativeBarConfigId,
 					},
 					(query) =>
-						query
-							.from(informativeBarConfigToSimulationSetup)
-							.where(eq(informativeBarConfigToSimulationSetup.simulationSetupId, simulationSetup.id)),
+						query.from(simulationRoomToInformativeBar).where(eq(simulationRoomToInformativeBar.simulationRoomId, simulationRoom.id)),
 				),
 			})
-			.from(simulationSetup)
-			.where(eq(simulationSetup.id, input.simulationSetupId))
+			.from(simulationRoom)
+			.where(eq(simulationRoom.id, input.simulationRoomId))
 			.limit(1);
 
-		if (!simulationSetupResult || !simulationSetupResult.infoBars?.length || !simulationSetupResult.volumeProfiles?.length) {
+		if (!roomResult || !roomResult.infoBars?.length || !roomResult.volumeProfiles?.length) {
 			throw new TRPCError({
 				code: 'NOT_FOUND',
 			});
@@ -67,14 +64,14 @@ export const simulationExecutionRouter = {
 			const [execution] = await tx
 				.insert(simulationExecution)
 				.values({
-					simulationSetupId: input.simulationSetupId,
-					simulationRoomId: simulationSetupResult.simulationRoomId,
+					simulationRoomId: roomResult.id,
 					startDate: input.startDate,
 					tradesToExecute: input.iterations ?? 10,
-					aiPrompt: simulationSetupResult.aiPrompt,
-					systemPrompt: simulationSetupResult.systemPrompt,
-					pair: simulationSetupResult.pair,
-					trailingStop: simulationSetupResult.trailingStop,
+					aiPrompt: input.aiPrompt,
+					systemPrompt: input.systemPrompt,
+					pair: input.pair,
+					trailingStop: input.trailingStop ?? false,
+					name: input.name.trim(),
 				})
 				.returning();
 
@@ -84,14 +81,14 @@ export const simulationExecutionRouter = {
 				});
 			}
 			await tx.insert(simulationExecutionToVolumeProfileConfig).values(
-				simulationSetupResult.volumeProfiles!.map((profile) => ({
+				roomResult.volumeProfiles!.map((profile) => ({
 					simulationExecutionId: execution.id,
 					volumeProfileConfigId: profile.volumeProfileConfigId,
 				})),
 			);
 
 			await tx.insert(simulationExecutionToInformativeBarConfig).values(
-				simulationSetupResult.infoBars!.map((bar) => ({
+				roomResult.infoBars!.map((bar) => ({
 					simulationExecutionId: execution.id,
 					informativeBarConfigId: bar.informativeBarConfigId,
 				})),
@@ -112,9 +109,9 @@ export const simulationExecutionRouter = {
 		return executionResult;
 	}),
 
-	list: protectedProcedure.input(z.object({ simulationSetupId: z.string() }).merge(paginatedSchema)).query(async ({ input }) => {
+	list: protectedProcedure.input(z.object({ simulationRoomId: z.string() }).merge(paginatedSchema)).query(async ({ input }) => {
 		const db = getDatabase();
-		const where: (SQL | undefined)[] = [eq(simulationExecution.simulationSetupId, input.simulationSetupId)];
+		const where: (SQL | undefined)[] = [eq(simulationExecution.simulationRoomId, input.simulationRoomId)];
 
 		return paginate({
 			skip: input.skip,
@@ -133,7 +130,13 @@ export const simulationExecutionRouter = {
 				return db
 					.select({
 						id: simulationExecution.id,
+						name: simulationExecution.name,
 						createdAt: simulationExecution.createdAt,
+						pair: simulationExecution.pair,
+						stepMinutes: simulationExecution.stepMinutes,
+						tradesToExecute: simulationExecution.tradesToExecute,
+						startDate: simulationExecution.startDate,
+						status: simulationExecution.status,
 						trades: queryJoin(
 							db,
 							{
@@ -159,8 +162,8 @@ export const simulationExecutionRouter = {
 		const [execution] = await db
 			.select({
 				id: simulationExecution.id,
+				name: simulationExecution.name,
 				createdAt: simulationExecution.createdAt,
-				simulationSetupId: simulationExecution.simulationSetupId,
 				simulationRoomId: simulationExecution.simulationRoomId,
 				startDate: simulationExecution.startDate,
 				aiPrompt: simulationExecution.aiPrompt,

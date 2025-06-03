@@ -55,13 +55,7 @@ export async function fetchBinanceBars(input: {
     });
 
     try {
-      const headers = new Headers();
-      headers.set('User-Agent', 'curl/8.7.1');
-      headers.set('Accept', '*/*');
-
-      const response = await fetch(`${baseUrl}?${params}`, {
-        headers: headers,
-      });
+      const response = await fetch(`${baseUrl}?${params}`);
       if (!response.ok) {
         throw new Error(`Binance API error: ${response.statusText}`);
       }

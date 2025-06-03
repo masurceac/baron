@@ -1,10 +1,17 @@
 import { paginate, paginatedSchema } from '@baron/common';
-import { simulationRoom } from '@baron/db/schema';
+import { queryJoin } from '@baron/db/client';
+import {
+	informativeBarConfig,
+	simulationRoom,
+	simulationRoomToInformativeBar,
+	simulationRoomToVolumeProfileConfig,
+	volumeProfileConfig,
+} from '@baron/db/schema';
 import { simulationRoomSchema } from '@baron/schema';
 import { protectedProcedure } from '@baron/trpc-server';
 import { getAuth, getClerkClient, getDatabase } from '@baron/trpc-server/async-storage/getters';
 import { TRPCError } from '@trpc/server';
-import { and, count, desc, eq, ilike, SQL } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, inArray, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 
 export const simulationRoomRouter = {
@@ -27,25 +34,203 @@ export const simulationRoomRouter = {
 		const auth = getAuth();
 		const user = await getClerkClient().users.getUser(auth.userId!);
 
-		const [newRoom] = await db
-			.insert(simulationRoom)
-			.values({
-				name: input.name.trim(),
-				description: input.description.trim(),
-				authorId: user.id,
-				authorName: user.fullName ?? user.username ?? 'Unknown User',
-			})
-			.returning();
+		const roomResult = await db.transaction(async (tx) => {
+			const [room] = await tx
+				.insert(simulationRoom)
+				.values({
+					name: input.name.trim(),
+					description: input.description.trim(),
+					authorId: user.id,
+					authorName: user.fullName ?? user.username ?? 'Unknown User',
+					aiPrompt: input.aiPrompt.trim(),
+					systemPrompt: input.systemPrompt.trim(),
+					pair: input.pair,
+					trailingStop: input.trailingStop ?? false,
+				})
+				.returning();
 
-		if (!newRoom) {
+			if (!room) {
+				throw new TRPCError({
+					code: 'INTERNAL_SERVER_ERROR',
+				});
+			}
+
+			const vpcs = await tx
+				.select({ id: volumeProfileConfig.id })
+				.from(volumeProfileConfig)
+				.where(inArray(volumeProfileConfig.id, input.vpcIds));
+
+			if (vpcs.length !== input.vpcIds.length) {
+				throw new TRPCError({
+					code: 'NOT_FOUND',
+					message: 'One or more VPCs not found',
+				});
+			}
+
+			const infoBarsSetup = await tx
+				.select({ id: informativeBarConfig.id })
+				.from(informativeBarConfig)
+				.where(inArray(informativeBarConfig.id, input.infoBarIds));
+
+			if (infoBarsSetup.length !== input.infoBarIds.length) {
+				throw new TRPCError({
+					code: 'NOT_FOUND',
+					message: 'One or more informative bars not found',
+				});
+			}
+			await tx.insert(simulationRoomToVolumeProfileConfig).values(
+				input.vpcIds.map((vpcId) => ({
+					simulationRoomId: room.id,
+					volumeProfileConfigId: vpcId,
+				})),
+			);
+
+			await tx.insert(simulationRoomToInformativeBar).values(
+				input.infoBarIds.map((infoBarId) => ({
+					simulationRoomId: room.id,
+					informativeBarConfigId: infoBarId,
+				})),
+			);
+
+			return room;
+		});
+
+		if (!roomResult) {
 			throw new TRPCError({
 				code: 'INTERNAL_SERVER_ERROR',
-				message: 'Failed to create informative bar configuration.',
 			});
 		}
 
-		return newRoom;
+		return roomResult;
 	}),
+
+	edit: protectedProcedure
+		.input(
+			z.object({
+				id: z.string(),
+				data: simulationRoomSchema,
+			}),
+		)
+		.mutation(async ({ input }) => {
+			const db = getDatabase();
+			const { id, data } = input;
+			const [roomData] = await db
+				.select({
+					id: simulationRoom.id,
+				})
+				.from(simulationRoom)
+				.where(eq(simulationRoom.id, id))
+				.limit(1);
+			if (!roomData) {
+				throw new TRPCError({
+					code: 'NOT_FOUND',
+				});
+			}
+
+			const updatedSimulation = await db.transaction(async (tx) => {
+				const [updatedRoom] = await tx
+					.update(simulationRoom)
+					.set({
+						name: data.name.trim(),
+						description: data.description.trim(),
+						aiPrompt: data.aiPrompt.trim(),
+						systemPrompt: data.systemPrompt.trim(),
+						pair: data.pair,
+						trailingStop: data.trailingStop ?? false,
+					})
+					.where(eq(simulationRoom.id, id))
+					.returning();
+
+				if (!updatedRoom) {
+					throw new TRPCError({
+						code: 'INTERNAL_SERVER_ERROR',
+					});
+				}
+
+				const vpcs = await tx
+					.select({ id: volumeProfileConfig.id })
+					.from(volumeProfileConfig)
+					.where(inArray(volumeProfileConfig.id, data.vpcIds));
+
+				if (vpcs.length !== data.vpcIds.length) {
+					throw new TRPCError({
+						code: 'NOT_FOUND',
+						message: 'One or more VPCs not found',
+					});
+				}
+
+				const infoBarsSetup = await tx
+					.select({ id: informativeBarConfig.id })
+					.from(informativeBarConfig)
+					.where(inArray(informativeBarConfig.id, data.infoBarIds));
+
+				if (infoBarsSetup.length !== data.infoBarIds.length) {
+					throw new TRPCError({
+						code: 'NOT_FOUND',
+						message: 'One or more informative bars not found',
+					});
+				}
+
+				await tx.delete(simulationRoomToVolumeProfileConfig).where(eq(simulationRoomToVolumeProfileConfig.simulationRoomId, id));
+				await tx.delete(simulationRoomToInformativeBar).where(eq(simulationRoomToInformativeBar.simulationRoomId, id));
+
+				await tx.insert(simulationRoomToVolumeProfileConfig).values(
+					data.vpcIds.map((vpcId) => ({
+						simulationRoomId: id,
+						volumeProfileConfigId: vpcId,
+					})),
+				);
+				await tx.insert(simulationRoomToInformativeBar).values(
+					data.infoBarIds.map((infoBarId) => ({
+						simulationRoomId: id,
+						informativeBarConfigId: infoBarId,
+					})),
+				);
+				return updatedRoom;
+			});
+
+			return updatedSimulation;
+		}),
+
+	get: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ input }) => {
+		const db = getDatabase();
+		const [room] = await db
+			.select({
+				id: simulationRoom.id,
+				name: simulationRoom.name,
+				description: simulationRoom.description,
+				createdAt: simulationRoom.createdAt,
+				authorId: simulationRoom.authorId,
+				authorName: simulationRoom.authorName,
+				aiPrompt: simulationRoom.aiPrompt,
+				systemPrompt: simulationRoom.systemPrompt,
+				pair: simulationRoom.pair,
+				trailingStop: simulationRoom.trailingStop,
+				vpcIds: queryJoin(db, { id: volumeProfileConfig.id }, (query) =>
+					query
+						.from(simulationRoomToVolumeProfileConfig)
+						.innerJoin(volumeProfileConfig, eq(simulationRoomToVolumeProfileConfig.volumeProfileConfigId, volumeProfileConfig.id))
+						.where(eq(simulationRoomToVolumeProfileConfig.simulationRoomId, simulationRoom.id)),
+				),
+				infoBarIds: queryJoin(db, { id: informativeBarConfig.id }, (query) =>
+					query
+						.from(simulationRoomToInformativeBar)
+						.innerJoin(informativeBarConfig, eq(simulationRoomToInformativeBar.informativeBarConfigId, informativeBarConfig.id))
+						.where(eq(simulationRoomToInformativeBar.simulationRoomId, simulationRoom.id)),
+				),
+			})
+			.from(simulationRoom)
+			.where(eq(simulationRoom.id, input.id))
+			.limit(1);
+
+		if (!room) {
+			throw new TRPCError({
+				code: 'NOT_FOUND',
+			});
+		}
+		return room;
+	}),
+
 	list: protectedProcedure
 		.input(
 			z

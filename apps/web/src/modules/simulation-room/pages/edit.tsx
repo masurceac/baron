@@ -13,18 +13,13 @@ import { toast } from 'sonner';
 import { BackToList } from '../components/back-to-list';
 import { ItemForm } from '../components/item-form';
 
-export function SimulationSetupCreatePage() {
+export function SimulationRoomEditPage() {
   const history = useNavigate();
-  const params =
-    useParams<GetRouteParams<'/app/simulation/room/:roomId/create'>>();
-  const createItem = trpc.simulationSetup.create.useMutation({
+  const params = useParams<GetRouteParams<'/app/simulation/edit/:roomId'>>();
+  const editItem = trpc.simulationRoom.edit.useMutation({
     onSuccess: () => {
       toast(`Item created`);
-      history(
-        getAppRoute('/app/simulation/room/:roomId/list', {
-          roomId: params.roomId || '',
-        }),
-      );
+      history(getAppRoute('/app/simulation/list'));
     },
     onError() {
       toast.error('Failed to create Item');
@@ -32,19 +27,23 @@ export function SimulationSetupCreatePage() {
   });
 
   return (
-    <PageLayout title="Simulation Setup">
+    <PageLayout title="Edit Simulation Room">
       <BackToList />
       <Card className="max-w-screen-lg mx-auto w-full">
         <CardHeader>
-          <CardTitle>Create Simulation Session</CardTitle>
+          <CardTitle>Edit Simulation Room</CardTitle>
           <CardDescription>
-            Inside you'll be able to test your Trading Strategies
+            Edit the details of your Simulation Room here.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <ItemForm
-            onSubmit={(d) => createItem.mutate(d)}
-            simulationRoomId={params.roomId || ''}
+            onSubmit={(d) =>
+              editItem.mutate({
+                id: params.roomId ?? '',
+                data: d,
+              })
+            }
           />
         </CardContent>
       </Card>

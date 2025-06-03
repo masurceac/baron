@@ -4,7 +4,7 @@ import { volumeProfileConfigSchema } from '@baron/schema';
 import { protectedProcedure } from '@baron/trpc-server';
 import { getDatabase } from '@baron/trpc-server/async-storage/getters';
 import { TRPCError } from '@trpc/server';
-import { and, count, desc, eq, ilike, inArray, SQL } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, inArray, isNull, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 
 export const volumeProfileConfigRouter = {
@@ -103,7 +103,10 @@ export const volumeProfileConfigRouter = {
 	delete: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
 		const db = getDatabase();
 
-		const deletedConfig = await db.delete(volumeProfileConfig).where(eq(volumeProfileConfig.id, input.id)).returning();
+		const deletedConfig = await db
+			.delete(volumeProfileConfig)
+			.where(and(eq(volumeProfileConfig.id, input.id), isNull(volumeProfileConfig.flag)))
+			.returning();
 
 		if (!deletedConfig || deletedConfig.length === 0) {
 			throw new TRPCError({

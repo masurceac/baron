@@ -126,50 +126,35 @@ export const simulationRoom = pgTable('simulation_room', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => createId()),
-  name: text('name').notNull(),
-  description: text('description').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(
     () => new Date(),
   ),
-  authorName: text('author_name').notNull(),
-  authorId: text('author_id').notNull(),
-});
+  name: text('name').notNull(),
+  description: text('description').notNull(),
 
-export const simulationSetup = pgTable('simulation_setup', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => createId()),
-  createdAt: timestamp('created_at', { withTimezone: true })
-    .notNull()
-    .defaultNow(),
   pair: text('pair', {
     enum: [TradingPair.BTCUSDT, TradingPair.ETHUSDT],
   }).notNull(),
   aiPrompt: text('ai_prompt').notNull(),
   systemPrompt: text('system_prompt').notNull(),
   trailingStop: boolean('trailing_stop').notNull(),
-
-  simulationRoomId: text('simulation_room_id')
-    .notNull()
-    .references(() => simulationRoom.id, {
-      onDelete: 'cascade',
-      onUpdate: 'cascade',
-    }),
+  authorName: text('author_name').notNull(),
+  authorId: text('author_id').notNull(),
 });
 
-export const volumeProfileConfigToSimulationSetup = pgTable(
-  'volume_profile_config_to_simulation_setup',
+export const simulationRoomToVolumeProfileConfig = pgTable(
+  'simulation_room_to_volume_profile_config',
   {
     id: text('id')
       .primaryKey()
       .$defaultFn(() => createId()),
 
-    simulationSetupId: text('simulation_setup_id')
+    simulationRoomId: text('simulation_room_id')
       .notNull()
-      .references(() => simulationSetup.id, {
+      .references(() => simulationRoom.id, {
         onDelete: 'cascade',
         onUpdate: 'cascade',
       }),
@@ -183,16 +168,16 @@ export const volumeProfileConfigToSimulationSetup = pgTable(
   },
 );
 
-export const informativeBarConfigToSimulationSetup = pgTable(
-  'informative_bar_config_to_simulation_setup',
+export const simulationRoomToInformativeBar = pgTable(
+  'simulation_room_to_informative_bar',
   {
     id: text('id')
       .primaryKey()
       .$defaultFn(() => createId()),
 
-    simulationSetupId: text('simulation_setup_id')
+    simulationRoomId: text('simulation_room_id')
       .notNull()
-      .references(() => simulationSetup.id, {
+      .references(() => simulationRoom.id, {
         onDelete: 'cascade',
         onUpdate: 'cascade',
       }),
@@ -217,6 +202,7 @@ export const simulationExecution = pgTable('simulation_execution', {
     () => new Date(),
   ),
 
+  name: text('name').notNull(),
   pair: text('pair', {
     enum: [TradingPair.BTCUSDT, TradingPair.ETHUSDT],
   }).notNull(),
@@ -227,13 +213,6 @@ export const simulationExecution = pgTable('simulation_execution', {
   simulationRoomId: text('simulation_room_id')
     .notNull()
     .references(() => simulationRoom.id, {
-      onDelete: 'cascade',
-      onUpdate: 'cascade',
-    }),
-
-  simulationSetupId: text('simulation_setup_id')
-    .notNull()
-    .references(() => simulationSetup.id, {
       onDelete: 'cascade',
       onUpdate: 'cascade',
     }),

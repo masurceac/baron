@@ -62,7 +62,7 @@ function ListData() {
       {
         accessorKey: 'description',
         enableSorting: false,
-        header: 'Setups',
+        header: 'Simulations',
         cell: ({ row: { original } }) => (
           <div>
             <Button asChild variant="link" className="-ml-2">
@@ -71,7 +71,7 @@ function ListData() {
                   roomId: original.id,
                 })}
               >
-                View Setups <ArrowRightIcon className="w-4" />
+                View Simulations <ArrowRightIcon className="w-4" />
               </Link>
             </Button>
           </div>
@@ -112,7 +112,7 @@ function ListData() {
 
 export function SimulationRoomListPage() {
   return (
-    <PageLayout title="Simulation Room List">
+    <PageLayout title="Simulation Rooms">
       <div>
         <Suspense>
           <ListData />

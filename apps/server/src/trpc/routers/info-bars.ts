@@ -4,7 +4,7 @@ import { inforBarSchema } from '@baron/schema';
 import { protectedProcedure } from '@baron/trpc-server';
 import { getDatabase } from '@baron/trpc-server/async-storage/getters';
 import { TRPCError } from '@trpc/server';
-import { and, count, desc, eq, ilike, inArray, SQL } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, inArray, isNull, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 
 export const infoBarsRouter = {
@@ -98,7 +98,10 @@ export const infoBarsRouter = {
 	delete: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
 		const db = getDatabase();
 
-		const deletedConfig = await db.delete(informativeBarConfig).where(eq(informativeBarConfig.id, input.id)).returning();
+		const deletedConfig = await db
+			.delete(informativeBarConfig)
+			.where(and(eq(informativeBarConfig.id, input.id), isNull(informativeBarConfig.flag)))
+			.returning();
 
 		if (!deletedConfig || deletedConfig.length === 0) {
 			throw new TRPCError({

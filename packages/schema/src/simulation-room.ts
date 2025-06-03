@@ -1,6 +1,8 @@
 import { z } from 'zod';
+import { simulationConfigSchema } from './simulation-config';
 
-export const simulationRoomSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  description: z.string(),
-});
+export const simulationRoomSchema = z
+  .object({
+    description: z.string(),
+  })
+  .merge(simulationConfigSchema);

@@ -1,9 +1,10 @@
 import { defineModuleRouting } from '@baron/routes/utils';
 import { Outlet, RouteObject } from 'react-router-dom';
+import { simulationExecutionRouter } from '../simulation-execution';
 import { RedirectToList } from './components/redirect-to-list';
 import { SimulationRoomCreatePage } from './pages/create';
+import { SimulationRoomEditPage } from './pages/edit';
 import { SimulationRoomListPage } from './pages/list';
-import { simulationSetupRouter } from '../simulation-setup';
 
 export const simulationRoomsRouter = defineModuleRouting([
   {
@@ -22,9 +23,13 @@ export const simulationRoomsRouter = defineModuleRouting([
         Component: SimulationRoomCreatePage,
       },
       {
+        path: 'edit/:roomId',
+        Component: SimulationRoomEditPage,
+      },
+      {
         path: 'room/:roomId',
         Component: Outlet,
-        children: simulationSetupRouter,
+        children: simulationExecutionRouter,
       },
     ],
   },
