@@ -1,4 +1,3 @@
 import { RouterOutput } from '@baron/server';
 
-export type ItemType =
-  RouterOutput['simulationExecution']['runSimulationSetup'];
+export type ItemType = RouterOutput['simulationExecution']['getDetails'];
