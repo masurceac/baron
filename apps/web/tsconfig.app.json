@@ -28,6 +28,6 @@
     },
     "rootDirs": ["src"]
   },
-  "include": ["src"],
-  "exclude": ["../server/worker-configuration.d.ts", "../server/src/**/*"]
+  "include": ["src", "../server/*.d.ts"],
+  "exclude": ["../server/src/**/*"]
 }
