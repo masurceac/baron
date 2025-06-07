@@ -5,7 +5,6 @@
   "main": "index.js",
   "scripts": {
     "dev": "NODE_OPTIONS=--max-old-space-size=8096 tsx src/index.ts",
-    "server": "NODE_OPTIONS=--max-old-space-size=8096 tsx src/server.ts",
     "build": "tsc",
     "start:prod": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -14,8 +13,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@baron/common": "workspace:",
+    "@baron/db": "workspace:",
+    "@baron/fixed-range-volume-profile": "workspace:",
     "@hono/node-server": "^1.14.3",
-    "hono": "^4.7.11"
+    "dotenv": "^16.5.0",
+    "drizzle-orm": "catalog:",
+    "hono": "^4.7.11",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/dotenv": "^8.2.3",

@@ -1,4 +1,4 @@
-import { ChartBar, TimeUnit, TradingPair } from '@baron/common';
+import { BARS_API_URL, ChartBar, TimeUnit, TradingPair } from '@baron/common';
 
 function convertToBinanceFormat(amount: number, unit: TimeUnit): string {
   switch (unit) {
@@ -36,7 +36,7 @@ export async function fetchBinanceBars(input: {
     throw new Error('Invalid start or end date');
   }
 
-  const baseUrl = 'https://api.tursotopostgres.com/binance/api/v3/klines'; // proxy server
+  const baseUrl = `${BARS_API_URL}/binance/api/v3/klines`; // proxy server
 
   const bars: ChartBar[] = [];
   const limit = 1000; // Binance max limit per request

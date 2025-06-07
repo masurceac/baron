@@ -124,31 +124,6 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 				vpcList.push(item);
 			}
 
-			// const vpcList = await step.do(`get vpc list`, async () =>
-			// 	Promise.all(
-			// 		executionConfig.vpc!.map(async (vpc) => {
-			// 			console.log('Processing VPC:', vpc.id);
-
-			// 			const profiles = await getFrvpProfilesWithDb({
-			// 				historicalBarsToConsider: vpc.vpcHistoricalTimeToConsiderAmount,
-			// 				end: tradeTime,
-			// 				pair: executionConfig.pair,
-			// 				timeframeUnit: vpc.vpcTimeframeUnit,
-			// 				timeframeAmount: vpc.vpcTimeframeAmount,
-			// 				maxDeviationPercent: vpc.vpcMaxDeviationPercent,
-			// 				minBarsToConsiderConsolidation: vpc.vpcMinimumBarsToConsider,
-			// 				volumePercentageRange: vpc.vpcVolumeProfilePercentage,
-			// 				currentPrice: bars.at(-1)?.Close ?? 0,
-			// 			});
-
-			// 			return {
-			// 				key: `${vpc.vpcTimeframeAmount}_${vpc.vpcTimeframeUnit}`,
-			// 				profiles,
-			// 			};
-			// 		}),
-			// 	),
-			// );
-
 			const infoBars = await step.do(`get informative bars ${tradeTime.toISOString()} ${executionConfig.id}`, async () => {
 				if (!executionConfig.infoBars || executionConfig.infoBars.length === 0) {
 					throw new NonRetryableError('InfoBars');
