@@ -50,6 +50,7 @@ export const simulationRoomRouter = {
 					selfTraining: input.selfTraining ?? false,
 					startDate: input.startDate,
 					tradesToExecute: input.tradesToExecute,
+					selfTrainingCycles: input.selfTrainingCycles,
 				})
 				.returning();
 
@@ -211,6 +212,7 @@ export const simulationRoomRouter = {
 				authorName: simulationRoom.authorName,
 				aiPrompt: simulationRoom.aiPrompt,
 				pair: simulationRoom.pair,
+				startDate: simulationRoom.startDate,
 				trailingStop: simulationRoom.trailingStop,
 				vpcIds: queryJoin(db, { id: volumeProfileConfig.id }, (query) =>
 					query

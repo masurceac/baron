@@ -85,13 +85,13 @@ export function ItemForm(props: {
           <FormFieldWrapper
             control={form.control}
             name="tradesToExecute"
-            label="Iterations Amount"
+            label="Trades Amount"
             description="How many trades should be completed before the simulation ends."
             render={({ field }) => (
               <NumericInput
                 value={field.value}
                 onChange={field.onChange}
-                placeholder="Enter Iterations Amount"
+                placeholder="Enter Trades Amount"
               />
             )}
           />
@@ -132,14 +132,29 @@ export function ItemForm(props: {
             )}
           />
           {selfTraining && (
-            <Alert>
-              <AlertTitle>Self Training Mode Enabled</AlertTitle>
-              <AlertDescription>
-                When in self-training mode, the AI will use the prompt below as
-                requirements to generate further prompts for trading. All
-                required variables will be included automatically.
-              </AlertDescription>
-            </Alert>
+            <>
+              <Alert>
+                <AlertTitle>Self Training Mode Enabled</AlertTitle>
+                <AlertDescription>
+                  When in self-training mode, the AI will use the prompt below
+                  as requirements to generate further prompts for trading. All
+                  required variables will be included automatically.
+                </AlertDescription>
+              </Alert>
+              <FormFieldWrapper
+                control={form.control}
+                name="selfTrainingCycles"
+                label="Self Training Cycles"
+                description="How many self-training cycles should be made."
+                render={({ field }) => (
+                  <NumericInput
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Enter Self Training Cycles"
+                  />
+                )}
+              />
+            </>
           )}
           <FormFieldWrapper
             control={form.control}

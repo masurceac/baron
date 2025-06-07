@@ -77,6 +77,7 @@ export class SimulationIterationWorkflow extends WorkflowEntrypoint<Env, {}> {
 					aiPrompt: simulationExecution.aiPrompt,
 					tradesToExecute: simulationExecution.tradesToExecute,
 					selfTrainingRoom: simulationRoom.selfTraining,
+					selfTrainingCycles: simulationRoom.selfTrainingCycles,
 					simulationRoomId: simulationExecution.simulationRoomId,
 				})
 				.from(simulationExecution)
@@ -324,7 +325,8 @@ export class SimulationIterationWorkflow extends WorkflowEntrypoint<Env, {}> {
 						),
 					);
 
-				const allSimulationsCompleted = (completedExecutionsCount?.count ?? 1) % executionConfig.tradesToExecute === 0;
+				const allSimulationsCompleted =
+					(completedExecutionsCount?.count ?? 1) % (executionConfig.selfTrainingCycles ?? executionConfig.tradesToExecute) === 0;
 
 				if (executionConfig.selfTrainingRoom && !allSimulationsCompleted && tradesHistory.some((t) => t.balanceResult < 0)) {
 					await triggerSelfTrainingRoom(executionConfig.simulationRoomId);

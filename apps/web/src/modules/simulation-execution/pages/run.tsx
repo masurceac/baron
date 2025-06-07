@@ -56,6 +56,8 @@ function RunSimulationExecutionContent() {
               tradesToExecute: 10,
               vpcIds: room.vpcIds?.map((v) => v.id) ?? [],
               infoBarIds: room.infoBarIds?.map((i) => i.id) ?? [],
+              startDate: room.startDate,
+              name: `${room.name ?? ''} - `,
             }}
             onSubmit={(d) => createItem.mutate(d)}
           />

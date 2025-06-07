@@ -1,0 +1,1 @@
+ALTER TABLE "simulation_room" ADD COLUMN "self_training_cycles" integer;
