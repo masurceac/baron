@@ -3,13 +3,14 @@ import {
   assertNever,
   BarsStack,
   createBarsStack,
+  measure,
   TimeUnit,
   TradingPair,
   ZoneVolumeProfile,
 } from '@baron/common';
 import { findLongestSubsets } from '@baron/volume-profile';
-import { getFrvpForBuffer } from './get-frvp-for-buffer';
 import { sub } from 'date-fns';
+import { getFrvpForBuffer } from './get-frvp-for-buffer';
 
 export type GetFrvpProfilesInput = {
   // start: Date;
@@ -72,6 +73,7 @@ export async function getFrvpProfiles(
   },
 ): Promise<Array<ZoneVolumeProfile>> {
   const consolidationBuffers: Array<BarsStack> = [];
+  let log: ReturnType<typeof measure> | null = null;
 
   const start = getStartDate(
     input.end,
@@ -79,6 +81,7 @@ export async function getFrvpProfiles(
     input.historicalBarsToConsider,
   );
 
+  log = measure('getFrvpProfiles - fetchBars');
   const bars = await fetchBars({
     start: start,
     end: input.end,
@@ -86,12 +89,15 @@ export async function getFrvpProfiles(
     timeframeUnit: input.timeframeUnit,
     pair: input.pair,
   });
+  log();
 
+  log = measure('findLongestSubsets');
   const groupedChains = findLongestSubsets(
     bars.map((v, i) => ({ ...v, index: i, value: v.Close })),
     input.maxDeviationPercent,
     input.minBarsToConsiderConsolidation,
   );
+  log();
 
   groupedChains.forEach((chain) => {
     const buffer = createBarsStack();
@@ -146,6 +152,10 @@ export async function getFrvpProfiles(
 
   conslidationBuffersToProcess.push(...lowerBuffers.slice(0, 2));
 
+  log = measure(
+    `getFrvpProfiles - processing ${conslidationBuffersToProcess.length} buffers`,
+  );
+  // if we have more than 5 buffers, take only the first 5
   for (let i = 0; i < conslidationBuffersToProcess.length; i++) {
     const barsStack = conslidationBuffersToProcess[i]!;
     const stackStart = barsStack.bars.at(0)?.Timestamp ?? '';
@@ -199,6 +209,7 @@ export async function getFrvpProfiles(
       });
     }
   }
+  log();
 
   return volumeProfilesResult;
 }

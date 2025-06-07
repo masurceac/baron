@@ -7,6 +7,7 @@ import {
   TimeUnit,
   TradingPair,
   ZoneVolumeProfile,
+  measure,
 } from '@baron/common';
 import { calculateVolumeProfile } from '@baron/volume-profile';
 import { add } from 'date-fns';
@@ -77,6 +78,8 @@ export async function getFrvpForBuffer(input: {
   // parentChunkSize: number;
   vpPercentageRange: number;
 }): Promise<ZoneVolumeProfile | null> {
+  let log: ReturnType<typeof measure> | null = null;
+
   const childSettings = getChildIntervalAndAmount(input.parentIntervalUnit);
   const bars: ChartBar[][] = [];
 
@@ -85,6 +88,9 @@ export async function getFrvpForBuffer(input: {
     childSettings.parentsToGroupForFetchingChilds,
   );
 
+  log = measure(
+    `Processing ${barsChunks.length} chunks for FRVP calculation...`,
+  );
   for (const chunk of barsChunks) {
     const startTs = chunk[0]?.Timestamp;
     const endTs = chunk.at(-1)?.Timestamp;
@@ -103,10 +109,15 @@ export async function getFrvpForBuffer(input: {
     });
     bars.push(barTicks);
   }
+  log();
 
-  return calculateVolumeProfile(
+  log = measure('getFrvpForBuffer - calculateVolumeProfile');
+  const result = calculateVolumeProfile(
     bars.flat(),
     0.01,
     input.vpPercentageRange / 100,
   );
+  log();
+
+  return result;
 }
