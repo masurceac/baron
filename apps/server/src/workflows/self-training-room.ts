@@ -36,15 +36,12 @@ export class SelfTrainingRoomWorkflow extends WorkflowEntrypoint<Env, {}> {
 	override async run(event: WorkflowEvent<Params>, step: WorkflowStep) {
 		console.log('Running self-training room workflow');
 		const db = getDatabase();
-		const room = await step.do('get simulation room', async () => {
-			return await this.getSimulationRoom(event.payload.simulationRoomId);
-		});
 
-		console.log('Simulation room:', room);
-		let hasMore = true;
-
-		while (hasMore) {
-			hasMore = await step.do('check if more executions are needed', async () => {
+		for (let i = 0; i < 1000; i++) {
+			const room = await step.do('get simulation room', async () => {
+				return await this.getSimulationRoom(event.payload.simulationRoomId);
+			});
+			const hasMore = await step.do('check if more executions are needed', async () => {
 				const executions = await db
 					.select({
 						count: count(simulationExecution.id),
@@ -53,6 +50,9 @@ export class SelfTrainingRoomWorkflow extends WorkflowEntrypoint<Env, {}> {
 					.where(eq(simulationExecution.simulationRoomId, room.id));
 				return (executions[0]?.count ?? 0) < room.tradesToExecute; // Adjust the number of executions as needed
 			});
+			if (!hasMore) {
+				break;
+			}
 
 			if (!room.lastExecution?.id) {
 				console.log('into prompt');

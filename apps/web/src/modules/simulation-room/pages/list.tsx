@@ -98,7 +98,7 @@ function ListData() {
                 })
               }
             >
-              View Simulations <ArrowRightIcon className="w-4" />
+              Train <ArrowRightIcon className="w-4" />
             </Button>
           </div>
         ),
