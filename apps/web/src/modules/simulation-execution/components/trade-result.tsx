@@ -8,7 +8,7 @@ export function TradeResult(props: {
     0,
   );
   const positiveTrades = props.trades.filter(
-    (trade) => trade.balanceResult > 0,
+    (trade) => trade.balanceResult >= 0,
   ).length;
   const negativeTrades = props.trades.filter(
     (trade) => trade.balanceResult < 0,

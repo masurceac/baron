@@ -20,6 +20,11 @@
 			"binding": "PROCESS_SIMULATION_EXECUTION",
 			"class_name": "ProcessSimulationExecutionWorkflow",
 		},
+		{
+			"name": "self-training-room",
+			"binding": "SELF_TRAINING_ROOM",
+			"class_name": "SelfTrainingRoomWorkflow",
+		},
 	],
 	/**
 	 * Smart Placement

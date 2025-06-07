@@ -1,9 +1,9 @@
 import { checkTradeSuccess } from '@/services/check-trade-success';
+import { getFrvpProfilesWithDb } from '@/services/get-frvp-profiles-with-db';
 import { getDeepSeekResponse } from '@baron/ai/api';
-import { OpenOrderSystemVariables, OpenOrderVariables } from '@baron/ai/prompt';
-import { openOrderAIResponseJsonOrgSchema, openOrderAiResponseSchema } from '@baron/ai/schema';
+import { getOderSuggestionPromptVariables, openOrderAIResponseJsonOrgSchema, openOrderAiResponseSchema } from '@baron/ai/order-suggestion';
 import { fetchBars } from '@baron/bars-api';
-import { assertNever, TimeUnit, TradeDirection, TradeLogDirection } from '@baron/common';
+import { TimeUnit, TradeDirection, TradeLogDirection } from '@baron/common';
 import { getDrizzleClient, queryJoin, queryJoinOne } from '@baron/db/client';
 import { SimulationExecutionStatus } from '@baron/db/enum';
 import {
@@ -14,9 +14,8 @@ import {
 	simulationExecutionToVolumeProfileConfig,
 	simulationExecutionTrade,
 	volumeProfileConfig,
-	zoneVolumeProfile,
 } from '@baron/db/schema';
-import { getFrvpProfiles } from '@baron/fixed-range-volume-profile';
+import { getStartDate } from '@baron/fixed-range-volume-profile';
 import { env, WorkflowEntrypoint, WorkflowEvent, WorkflowStep } from 'cloudflare:workers';
 import { NonRetryableError } from 'cloudflare:workflows';
 import { add, addMinutes, isBefore, sub } from 'date-fns';
@@ -81,6 +80,7 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 		while (tradesCount < executionConfig.tradesToExecute) {
 			console.log('Processing ' + event.payload.simulationExecutionId);
 			const bars = await step.do(`fetch bars ${tradeTime.toISOString()}`, async () => {
+				console.log('fetching bars for time:', tradeTime.toISOString());
 				const result = await fetchBars({
 					start: sub(tradeTime, {
 						minutes: 5,
@@ -90,6 +90,7 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 					timeframeUnit: TimeUnit.Min,
 					pair: executionConfig.pair,
 				});
+				console.log('end bars for time:', tradeTime.toISOString());
 				return result;
 			});
 			const entryPrice = bars[bars.length - 1]?.Close ?? 0;
@@ -98,90 +99,20 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 			}
 			const vpcList = await Promise.all(
 				executionConfig.vpc.map((vpc) =>
-					step.do(`get VPC ${vpc.vpcId} ${tradeTime.toISOString()} ${executionConfig.id}`, async () => {
-						console.log('Processing VPC:', vpc.vpcId);
-						const getStartDate = () => {
-							switch (vpc.vpcTimeframeUnit) {
-								case TimeUnit.Min:
-									return sub(tradeTime, {
-										minutes: vpc.vpcHistoricalTimeToConsiderAmount,
-									});
-								case TimeUnit.Hour:
-									return sub(tradeTime, {
-										hours: vpc.vpcHistoricalTimeToConsiderAmount,
-									});
-								case TimeUnit.Day:
-									return sub(tradeTime, {
-										days: vpc.vpcHistoricalTimeToConsiderAmount,
-									});
-								case TimeUnit.Week:
-									return sub(tradeTime, {
-										days: vpc.vpcHistoricalTimeToConsiderAmount,
-									});
-								case TimeUnit.Month:
-									return sub(tradeTime, {
-										days: vpc.vpcHistoricalTimeToConsiderAmount,
-									});
-								default:
-									assertNever(vpc.vpcTimeframeUnit);
-							}
-						};
-						const profiles = await getFrvpProfiles(
-							{
-								start: getStartDate(),
-								end: tradeTime,
-								pair: executionConfig.pair,
-								timeframeUnit: vpc.vpcTimeframeUnit,
-								timeframeAmount: vpc.vpcTimeframeAmount,
-								maxDeviationPercent: vpc.vpcMaxDeviationPercent,
-								minBarsToConsiderConsolidation: vpc.vpcMinimumBarsToConsider,
-								volumePercentageRange: vpc.vpcVolumeProfilePercentage,
-								currentPrice: bars.at(-1)?.Close ?? 0,
-							},
-							{
-								writeFrvp: async (input) => {
-									try {
-										await db.insert(zoneVolumeProfile).values({
-											volumeAreaHigh: input.zone.VAH,
-											volumeAreaLow: input.zone.VAL,
-											pointOfControl: input.zone.POC,
-											zoneStartAt: input.start,
-											zoneEndAt: input.end,
-											tradingPair: input.pair,
-											timeUnit: input.timeframeUnit,
-											timeAmount: input.timeframeAmount,
-											maxDeviationPercent: input.maxDeviationPercent,
-											minimumBarsToConsider: input.minBarsToConsider,
-											volumeProfilePercentage: input.volumePercentageRange,
-										});
-									} catch (e) {
-										console.log(e);
-									}
-								},
-								readFrvp: async (input) => {
-									const [exist] = await db
-										.select()
-										.from(zoneVolumeProfile)
-										.where(
-											and(
-												eq(zoneVolumeProfile.tradingPair, input.pair),
-												eq(zoneVolumeProfile.timeUnit, input.timeframeUnit),
-												eq(zoneVolumeProfile.timeAmount, input.timeframeAmount),
-												eq(zoneVolumeProfile.zoneStartAt, input.start),
-												eq(zoneVolumeProfile.zoneEndAt, input.end),
-											),
-										);
-									if (!exist) {
-										return null;
-									}
-									return {
-										VAH: exist.volumeAreaHigh,
-										VAL: exist.volumeAreaLow,
-										POC: exist.pointOfControl,
-									};
-								},
-							},
-						);
+					step.do(`get VPC ${vpc.id} ${tradeTime.toISOString()} ${executionConfig.id}`, async () => {
+						console.log('Processing VPC:', vpc.id);
+
+						const profiles = await getFrvpProfilesWithDb({
+							historicalBarsToConsider: vpc.vpcHistoricalTimeToConsiderAmount,
+							end: tradeTime,
+							pair: executionConfig.pair,
+							timeframeUnit: vpc.vpcTimeframeUnit,
+							timeframeAmount: vpc.vpcTimeframeAmount,
+							maxDeviationPercent: vpc.vpcMaxDeviationPercent,
+							minBarsToConsiderConsolidation: vpc.vpcMinimumBarsToConsider,
+							volumePercentageRange: vpc.vpcVolumeProfilePercentage,
+							currentPrice: bars.at(-1)?.Close ?? 0,
+						});
 
 						return {
 							key: `${vpc.vpcTimeframeAmount}_${vpc.vpcTimeframeUnit}`,
@@ -197,9 +128,10 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 				}
 				return Promise.all(
 					executionConfig.infoBars.map(async (infoBar) => {
-						const start = sub(tradeTime, {
-							minutes: infoBar.historicalBarsToConsiderAmount,
-						});
+						const start = getStartDate(tradeTime, infoBar.timeframeUnit, infoBar.historicalBarsToConsiderAmount);
+						console.log(
+							`Fetching informative bars for ${infoBar.timeframeAmount} ${infoBar.timeframeUnit} from ${start.toISOString()} to ${tradeTime.toISOString()}`,
+						);
 						const bars = await fetchBars({
 							start,
 							end: tradeTime,
@@ -207,6 +139,7 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 							timeframeUnit: infoBar.timeframeUnit,
 							pair: executionConfig.pair,
 						});
+						console.log('end');
 						return {
 							key: `${infoBar.timeframeAmount}_${infoBar.timeframeUnit}`,
 							bars,
@@ -216,37 +149,25 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 			});
 
 			const aiPromptResult = await step.do(`generate AI prompt for simulation execution ${executionConfig.id}`, async () => {
-				const orderKeys: OpenOrderVariables = {
-					json_input: JSON.stringify(
-						{
-							support_resistance_zones: vpcList.reduce((acc, vpc) => ({ ...acc, [vpc.key]: vpc.profiles }), {}),
-							bars: infoBars.reduce((acc, ib) => ({ ...acc, [ib.key]: ib.bars }), {}),
-							current_price: entryPrice,
-						},
-						null,
-						2,
-					),
-					response_schema: JSON.stringify(openOrderAIResponseJsonOrgSchema, null, 2),
-				};
+				const previousTrades = await db
+					.select()
+					.from(simulationExecutionTrade)
+					.where(eq(simulationExecutionTrade.simulationExecutionId, executionConfig.id));
 
-				const systemKeys: OpenOrderSystemVariables = {
-					trading_pair: executionConfig.pair,
-				};
-				const prompt = Object.keys(orderKeys).reduce(
-					(acc, key) => acc.replace(`{{${key}}}`, orderKeys[key as keyof typeof orderKeys]),
-					executionConfig.aiPrompt,
-				);
-				const system = Object.keys(systemKeys).reduce(
-					(acc, key) => acc.replace(`{{${key}}}`, systemKeys[key as keyof typeof systemKeys]),
-					executionConfig.systemPrompt,
-				);
+				const promptEnd = getOderSuggestionPromptVariables({
+					support_resistance_zones: vpcList.reduce((acc, vpc) => ({ ...acc, [vpc.key]: vpc.profiles }), {}),
+					price_action_bars: infoBars.reduce((acc, ib) => ({ ...acc, [ib.key]: ib.bars }), {}),
+					current_price: Math.trunc(entryPrice * 100) / 100,
+					previous_trades: previousTrades,
+				});
+				const prompt = executionConfig.aiPrompt.concat(`\n${promptEnd}`);
 				console.log('Asking AI...');
 
 				const aiResponse = await getDeepSeekResponse({
 					prompt,
-					system,
 					apiKey: env.DEEPSEEK_API_KEY_ID,
-					schema: openOrderAiResponseSchema,
+					responseValidationSchema: openOrderAiResponseSchema,
+					responseSchema: openOrderAIResponseJsonOrgSchema,
 				});
 				if (!aiResponse) {
 					throw new Error('AI response is empty or does not contain open_order');
@@ -313,6 +234,11 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 				status: SimulationExecutionStatus.Completed,
 			})
 			.where(eq(simulationExecution.id, event.payload.simulationExecutionId));
+
+		const instance = await env.SELF_TRAINING_ROOM.get(executionConfig.simulationRoomId);
+		if (instance) {
+			await instance.sendEvent({ type: 'proceed-execution', payload: {} });
+		}
 	}
 
 	private async getSimulationExecutionConfig(simulationExecutionId: string) {
@@ -326,13 +252,12 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 				status: simulationExecution.status,
 				pair: simulationExecution.pair,
 				aiPrompt: simulationExecution.aiPrompt,
-				systemPrompt: simulationExecution.systemPrompt,
 				trailingStop: simulationExecution.trailingStop,
+				simulationRoomId: simulationExecution.simulationRoomId,
 				vpc: queryJoin(
 					db,
 					{
 						id: volumeProfileConfig.id,
-						vpcId: volumeProfileConfig.id,
 						vpcTimeframeUnit: volumeProfileConfig.timeframeUnit,
 						vpcTimeframeAmount: volumeProfileConfig.timeframeAmount,
 						vpcMaxDeviationPercent: volumeProfileConfig.maxDeviationPercent,

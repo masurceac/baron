@@ -51,10 +51,9 @@ function RunSimulationExecutionContent() {
             defaultValues={{
               simulationRoomId: params.roomId ?? '',
               aiPrompt: room.aiPrompt ?? '',
-              systemPrompt: room.systemPrompt ?? '',
               pair: room.pair ?? '',
               trailingStop: room.trailingStop ?? false,
-              iterations: 10,
+              tradesToExecute: 10,
               vpcIds: room.vpcIds?.map((v) => v.id) ?? [],
               infoBarIds: room.infoBarIds?.map((i) => i.id) ?? [],
             }}

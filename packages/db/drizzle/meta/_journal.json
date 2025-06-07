@@ -8,6 +8,20 @@
       "when": 1748979995829,
       "tag": "0000_flat_wonder_man",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1749225274732,
+      "tag": "0001_jazzy_bloodstrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1749229166860,
+      "tag": "0002_misty_otto_octavius",
+      "breakpoints": true
     }
   ]
 }

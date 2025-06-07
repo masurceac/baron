@@ -1,10 +1,15 @@
 import { OpenAI } from 'openai';
 import { z } from 'zod';
+import {
+  JsonOrgResponseSchema,
+  replacePromptVariables,
+  RESPONSE_SCHEMA_PROMPT,
+} from '../../common';
 
 export async function getDeepSeekResponse<T extends z.ZodSchema>(input: {
   prompt: string;
-  system: string;
-  schema: T;
+  responseValidationSchema: T;
+  responseSchema: JsonOrgResponseSchema;
   apiKey: string;
 }): Promise<z.infer<T> | null> {
   const openai = new OpenAI({
@@ -12,12 +17,16 @@ export async function getDeepSeekResponse<T extends z.ZodSchema>(input: {
     baseURL: 'https://api.deepseek.com',
   });
 
+  const answerInstructions = replacePromptVariables(RESPONSE_SCHEMA_PROMPT, {
+    schema: JSON.stringify(input.responseSchema, null, 4),
+  });
+
   const response = await openai.chat.completions.create({
     model: 'deepseek-chat',
     messages: [
       {
         role: 'system',
-        content: input.system,
+        content: answerInstructions,
       },
       {
         role: 'user',
@@ -28,12 +37,13 @@ export async function getDeepSeekResponse<T extends z.ZodSchema>(input: {
   });
   const getResult = () => {
     try {
-      const r = JSON.parse(
+      const json =
         response.choices[0]?.message?.content
-          ?.replace('```json', '')
-          .replace('```', '') ?? '',
-      );
-      return input.schema.parse(r);
+          ?.replace(/^\s*```json\s*\n?/, '')
+          .replace(/\s*```\s*$/, '') ?? '';
+
+      const r = JSON.parse(json);
+      return input.responseValidationSchema.parse(r);
     } catch (e) {
       console.log('FAILED TO PARSE');
       console.log(response.choices[0]?.message?.content);

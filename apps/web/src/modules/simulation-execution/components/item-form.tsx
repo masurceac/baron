@@ -2,7 +2,7 @@ import { InfoBarMultiselect } from '@/modules/info-bars/lib';
 import { TradingPairSelect } from '@/modules/inputs/trading-pair-select';
 import { DetailedTextDialog } from '@/modules/shared/components/detailed-text-dialog';
 import { VolumeProfileMultiselect } from '@/modules/volume-profile-config/lib';
-import { OPEN_ORDER_PROMPT, OPEN_ORDER_SYSTEM_PROMPT } from '@baron/ai/prompt';
+import { ORDER_SUGGESTION_PROMPT } from '@baron/ai/order-suggestion';
 import { simulationRunSchema } from '@baron/schema';
 import { Button } from '@baron/ui/components/button';
 import { Form } from '@baron/ui/components/form';
@@ -73,7 +73,7 @@ export function ItemForm(props: {
           />
           <FormFieldWrapper
             control={form.control}
-            name="iterations"
+            name="tradesToExecute"
             label="Iterations Amount"
             description="How many trades should be completed before the simulation ends."
             render={({ field }) => (
@@ -113,22 +113,7 @@ export function ItemForm(props: {
             description={
               <DetailedTextDialog
                 title="This is the default AI prompt used for open orders"
-                content={OPEN_ORDER_PROMPT}
-              />
-            }
-            render={({ field }) => (
-              <Textarea value={field.value} onChange={field.onChange} />
-            )}
-          />
-          <FormFieldWrapper
-            control={form.control}
-            name="systemPrompt"
-            rightLabel="make sure to include all the variables"
-            label="System Prompt"
-            description={
-              <DetailedTextDialog
-                title="This is the default AI System prompt used for open orders"
-                content={OPEN_ORDER_SYSTEM_PROMPT}
+                content={ORDER_SUGGESTION_PROMPT}
               />
             }
             render={({ field }) => (

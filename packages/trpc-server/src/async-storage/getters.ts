@@ -14,4 +14,3 @@ export const getOptionalAuth = () => {
 };
 export const getClerkClient = () => factoryGetter('clerkClient');
 export const getRequest = () => factoryGetter('request');
-export const getDatabase = () => factoryGetter('db');

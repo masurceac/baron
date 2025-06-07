@@ -31,5 +31,6 @@ export const openOrderAIResponseJsonOrgSchema = {
   },
   required: ['type', 'stopLossPrice', 'takeProfitPrice', 'reason'],
   additionalProperties: false,
-};
+} as const;
 export type OpenOrderAiResponse = z.infer<typeof openOrderAiResponseSchema>;
+export type OpenOrderAIResponseJsonOrg = typeof openOrderAIResponseJsonOrgSchema;

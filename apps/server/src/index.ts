@@ -3,6 +3,7 @@ import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import { appRouter } from './trpc';
 import { eventBus } from './events';
 import { ProcessSimulationExecutionWorkflow } from './workflows/process-simulation-execution';
+import { SelfTrainingRoomWorkflow } from './workflows/self-training-room';
 
 const worker = {
 	async fetch(request, env): Promise<Response> {
@@ -57,6 +58,6 @@ const handleCORSPreflight = () => {
 	return addCORSHeaders(rs);
 };
 
-export { ProcessSimulationExecutionWorkflow };
+export { ProcessSimulationExecutionWorkflow, SelfTrainingRoomWorkflow };
 
 export default worker;

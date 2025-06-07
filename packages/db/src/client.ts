@@ -91,6 +91,13 @@ export function queryJoin<TSelection extends SelectedFields>(
 
   type Result = QueryReturnType<TSelection>;
 
+  const subselectMap = (Object.entries(columns) as Array<[string, PgColumn]>)
+    .filter(([, tableColumn]) => tableColumn.name)
+    .map(([key, tableColumn]) =>
+      // key should be '' as string value
+      sql.raw(`'${key}',"subquery"."${tableColumn.name}"`),
+    );
+
   const sqlSelect = columnsMap.reduce(
     (chunk, item, index) =>
       index < columnsMap.length - 1
@@ -99,11 +106,11 @@ export function queryJoin<TSelection extends SelectedFields>(
     sql``,
   );
 
-  return sql<Result[]>`${cb(
-    db.select({
-      json: sql`jsonb_agg(json_build_object(${sqlSelect}))`,
-    }),
-  )}`.mapWith({
+  const jsonbAggSelect = sql`jsonb_agg(json_build_object${subselectMap})`;
+
+  const subselect = sql`(SELECT ${jsonbAggSelect} FROM ${cb(db.select({ subquery: sqlSelect }))} AS subquery)`;
+
+  return sql<Result[]>`${subselect}`.mapWith({
     mapFromDriverValue(value) {
       if (value === null) {
         return null;

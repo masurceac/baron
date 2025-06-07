@@ -135,14 +135,16 @@ export const simulationRoom = pgTable('simulation_room', {
   name: text('name').notNull(),
   description: text('description').notNull(),
 
+  startDate: timestamp('start_date', { withTimezone: true }).notNull(),
+  tradesToExecute: integer('trades_to_execute').notNull().default(10),
   pair: text('pair', {
     enum: [TradingPair.BTCUSDT, TradingPair.ETHUSDT],
   }).notNull(),
   aiPrompt: text('ai_prompt').notNull(),
-  systemPrompt: text('system_prompt').notNull(),
   trailingStop: boolean('trailing_stop').notNull(),
   authorName: text('author_name').notNull(),
   authorId: text('author_id').notNull(),
+  selfTraining: boolean('is_self_training').notNull().default(false),
 });
 
 export const simulationRoomToVolumeProfileConfig = pgTable(
@@ -207,7 +209,6 @@ export const simulationExecution = pgTable('simulation_execution', {
     enum: [TradingPair.BTCUSDT, TradingPair.ETHUSDT],
   }).notNull(),
   aiPrompt: text('ai_prompt').notNull(),
-  systemPrompt: text('system_prompt').notNull(),
   trailingStop: boolean('trailing_stop').notNull(),
 
   simulationRoomId: text('simulation_room_id')

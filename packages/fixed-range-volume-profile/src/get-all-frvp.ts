@@ -1,5 +1,6 @@
 import { fetchBars } from '@baron/bars-api';
 import {
+  assertNever,
   BarsStack,
   createBarsStack,
   TimeUnit,
@@ -8,9 +9,10 @@ import {
 } from '@baron/common';
 import { findLongestSubsets } from '@baron/volume-profile';
 import { getFrvpForBuffer } from './get-frvp-for-buffer';
+import { sub } from 'date-fns';
 
-type GetFrvpProfilesInput = {
-  start: Date;
+export type GetFrvpProfilesInput = {
+  // start: Date;
   end: Date;
   timeframeAmount: number;
   timeframeUnit: TimeUnit;
@@ -19,6 +21,7 @@ type GetFrvpProfilesInput = {
   pair: TradingPair;
   volumePercentageRange: number;
   currentPrice: number;
+  historicalBarsToConsider: number;
 };
 
 type MethodInput = {
@@ -32,6 +35,33 @@ type MethodInput = {
   volumePercentageRange: number;
 };
 
+export const getStartDate = (end: Date, unit: TimeUnit, bars: number) => {
+  switch (unit) {
+    case TimeUnit.Min:
+      return sub(end, {
+        minutes: bars,
+      });
+    case TimeUnit.Hour:
+      return sub(end, {
+        hours: bars,
+      });
+    case TimeUnit.Day:
+      return sub(end, {
+        days: bars,
+      });
+    case TimeUnit.Week:
+      return sub(end, {
+        days: bars,
+      });
+    case TimeUnit.Month:
+      return sub(end, {
+        days: bars,
+      });
+    default:
+      assertNever(unit);
+  }
+};
+
 export async function getFrvpProfiles(
   input: GetFrvpProfilesInput,
   methods: {
@@ -43,8 +73,14 @@ export async function getFrvpProfiles(
 ): Promise<Array<ZoneVolumeProfile>> {
   const consolidationBuffers: Array<BarsStack> = [];
 
+  const start = getStartDate(
+    input.end,
+    input.timeframeUnit,
+    input.historicalBarsToConsider,
+  );
+
   const bars = await fetchBars({
-    start: input.start,
+    start: start,
     end: input.end,
     timeframeAmount: input.timeframeAmount,
     timeframeUnit: input.timeframeUnit,

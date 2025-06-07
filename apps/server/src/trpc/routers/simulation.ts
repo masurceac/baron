@@ -1,3 +1,4 @@
+import { getDatabase } from '@/database';
 import { paginate, paginatedSchema } from '@baron/common';
 import { queryJoin } from '@baron/db/client';
 import {
@@ -9,8 +10,9 @@ import {
 } from '@baron/db/schema';
 import { simulationRoomSchema } from '@baron/schema';
 import { protectedProcedure } from '@baron/trpc-server';
-import { getAuth, getClerkClient, getDatabase } from '@baron/trpc-server/async-storage/getters';
+import { getAuth, getClerkClient } from '@baron/trpc-server/async-storage/getters';
 import { TRPCError } from '@trpc/server';
+import { env } from 'cloudflare:workers';
 import { and, count, desc, eq, ilike, inArray, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -43,9 +45,11 @@ export const simulationRoomRouter = {
 					authorId: user.id,
 					authorName: user.fullName ?? user.username ?? 'Unknown User',
 					aiPrompt: input.aiPrompt.trim(),
-					systemPrompt: input.systemPrompt.trim(),
 					pair: input.pair,
 					trailingStop: input.trailingStop ?? false,
+					selfTraining: input.selfTraining ?? false,
+					startDate: input.startDate,
+					tradesToExecute: input.tradesToExecute,
 				})
 				.returning();
 
@@ -100,6 +104,18 @@ export const simulationRoomRouter = {
 				code: 'INTERNAL_SERVER_ERROR',
 			});
 		}
+		console.log('roomResult.selfTraining');
+		console.log(roomResult.selfTraining);
+
+		if (roomResult.selfTraining) {
+			console.log('self training');
+			await env.SELF_TRAINING_ROOM.create({
+				id: roomResult.id,
+				params: {
+					simulationRoomId: roomResult.id,
+				},
+			});
+		}
 
 		return roomResult;
 	}),
@@ -134,7 +150,6 @@ export const simulationRoomRouter = {
 						name: data.name.trim(),
 						description: data.description.trim(),
 						aiPrompt: data.aiPrompt.trim(),
-						systemPrompt: data.systemPrompt.trim(),
 						pair: data.pair,
 						trailingStop: data.trailingStop ?? false,
 					})
@@ -203,7 +218,6 @@ export const simulationRoomRouter = {
 				authorId: simulationRoom.authorId,
 				authorName: simulationRoom.authorName,
 				aiPrompt: simulationRoom.aiPrompt,
-				systemPrompt: simulationRoom.systemPrompt,
 				pair: simulationRoom.pair,
 				trailingStop: simulationRoom.trailingStop,
 				vpcIds: queryJoin(db, { id: volumeProfileConfig.id }, (query) =>

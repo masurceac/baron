@@ -1,8 +1,8 @@
+import { getDatabase } from '@/database';
 import { paginate, paginatedSchema } from '@baron/common';
 import { informativeBarConfig } from '@baron/db/schema';
 import { inforBarSchema } from '@baron/schema';
 import { protectedProcedure } from '@baron/trpc-server';
-import { getDatabase } from '@baron/trpc-server/async-storage/getters';
 import { TRPCError } from '@trpc/server';
 import { and, count, desc, eq, ilike, inArray, isNull, SQL } from 'drizzle-orm';
 import { z } from 'zod';

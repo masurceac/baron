@@ -1,4 +1,4 @@
-import { OpenOrderAiResponse } from '@baron/ai/schema';
+import { OpenOrderAiResponse } from '@baron/ai/order-suggestion';
 import { fetchBars } from '@baron/bars-api';
 import { TimeUnit, TradeResult, TradingPair } from '@baron/common';
 import { add } from 'date-fns';
@@ -30,6 +30,9 @@ export async function checkTradeSuccess(order: TradeType): Promise<{
 	let trailingStep = Math.abs(order.entryPrice - order.aiOrder.stopLossPrice) * (order.aiOrder.type === 'buy' ? 1 : -1);
 
 	const trailingEnd = add(new Date(order.entryTimestamp), { hours: 3 });
+
+	console.log('Checking success for order');
+	console.log(order);
 
 	const bars = await fetchBars({
 		start: new Date(order.entryTimestamp),

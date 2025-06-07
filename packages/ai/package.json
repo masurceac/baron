@@ -4,8 +4,9 @@
   "private": true,
   "exports": {
     "./api": "./src/api/index.ts",
-    "./schema": "./src/schema/index.ts",
-    "./prompt": "./src/prompt/index.ts"
+    "./common": "./src/common/index.ts",
+    "./order-suggestion": "./src/order-suggestion/index.ts",
+    "./self-training": "./src/self-training/index.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0"

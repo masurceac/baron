@@ -75,14 +75,14 @@ function DetailsData() {
             <p className="text-lg font-medium">
               Simulation starts on: <FormatDate date={data.startDate} utc />
             </p>
-            <p className="max-w-lg text-sm">
+            <div className="max-w-lg text-sm">
               Trades Progress
               <Progress
                 value={
                   ((data.trades?.length ?? 0) / data.tradesToExecute) * 100
                 }
               />
-            </p>
+            </div>
             <div className="flex items-center space-x-2">
               <TradingPairSelect
                 value={data.pair}
@@ -111,12 +111,6 @@ function DetailsData() {
             content={data.aiPrompt}
             label="AI Prompt"
           />
-          <DetailedTextDialog
-            title="This is the default AI prompt used for closed orders"
-            content={data.systemPrompt}
-            label="System Prompt"
-          />
-
           <Dialog>
             <DialogTrigger asChild>
               <Button>Volume Profile Config</Button>
