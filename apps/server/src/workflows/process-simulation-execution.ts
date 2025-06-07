@@ -3,7 +3,7 @@ import { getFrvpProfilesWithDb } from '@/services/get-frvp-profiles-with-db';
 import { getDeepSeekResponse } from '@baron/ai/api';
 import { getOderSuggestionPromptVariables, openOrderAIResponseJsonOrgSchema, openOrderAiResponseSchema } from '@baron/ai/order-suggestion';
 import { fetchBars } from '@baron/bars-api';
-import { TimeUnit, TradeDirection, TradeLogDirection } from '@baron/common';
+import { TimeUnit, TradeDirection, TradeLogDirection, ZoneVolumeProfile } from '@baron/common';
 import { getDrizzleClient, queryJoin, queryJoinOne } from '@baron/db/client';
 import { SimulationExecutionStatus } from '@baron/db/enum';
 import {
@@ -97,30 +97,57 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 			if (!executionConfig.vpc || executionConfig.vpc.length === 0) {
 				throw new NonRetryableError(`No volume profile configs found for simulation execution ${executionConfig.id}`);
 			}
-			const vpcList = await Promise.all(
-				executionConfig.vpc.map((vpc) =>
-					step.do(`get VPC ${vpc.id} ${tradeTime.toISOString()} ${executionConfig.id}`, async () => {
-						console.log('Processing VPC:', vpc.id);
 
-						const profiles = await getFrvpProfilesWithDb({
-							historicalBarsToConsider: vpc.vpcHistoricalTimeToConsiderAmount,
-							end: tradeTime,
-							pair: executionConfig.pair,
-							timeframeUnit: vpc.vpcTimeframeUnit,
-							timeframeAmount: vpc.vpcTimeframeAmount,
-							maxDeviationPercent: vpc.vpcMaxDeviationPercent,
-							minBarsToConsiderConsolidation: vpc.vpcMinimumBarsToConsider,
-							volumePercentageRange: vpc.vpcVolumeProfilePercentage,
-							currentPrice: bars.at(-1)?.Close ?? 0,
-						});
+			const vpcList: Array<{
+				key: string;
+				profiles: ZoneVolumeProfile[];
+			}> = [];
 
-						return {
-							key: `${vpc.vpcTimeframeAmount}_${vpc.vpcTimeframeUnit}`,
-							profiles,
-						};
-					}),
-				),
-			);
+			for (const vpc of executionConfig.vpc) {
+				const item = await step.do(`get vpc profiles for ${vpc.id}`, async () => {
+					const profiles = await getFrvpProfilesWithDb({
+						historicalBarsToConsider: vpc.vpcHistoricalTimeToConsiderAmount,
+						end: tradeTime,
+						pair: executionConfig.pair,
+						timeframeUnit: vpc.vpcTimeframeUnit,
+						timeframeAmount: vpc.vpcTimeframeAmount,
+						maxDeviationPercent: vpc.vpcMaxDeviationPercent,
+						minBarsToConsiderConsolidation: vpc.vpcMinimumBarsToConsider,
+						volumePercentageRange: vpc.vpcVolumeProfilePercentage,
+						currentPrice: bars.at(-1)?.Close ?? 0,
+					});
+					return {
+						key: `${vpc.vpcTimeframeAmount}_${vpc.vpcTimeframeUnit}`,
+						profiles,
+					};
+				});
+				vpcList.push(item);
+			}
+
+			// const vpcList = await step.do(`get vpc list`, async () =>
+			// 	Promise.all(
+			// 		executionConfig.vpc!.map(async (vpc) => {
+			// 			console.log('Processing VPC:', vpc.id);
+
+			// 			const profiles = await getFrvpProfilesWithDb({
+			// 				historicalBarsToConsider: vpc.vpcHistoricalTimeToConsiderAmount,
+			// 				end: tradeTime,
+			// 				pair: executionConfig.pair,
+			// 				timeframeUnit: vpc.vpcTimeframeUnit,
+			// 				timeframeAmount: vpc.vpcTimeframeAmount,
+			// 				maxDeviationPercent: vpc.vpcMaxDeviationPercent,
+			// 				minBarsToConsiderConsolidation: vpc.vpcMinimumBarsToConsider,
+			// 				volumePercentageRange: vpc.vpcVolumeProfilePercentage,
+			// 				currentPrice: bars.at(-1)?.Close ?? 0,
+			// 			});
+
+			// 			return {
+			// 				key: `${vpc.vpcTimeframeAmount}_${vpc.vpcTimeframeUnit}`,
+			// 				profiles,
+			// 			};
+			// 		}),
+			// 	),
+			// );
 
 			const infoBars = await step.do(`get informative bars ${tradeTime.toISOString()} ${executionConfig.id}`, async () => {
 				if (!executionConfig.infoBars || executionConfig.infoBars.length === 0) {

@@ -126,7 +126,7 @@ export class SelfTrainingRoomWorkflow extends WorkflowEntrypoint<Env, {}> {
 
 			await step.waitForEvent('receive previous execution completeness', {
 				type: 'proceed-execution',
-				timeout: '1 hour',
+				timeout: '6 hours',
 			});
 		}
 	}

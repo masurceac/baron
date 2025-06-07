@@ -86,30 +86,31 @@ export async function getFrvpForBuffer(input: {
   const barsChunks = chunkArray(
     input.barsStack.bars,
     childSettings.parentsToGroupForFetchingChilds,
-  );
+  ); // group chunks per request
 
-  log = measure(
-    `Processing ${barsChunks.length} chunks for FRVP calculation...`,
-  );
-  for (const chunk of barsChunks) {
-    const startTs = chunk[0]?.Timestamp;
-    const endTs = chunk.at(-1)?.Timestamp;
-    if (!startTs || !endTs) {
-      console.warn('Buffer has no valid timestamps', chunk);
-      continue;
-    }
-    const end = getEnd(new Date(endTs), input.parentIntervalUnit);
+  const parallelChunksArray = chunkArray(barsChunks, 10); // group chunks for requests in parallel
 
-    const barTicks = await fetchBars({
-      start: new Date(startTs),
-      end: end,
-      timeframeAmount: childSettings.childIntervalAmount,
-      timeframeUnit: childSettings.childIntervalUnit,
-      pair: input.tradingPair,
-    });
-    bars.push(barTicks);
+  for (const parallelChunks of parallelChunksArray) {
+    await Promise.all(
+      parallelChunks.map(async (chunk) => {
+        const startTs = chunk[0]?.Timestamp;
+        const endTs = chunk.at(-1)?.Timestamp;
+        if (!startTs || !endTs) {
+          console.warn('Buffer has no valid timestamps', chunk);
+          return;
+        }
+        const end = getEnd(new Date(endTs), input.parentIntervalUnit);
+        const barTicks = await fetchBars({
+          start: new Date(startTs),
+          end: end,
+          timeframeAmount: childSettings.childIntervalAmount,
+          timeframeUnit: childSettings.childIntervalUnit,
+          pair: input.tradingPair,
+        });
+        bars.push(barTicks);
+      }),
+    );
   }
-  log();
 
   log = measure('getFrvpForBuffer - calculateVolumeProfile');
   const result = calculateVolumeProfile(

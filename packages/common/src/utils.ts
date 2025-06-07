@@ -10,8 +10,9 @@ export function assertNever(x: never): never {
 
 export function measure(log: string) {
   const start = Date.now();
+  console.log(`🟩 START: ${log}`);
   return () => {
     const end = Date.now();
-    console.log(`${log} took ${end - start}ms`);
+    console.log(`🟥 STOP ${Math.trunc((end - start) / 1000)}s: ${log}`);
   };
 }
