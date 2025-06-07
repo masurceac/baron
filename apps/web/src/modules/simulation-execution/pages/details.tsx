@@ -8,8 +8,8 @@ import { ExecutionTradeHistory } from '@/modules/trade-history';
 import { ExecutionLogs } from '@/modules/trade-history/components/execution-logs';
 import { VolumeProfileList } from '@/modules/volume-profile-config/components/volume-profile-list';
 import { SimulationExecutionStatus } from '@baron/db/enum';
+import { Badge } from '@baron/ui/components/badge';
 import { Button } from '@baron/ui/components/button';
-import { Progress } from '@baron/ui/components/progress';
 import {
   Card,
   CardContent,
@@ -25,6 +25,7 @@ import {
   DialogTrigger,
 } from '@baron/ui/components/dialog';
 import { FormatDate } from '@baron/ui/components/format-date';
+import { Progress } from '@baron/ui/components/progress';
 import {
   Tabs,
   TabsContent,
@@ -41,13 +42,14 @@ import { Suspense } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ExecutionStatus } from '../components/execution-status';
 import { TradeResult } from '../components/trade-result';
-import { Badge } from '@baron/ui/components/badge';
+import { toast } from 'sonner';
 
 function DetailsData() {
   const params =
     useParams<
       GetRouteParams<'/app/simulation/room/:roomId/view/:executionId'>
     >();
+  const utils = trpc.useUtils();
 
   const [data] = trpc.simulationExecution.getDetails.useSuspenseQuery(
     {
@@ -60,6 +62,8 @@ function DetailsData() {
           : false,
     },
   );
+
+  const stopExecution = trpc.simulationExecution.stopExecution.useMutation();
 
   return (
     <div className="space-y-4">
@@ -151,6 +155,29 @@ function DetailsData() {
               </DialogContent>
             </DialogContent>
           </Dialog>
+        </CardContent>
+        <CardContent>
+          {data.status === SimulationExecutionStatus.Running && (
+            <Button
+              variant="destructive"
+              onClick={() => {
+                stopExecution.mutate(
+                  { executionId: params.executionId ?? '' },
+                  {
+                    onSuccess: () => {
+                      toast('Execution stopped');
+                      utils.simulationExecution.getDetails.invalidate({
+                        executionId: params.executionId ?? '',
+                      });
+                    },
+                  },
+                );
+              }}
+            >
+              Stop Execution
+              <ArrowLeftIcon className="w-4 ml-2" />
+            </Button>
+          )}
         </CardContent>
       </Card>
 

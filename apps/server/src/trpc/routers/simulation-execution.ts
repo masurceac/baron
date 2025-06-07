@@ -19,6 +19,35 @@ export const simulationExecutionRouter = {
 	runSimulation: protectedProcedure.input(simulationRunSchema).mutation(async ({ input }) => {
 		return runSimulation(input);
 	}),
+	stopExecution: protectedProcedure.input(z.object({ executionId: z.string() })).mutation(async ({ input }) => {
+		const db = getDatabase();
+
+		const [execution] = await db
+			.select({ id: simulationExecution.id, status: simulationExecution.status })
+			.from(simulationExecution)
+			.where(eq(simulationExecution.id, input.executionId))
+			.limit(1);
+
+		if (!execution) {
+			throw new TRPCError({
+				code: 'NOT_FOUND',
+			});
+		}
+
+		if (execution.status !== SimulationExecutionStatus.Running) {
+			throw new TRPCError({
+				code: 'BAD_REQUEST',
+				message: 'Simulation execution is not running.',
+			});
+		}
+
+		await db
+			.update(simulationExecution)
+			.set({ status: SimulationExecutionStatus.Completed })
+			.where(eq(simulationExecution.id, input.executionId));
+
+		return { success: true };
+	}),
 
 	list: protectedProcedure.input(z.object({ simulationRoomId: z.string() }).merge(paginatedSchema)).query(async ({ input }) => {
 		const db = getDatabase();

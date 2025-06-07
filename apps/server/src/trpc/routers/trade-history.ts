@@ -1,7 +1,7 @@
 import { getDatabase } from '@/database';
 import { simulationExecutionTrade } from '@baron/db/schema';
 import { protectedProcedure } from '@baron/trpc-server';
-import { and, asc, eq, SQL } from 'drizzle-orm';
+import { and, desc, eq, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 
 export const tradeHistoryRouter = {
@@ -13,6 +13,6 @@ export const tradeHistoryRouter = {
 			.select()
 			.from(simulationExecutionTrade)
 			.where(and(...where))
-			.orderBy(asc(simulationExecutionTrade.createdAt));
+			.orderBy(desc(simulationExecutionTrade.createdAt));
 	}),
 };
