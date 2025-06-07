@@ -83,7 +83,7 @@ function DetailsData() {
                 }
               />
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="grid grid-cols-2 gap-2 lg:flex items-center space-x-2">
               <TradingPairSelect
                 value={data.pair}
                 onChange={() => null}
@@ -91,16 +91,16 @@ function DetailsData() {
               />
               <ExecutionStatus status={data.status} />
               <Badge>
-                <TargetIcon className="w-4 mr-1" /> {data.tradesToExecute}{' '}
-                trades
+                <TargetIcon className="w-4 mr-1" /> {data.trades?.length ?? 0}/
+                {data.tradesToExecute} trades
               </Badge>
               <Badge>
                 <StepForwardIcon className="w-4 mr-1" /> {data.stepMinutes}{' '}
-                minute(s)
+                minute(s) step
               </Badge>
               <Badge title="Trailing Stop">
-                <OctagonMinusIcon className="w-4 mr-1" />{' '}
-                {data.trailingStop ? 'Enabled' : 'Disabled'}
+                <OctagonMinusIcon className="w-4 mr-1" /> Trailing stop{' '}
+                {data.trailingStop ? 'enabled' : 'disabled'}
               </Badge>
             </div>
           </div>
@@ -160,7 +160,7 @@ function DetailsData() {
           <TabsTrigger value="logs">Logs</TabsTrigger>
         </TabsList>
         <TabsContent value="trades" className="space-y-6">
-          <TradeResult trades={data.trades ?? []} />
+          <TradeResult trades={data.trades ?? []} key={data.trades?.length} />
 
           <ExecutionTradeHistory executionId={params.executionId ?? ''} />
         </TabsContent>
@@ -181,18 +181,15 @@ export function SimulationExecutionDetailsPage() {
   return (
     <PageLayout
       title={
-        <p>
-          <Button asChild variant="link" size="sm">
-            <Link
-              to={getAppRoute('/app/simulation/room/:roomId/list', {
-                roomId: params.roomId ?? '',
-              })}
-            >
-              <ArrowLeftIcon className="w-4 mr-2" /> Back to List
-            </Link>
-          </Button>
-          Simulation Execution Details.
-        </p>
+        <Button asChild variant="link" size="sm">
+          <Link
+            to={getAppRoute('/app/simulation/room/:roomId/list', {
+              roomId: params.roomId ?? '',
+            })}
+          >
+            <ArrowLeftIcon className="w-4 mr-2" /> Back
+          </Link>
+        </Button>
       }
     >
       <div>

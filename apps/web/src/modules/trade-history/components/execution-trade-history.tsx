@@ -71,8 +71,20 @@ function ExecutionTradeHistoryItems(props: { executionId: string }) {
         header: 'TP/SL',
         cell: ({ row: { original } }) => (
           <div>
-            ${original.takeProfitPrice.toFixed(2)}&nbsp;/ $
-            {original.stopLossPrice.toFixed(2)}
+            <div>
+              ${original.takeProfitPrice.toFixed(2)}&nbsp;/ $
+              {original.stopLossPrice.toFixed(2)}
+            </div>
+            <div>
+              $
+              {Math.abs(original.entryPrice - original.takeProfitPrice).toFixed(
+                2,
+              )}
+              &nbsp;/ $
+              {Math.abs(original.entryPrice - original.stopLossPrice).toFixed(
+                2,
+              )}
+            </div>
           </div>
         ),
       },

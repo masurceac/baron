@@ -25,7 +25,9 @@ export function TradeResult(props: {
     <div className="space-y-2">
       <div className="flex items-center space-x-4">
         <Badge variant="green">{positiveTrades} positive trades</Badge>
-        <span className="text-sm font-medium">vs</span>
+        <span className="text-sm font-medium">
+          {positiveTrades + negativeTrades} total
+        </span>
         <Badge variant="destructive">{negativeTrades} negative trades</Badge>
       </div>
       <div className="flex items-center space-x-4">
