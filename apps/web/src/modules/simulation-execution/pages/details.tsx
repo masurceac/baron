@@ -36,13 +36,14 @@ import {
   ArrowLeftIcon,
   OctagonMinusIcon,
   StepForwardIcon,
+  StopCircleIcon,
   TargetIcon,
 } from 'lucide-react';
 import { Suspense } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import { ExecutionStatus } from '../components/execution-status';
 import { TradeResult } from '../components/trade-result';
-import { toast } from 'sonner';
 
 function DetailsData() {
   const params =
@@ -175,7 +176,7 @@ function DetailsData() {
               }}
             >
               Stop Execution
-              <ArrowLeftIcon className="w-4 ml-2" />
+              <StopCircleIcon className="w-4 ml-2" />
             </Button>
           )}
         </CardContent>
