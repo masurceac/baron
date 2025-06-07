@@ -307,4 +307,30 @@ export const simulationRoomRouter = {
 
 		return deletedRoom[0];
 	}),
+
+	proceedTraining: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
+		const workflow = await env.SELF_TRAINING_ROOM.get(input.id);
+
+		if (!workflow) {
+			await env.SELF_TRAINING_ROOM.create({
+				id: input.id,
+				params: {
+					simulationRoomId: input.id,
+				},
+			});
+		} else {
+			await workflow.sendEvent({
+				type: 'proceed-execution',
+				payload: {},
+			});
+			try {
+				await workflow.resume();
+			} catch (error) {
+				console.error('Error resuming workflow:');
+				console.error(error);
+			}
+		}
+
+		return true;
+	}),
 };

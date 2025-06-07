@@ -10,6 +10,7 @@ import { ArrowRightIcon, PlusCircleIcon } from 'lucide-react';
 import { Suspense, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ItemActions } from '../components/item-actions';
+import { toast } from 'sonner';
 
 type TableItem = RouterOutput['simulationRoom']['list']['data'][number];
 
@@ -20,6 +21,11 @@ function ListData() {
   const [list] = trpc.simulationRoom.list.useSuspenseQuery({
     skip: pagination.skip,
     take: TAKE,
+  });
+  const train = trpc.simulationRoom.proceedTraining.useMutation({
+    onSuccess() {
+      toast('Training started successfully!');
+    },
   });
 
   const columns = useMemo<ColumnDef<TableItem>[]>(
@@ -73,6 +79,26 @@ function ListData() {
               >
                 View Simulations <ArrowRightIcon className="w-4" />
               </Link>
+            </Button>
+          </div>
+        ),
+      },
+      {
+        id: 'train',
+        enableSorting: false,
+        header: 'Train',
+        cell: ({ row: { original } }) => (
+          <div>
+            <Button
+              variant="link"
+              className="-ml-2"
+              onClick={() =>
+                train.mutate({
+                  id: original.id,
+                })
+              }
+            >
+              View Simulations <ArrowRightIcon className="w-4" />
             </Button>
           </div>
         ),

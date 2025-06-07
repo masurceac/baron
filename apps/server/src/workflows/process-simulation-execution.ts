@@ -18,7 +18,7 @@ import {
 import { getStartDate } from '@baron/fixed-range-volume-profile';
 import { env, WorkflowEntrypoint, WorkflowEvent, WorkflowStep } from 'cloudflare:workers';
 import { NonRetryableError } from 'cloudflare:workflows';
-import { add, addMinutes, isBefore, sub } from 'date-fns';
+import { addMinutes, isBefore, sub } from 'date-fns';
 import { and, count, desc, eq } from 'drizzle-orm';
 
 type Params = {
@@ -42,42 +42,37 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 				.where(eq(simulationExecution.id, executionConfig.id));
 		});
 
-		let tradesCount = executionConfig.trades?.count ?? 0;
-
-		if (tradesCount === executionConfig.tradesToExecute) {
-			console.log(
-				`Simulation execution with ID ${event.payload.simulationExecutionId} already has ${tradesCount} trades, skipping processing.`,
-			);
-			return;
-		}
-
-		let tradeTime = await step.do('get simulation execution start date', async () => {
-			const lastTrade = executionConfig.lastTrade?.exitDate
-				? add(executionConfig.lastTrade.exitDate, {
-						minutes: executionConfig.stepMinutes,
+		for (let i = 0; i < 1000; i++) {
+			const tradeTime = await step.do('get simulation execution start date', async () => {
+				const [lastTrade] = await db
+					.select({
+						exitDate: simulationExecutionTrade.exitDate,
 					})
-				: null;
-			const lastLog = executionConfig.lastLog?.date
-				? add(executionConfig.lastLog.date, {
-						minutes: executionConfig.stepMinutes,
+					.from(simulationExecutionTrade)
+					.where(eq(simulationExecutionTrade.simulationExecutionId, executionConfig.id))
+					.orderBy(desc(simulationExecutionTrade.exitDate))
+					.limit(1);
+				const [lastLog] = await db
+
+					.select({
+						date: simulationExecutionLog.date,
 					})
-				: null;
+					.from(simulationExecutionLog)
+					.where(eq(simulationExecutionLog.simulationExecutionId, executionConfig.id))
+					.orderBy(desc(simulationExecutionLog.date))
+					.limit(1);
 
-			if (!lastTrade && !lastLog) {
-				return executionConfig.startDate;
-			}
-
-			if (lastTrade && lastLog) {
-				if (isBefore(lastTrade, lastLog)) {
-					return lastTrade;
+				if (!lastTrade || !lastLog) {
+					return new Date(executionConfig.startDate);
 				}
-				return lastLog;
-			}
 
-			return lastLog ?? executionConfig.startDate;
-		});
+				if (isBefore(lastTrade.exitDate, lastLog.date)) {
+					return addMinutes(lastLog.date, executionConfig.stepMinutes);
+				}
 
-		while (tradesCount < executionConfig.tradesToExecute) {
+				return addMinutes(lastTrade.exitDate, executionConfig.stepMinutes);
+			});
+
 			console.log('Processing ' + event.payload.simulationExecutionId);
 			const bars = await step.do(`fetch bars ${tradeTime.toISOString()}`, async () => {
 				console.log('fetching bars for time:', tradeTime.toISOString());
@@ -216,8 +211,6 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 						date: tradeTime,
 						simulationExecutionTradeId: trade?.id,
 					});
-					tradesCount++;
-					tradeTime = addMinutes(new Date(success.timestamp), 1);
 				});
 			} else {
 				await db.insert(simulationExecutionLog).values({
@@ -226,7 +219,18 @@ export class ProcessSimulationExecutionWorkflow extends WorkflowEntrypoint<Env, 
 					reason: aiPromptResult.reason ?? '',
 					date: tradeTime,
 				});
-				tradeTime = addMinutes(tradeTime, executionConfig.stepMinutes);
+			}
+
+			const tradesCount = await step.do('get trades count', async () => {
+				const tradesCountResult = await db
+					.select({ count: count(simulationExecutionTrade.id) })
+					.from(simulationExecutionTrade)
+					.where(eq(simulationExecutionTrade.simulationExecutionId, executionConfig.id));
+				return tradesCountResult[0]?.count ?? 0;
+			});
+
+			if (tradesCount >= executionConfig.tradesToExecute) {
+				break;
 			}
 		}
 

@@ -75,7 +75,6 @@ export async function getFrvpForBuffer(input: {
   tradingPair: TradingPair;
   barsStack: BarsStack;
   parentIntervalUnit: TimeUnit;
-  // parentChunkSize: number;
   vpPercentageRange: number;
 }): Promise<ZoneVolumeProfile | null> {
   let log: ReturnType<typeof measure> | null = null;
@@ -89,7 +88,7 @@ export async function getFrvpForBuffer(input: {
   ); // group chunks per request
 
   const parallelChunksArray = chunkArray(barsChunks, 10); // group chunks for requests in parallel
-
+  log = measure('FRVP: fetching bars');
   for (const parallelChunks of parallelChunksArray) {
     await Promise.all(
       parallelChunks.map(async (chunk) => {
@@ -111,6 +110,7 @@ export async function getFrvpForBuffer(input: {
       }),
     );
   }
+  log();
 
   log = measure('getFrvpForBuffer - calculateVolumeProfile');
   const result = calculateVolumeProfile(
