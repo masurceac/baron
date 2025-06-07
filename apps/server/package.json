@@ -25,6 +25,7 @@
 		"date-fns": "catalog:",
 		"zod": "catalog:",
 		"@trpc/server": "catalog:",
+    "@paralleldrive/cuid2": "catalog:",
 		"wrangler": "catalog:"
 	}
 }

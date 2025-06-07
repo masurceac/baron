@@ -48,6 +48,7 @@ export enum SortDirectionEnum {
 export enum TradeResult {
   Success = 'success',
   Failure = 'failure',
+  Unknown = 'unknown',
 }
 
 export enum EntityFlagEnum {

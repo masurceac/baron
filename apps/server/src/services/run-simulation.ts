@@ -1,7 +1,10 @@
 import { getDatabase } from '@/database';
+import { triggerIteration } from '@/workflows/utils';
 import { queryJoin } from '@baron/db/client';
+import { SimulationExecutionStatus } from '@baron/db/enum';
 import {
 	simulationExecution,
+	simulationExecutionIteration,
 	simulationExecutionToInformativeBarConfig,
 	simulationExecutionToVolumeProfileConfig,
 	simulationRoom,
@@ -10,7 +13,6 @@ import {
 } from '@baron/db/schema';
 import { simulationRunSchema } from '@baron/schema';
 import { TRPCError } from '@trpc/server';
-import { env } from 'cloudflare:workers';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -64,6 +66,7 @@ export async function runSimulation(input: z.infer<typeof simulationRunSchema>) 
 				pair: input.pair,
 				trailingStop: input.trailingStop ?? false,
 				name: input.name.trim(),
+				status: SimulationExecutionStatus.Running,
 			})
 			.returning();
 
@@ -86,15 +89,20 @@ export async function runSimulation(input: z.infer<typeof simulationRunSchema>) 
 			})),
 		);
 
-		return execution;
+		const [iteration] = await tx
+			.insert(simulationExecutionIteration)
+			.values({
+				simulationExecutionId: execution.id,
+				date: execution.startDate,
+			})
+			.returning();
+
+		return { execution, iteration };
 	});
 
-	await env.PROCESS_SIMULATION_EXECUTION.create({
-		id: executionResult.id,
-		params: {
-			simulationExecutionId: executionResult.id,
-		},
-	});
+	if (executionResult.iteration) {
+		await triggerIteration(executionResult.iteration.id);
+	}
 
 	return executionResult;
 }

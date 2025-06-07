@@ -1,0 +1,1 @@
+ALTER TABLE "simulation_execution_trade" ADD COLUMN "status" text NOT NULL;

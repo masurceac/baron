@@ -69,19 +69,20 @@ function ListData() {
         id: 'train',
         enableSorting: false,
         header: 'Train',
-        cell: ({ row: { original } }) => (
-          <Button
-            variant="link"
-            className="-ml-2"
-            onClick={() =>
-              train.mutate({
-                id: original.id,
-              })
-            }
-          >
-            Train <ArrowRightIcon className="w-4" />
-          </Button>
-        ),
+        cell: ({ row: { original } }) =>
+          original.selfTraining ? (
+            <Button
+              variant="link"
+              className="cursor-pointer"
+              onClick={() =>
+                train.mutate({
+                  id: original.id,
+                })
+              }
+            >
+              Train <ArrowRightIcon className="w-4" />
+            </Button>
+          ) : null,
       },
       {
         accessorKey: 'description',

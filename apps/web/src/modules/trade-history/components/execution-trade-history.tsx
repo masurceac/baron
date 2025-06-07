@@ -3,7 +3,6 @@ import { DataTable, RedGreenHighlight } from '@/modules/shared';
 import { DetailedTextDialog } from '@/modules/shared/components/detailed-text-dialog';
 import { TradeDirection } from '@baron/common';
 import { RouterOutput } from '@baron/server';
-import { Button } from '@baron/ui/components/button';
 import { FormatDate } from '@baron/ui/components/format-date';
 import { ColumnDef } from '@tanstack/react-table';
 import { Suspense, useMemo } from 'react';
@@ -115,9 +114,9 @@ function ExecutionTradeHistoryItems(props: { executionId: string }) {
         cell: ({ row: { original } }) => (
           <div>
             <RedGreenHighlight
-              variant={original.balanceResult > 0 ? 'green' : 'red'}
+              variant={original.balanceResult >= 0 ? 'green' : 'red'}
             >
-              {original.balanceResult > 0
+              {original.balanceResult >= 0
                 ? `+${original.balanceResult.toFixed(2)}`
                 : `-${Math.abs(original.balanceResult).toFixed(2)}`}
             </RedGreenHighlight>
@@ -139,15 +138,9 @@ function ExecutionTradeHistoryItems(props: { executionId: string }) {
         ),
       },
       {
-        enableSorting: false,
-        header: 'Info',
-        cell: () => (
-          <div>
-            <Button variant="link" disabled>
-              View S/R Zones
-            </Button>
-          </div>
-        ),
+        accessorKey: 'status',
+        header: 'Status',
+        cell: ({ row: { original } }) => <div>{original.status}</div>,
       },
     ],
     [],

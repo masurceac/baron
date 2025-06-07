@@ -3,6 +3,7 @@ import {
   TimeUnit,
   TradeDirection,
   TradeLogDirection,
+  TradeResult,
   TradingPair,
 } from '@baron/common';
 import { createId } from '@paralleldrive/cuid2';
@@ -312,6 +313,10 @@ export const simulationExecutionTrade = pgTable('simulation_execution_trade', {
   takeProfitPrice: real('take_profit_price').notNull(),
   balanceResult: real('balance_result').notNull(),
   reason: text('reason'),
+
+  status: text('status', {
+    enum: [TradeResult.Success, TradeResult.Failure, TradeResult.Unknown],
+  }).notNull(),
 });
 
 export const simulationExecutionLog = pgTable('simulation_execution_log', {
@@ -350,3 +355,24 @@ export const simulationExecutionLog = pgTable('simulation_execution_log', {
 
   reason: text('reason').notNull(),
 });
+
+export const simulationExecutionIteration = pgTable(
+  'simulation_execution_iteration',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+
+    simulationExecutionId: text('simulation_execution_id')
+      .notNull()
+      .references(() => simulationExecution.id, {
+        onDelete: 'cascade',
+        onUpdate: 'cascade',
+      }),
+
+    date: timestamp('date', { withTimezone: true }).notNull(),
+  },
+);

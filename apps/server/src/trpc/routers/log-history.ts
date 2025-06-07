@@ -1,7 +1,7 @@
 import { getDatabase } from '@/database';
 import { simulationExecutionLog } from '@baron/db/schema';
 import { protectedProcedure } from '@baron/trpc-server';
-import { and, asc, eq, SQL } from 'drizzle-orm';
+import { and, desc, eq, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 
 export const logHistoryRouter = {
@@ -13,6 +13,6 @@ export const logHistoryRouter = {
 			.select()
 			.from(simulationExecutionLog)
 			.where(and(...where))
-			.orderBy(asc(simulationExecutionLog.createdAt));
+			.orderBy(desc(simulationExecutionLog.createdAt));
 	}),
 };

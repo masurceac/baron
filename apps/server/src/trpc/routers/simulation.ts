@@ -1,4 +1,5 @@
 import { getDatabase } from '@/database';
+import { triggerSelfTrainingRoom } from '@/workflows/utils';
 import { paginate, paginatedSchema } from '@baron/common';
 import { queryJoin } from '@baron/db/client';
 import {
@@ -12,7 +13,6 @@ import { simulationRoomSchema } from '@baron/schema';
 import { protectedProcedure } from '@baron/trpc-server';
 import { getAuth, getClerkClient } from '@baron/trpc-server/async-storage/getters';
 import { TRPCError } from '@trpc/server';
-import { env } from 'cloudflare:workers';
 import { and, count, desc, eq, ilike, inArray, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -104,17 +104,9 @@ export const simulationRoomRouter = {
 				code: 'INTERNAL_SERVER_ERROR',
 			});
 		}
-		console.log('roomResult.selfTraining');
-		console.log(roomResult.selfTraining);
 
 		if (roomResult.selfTraining) {
-			console.log('self training');
-			await env.SELF_TRAINING_ROOM.create({
-				id: roomResult.id,
-				params: {
-					simulationRoomId: roomResult.id,
-				},
-			});
+			await triggerSelfTrainingRoom(roomResult.id);
 		}
 
 		return roomResult;
@@ -283,6 +275,7 @@ export const simulationRoomRouter = {
 							description: simulationRoom.description,
 							authorId: simulationRoom.authorId,
 							authorName: simulationRoom.authorName,
+							selfTraining: simulationRoom.selfTraining,
 						})
 						.from(simulationRoom)
 						.where(and(...where))
@@ -309,28 +302,7 @@ export const simulationRoomRouter = {
 	}),
 
 	proceedTraining: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
-		const workflow = await env.SELF_TRAINING_ROOM.get(input.id);
-
-		if (!workflow) {
-			await env.SELF_TRAINING_ROOM.create({
-				id: input.id,
-				params: {
-					simulationRoomId: input.id,
-				},
-			});
-		} else {
-			await workflow.sendEvent({
-				type: 'proceed-execution',
-				payload: {},
-			});
-			try {
-				await workflow.resume();
-			} catch (error) {
-				console.error('Error resuming workflow:');
-				console.error(error);
-			}
-		}
-
+		await triggerSelfTrainingRoom(input.id);
 		return true;
 	}),
 };

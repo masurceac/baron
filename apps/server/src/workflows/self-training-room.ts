@@ -1,4 +1,3 @@
-import { getDatabase } from '@/database';
 import { createSimulationExecutionFromPrompt } from '@/services/create-simulation-execution-from-prompt';
 import { getOpenAiResponse } from '@baron/ai/api';
 import { replacePromptVariables } from '@baron/ai/common';
@@ -7,11 +6,10 @@ import { getDrizzleClient, queryJoin, queryJoinOne } from '@baron/db/client';
 import { simulationExecution, simulationExecutionTrade, simulationRoom } from '@baron/db/schema';
 import { env, WorkflowEntrypoint, WorkflowEvent, WorkflowStep } from 'cloudflare:workers';
 import { NonRetryableError } from 'cloudflare:workflows';
-import { and, count, desc, eq } from 'drizzle-orm';
-
-type Params = {
-	simulationRoomId: string;
-};
+import { and, asc, desc, eq } from 'drizzle-orm';
+import { SelfTrainingRoomWorkflowArgs } from './types';
+import { fetchBars } from '@baron/bars-api';
+import { TimeUnit } from '@baron/common';
 
 const getPrompt = (
 	aiPrompt: string,
@@ -20,113 +18,133 @@ Here's user input:
 ${aiPrompt}`;
 
 const IMPROVEMENT_PROMPT = `
-You are a trading AI expert.
-This is your previous prompt:
+You are an expert trading AI. Your task is to rewrite a trading prompt to improve its performance.
+
+**1. Previous Prompt:**
+This is the prompt that was used to execute the trades.
 \`\`\`json
 {{previous_prompt}}
 \`\`\`
-Based on your prompt these are the trades that were executed:
+
+**2. Trade History:**
+These are the trades that resulted from the previous prompt. Analyze them internally to identify mistakes, poor entries/exits, and flawed logic.
 \`\`\`json
 {{trades}}
 \`\`\`
-Now, analyze the trades and the market data to improve your prompt to get a higher win chance.
+
+**3. Market Data:**
+This is the market data from the trading period. Use it to understand the context in which the trades failed or succeeded.
+\`\`\`
+{{market_data}}
+\`\`\`
+
+**Your Task:**
+
+Based on your internal analysis of the mistakes found in the 'trades' and the context from the 'market_data', create a new, superior prompt.
+
+The new prompt must contain clearer, more robust rules for:
+* Trade entry signals
+* Position sizing
+* Take-profit levels
+* Stop-loss levels
+
+**Your output should ONLY be the final, rewritten prompt. Do not provide any explanation, justification, or analysis in your response.**
 `;
 
 export class SelfTrainingRoomWorkflow extends WorkflowEntrypoint<Env, {}> {
-	override async run(event: WorkflowEvent<Params>, step: WorkflowStep) {
-		console.log('Running self-training room workflow');
-		const db = getDatabase();
+	override async run(event: WorkflowEvent<SelfTrainingRoomWorkflowArgs>, step: WorkflowStep) {
+		const room = await step.do('get simulation room', async () => {
+			return this.getSimulationRoom(event.payload.simulationRoomId);
+		});
 
-		for (let i = 0; i < 1000; i++) {
-			const room = await step.do('get simulation room', async () => {
-				return await this.getSimulationRoom(event.payload.simulationRoomId);
+		if (!room.lastExecution?.id) {
+			console.log('into prompt');
+			const aiGeneratedPrompt = await step.do('generate first AI prompt', async () => {
+				const aiPrompt = getPrompt(room.aiPrompt);
+
+				const aiResult = await getOpenAiResponse({
+					prompt: aiPrompt,
+					responseSchema: selfTrainingAIResponseJsonOrgSchema,
+					responseValidationSchema: selfTrainingAiResponseSchema,
+					apiKey: env.OPENAI_API_KEY,
+				});
+
+				console.log('Generated AI Promp');
+				if (!aiResult || !aiResult.prompt) {
+					throw new Error('AI did not return a valid prompt.');
+				}
+
+				return aiResult;
 			});
-			const hasMore = await step.do('check if more executions are needed', async () => {
-				const executions = await db
-					.select({
-						count: count(simulationExecution.id),
-					})
-					.from(simulationExecution)
-					.where(eq(simulationExecution.simulationRoomId, room.id));
-				return (executions[0]?.count ?? 0) < room.tradesToExecute; // Adjust the number of executions as needed
+
+			await step.do('create simulation execution', async () => {
+				const result = await createSimulationExecutionFromPrompt({
+					simulationRoomId: room.id,
+					prompt: aiGeneratedPrompt.prompt,
+				});
+
+				if (!result) {
+					throw new Error('Failed to create simulation execution from AI prompt.');
+				}
 			});
-			if (!hasMore) {
-				break;
-			}
-
-			if (!room.lastExecution?.id) {
-				console.log('into prompt');
-				const aiGeneratedPrompt = await step.do('generate first AI prompt', async () => {
-					const aiPrompt = getPrompt(room.aiPrompt);
-
-					const aiResult = await getOpenAiResponse({
-						prompt: aiPrompt,
-						responseSchema: selfTrainingAIResponseJsonOrgSchema,
-						responseValidationSchema: selfTrainingAiResponseSchema,
-						apiKey: env.OPENAI_API_KEY,
-					});
-
-					console.log('Generated AI Promp');
-					if (!aiResult || !aiResult.prompt) {
-						throw new Error('AI did not return a valid prompt.');
-					}
-
-					return aiResult;
+		} else {
+			const marketData = await step.do('fetch market data', async () => {
+				const minDate = room.lastExecution?.trades?.at(0)?.entryDate;
+				const maxDate = room.lastExecution?.trades?.at(-1)?.exitDate;
+				if (!minDate || !maxDate) {
+					return null;
+				}
+				console.log({
+					start: new Date(minDate),
+					end: new Date(maxDate),
+					timeframeAmount: 15,
+					timeframeUnit: TimeUnit.Min,
+					pair: room.pair,
+				});
+				const bars = await fetchBars({
+					start: new Date(minDate),
+					end: new Date(maxDate),
+					timeframeAmount: 15,
+					timeframeUnit: TimeUnit.Min,
+					pair: room.pair,
 				});
 
-				await step.do('create simulation execution', async () => {
-					// todo: replace prompt variables
+				return bars;
+			});
 
-					const result = await createSimulationExecutionFromPrompt({
-						simulationRoomId: room.id,
-						prompt: aiGeneratedPrompt.prompt,
-					});
-
-					if (!result) {
-						throw new Error('Failed to create simulation execution from AI prompt.');
-					}
+			const aiGeneratedPrompt = await step.do('generate improved AI prompt', async () => {
+				if (!room.lastExecution?.aiPrompt) {
+					throw new Error('No previous AI prompt found for self-training.');
+				}
+				const aiPrompt = replacePromptVariables(IMPROVEMENT_PROMPT, {
+					previous_prompt: room.lastExecution.aiPrompt,
+					trades: JSON.stringify(room.lastExecution.trades),
+					market_data: JSON.stringify(marketData),
 				});
-			} else {
-				const aiGeneratedPrompt = await step.do('generate improved AI prompt', async () => {
-					if (!room.lastExecution?.aiPrompt) {
-						throw new Error('No previous AI prompt found for self-training.');
-					}
-					const aiPrompt = replacePromptVariables(IMPROVEMENT_PROMPT, {
-						previous_prompt: room.lastExecution.aiPrompt,
-						trades: JSON.stringify(room.lastExecution.trades),
-					});
 
-					const aiResult = await getOpenAiResponse({
-						prompt: aiPrompt,
-						responseSchema: selfTrainingAIResponseJsonOrgSchema,
-						responseValidationSchema: selfTrainingAiResponseSchema,
-						apiKey: env.DEEPSEEK_API_KEY_ID,
-					});
-
-					console.log('Generated AI Promp');
-					if (!aiResult || !aiResult.prompt) {
-						throw new Error('AI did not return a valid prompt.');
-					}
-
-					return aiResult;
+				const aiResult = await getOpenAiResponse({
+					prompt: aiPrompt,
+					responseSchema: selfTrainingAIResponseJsonOrgSchema,
+					responseValidationSchema: selfTrainingAiResponseSchema,
+					apiKey: env.OPENAI_API_KEY,
 				});
-				await step.do('create simulation execution', async () => {
-					// todo: replace prompt variables
 
-					const result = await createSimulationExecutionFromPrompt({
-						simulationRoomId: room.id,
-						prompt: aiGeneratedPrompt.prompt,
-					});
+				console.log('Generated AI Promp');
+				if (!aiResult || !aiResult.prompt) {
+					throw new Error('AI did not return a valid prompt.');
+				}
 
-					if (!result) {
-						throw new Error('Failed to create simulation execution from AI prompt.');
-					}
+				return aiResult;
+			});
+			await step.do('create simulation execution', async () => {
+				const result = await createSimulationExecutionFromPrompt({
+					simulationRoomId: room.id,
+					prompt: aiGeneratedPrompt.prompt,
 				});
-			}
 
-			await step.waitForEvent('receive previous execution completeness', {
-				type: 'proceed-execution',
-				timeout: '6 hours',
+				if (!result) {
+					throw new Error('Failed to create simulation execution from AI prompt.');
+				}
 			});
 		}
 	}
@@ -137,6 +155,7 @@ export class SelfTrainingRoomWorkflow extends WorkflowEntrypoint<Env, {}> {
 			.select({
 				id: simulationRoom.id,
 				aiPrompt: simulationRoom.aiPrompt,
+				pair: simulationRoom.pair,
 				tradesToExecute: simulationRoom.tradesToExecute,
 				lastExecution: queryJoinOne(
 					db,
@@ -147,9 +166,20 @@ export class SelfTrainingRoomWorkflow extends WorkflowEntrypoint<Env, {}> {
 							db,
 							{
 								id: simulationExecutionTrade.id,
+								entryDate: simulationExecutionTrade.entryDate,
+								exitDate: simulationExecutionTrade.exitDate,
+								entryPrice: simulationExecutionTrade.entryPrice,
+								exitPrice: simulationExecutionTrade.exitPrice,
+								reason: simulationExecutionTrade.reason,
+								stopLossPrice: simulationExecutionTrade.stopLossPrice,
+								takeProfitPrice: simulationExecutionTrade.takeProfitPrice,
+								status: simulationExecutionTrade.status,
 							},
 							(query) =>
-								query.from(simulationExecutionTrade).where(eq(simulationExecutionTrade.simulationExecutionId, simulationExecution.id)),
+								query
+									.from(simulationExecutionTrade)
+									.where(eq(simulationExecutionTrade.simulationExecutionId, simulationExecution.id))
+									.orderBy(asc(simulationExecutionTrade.entryDate)),
 						),
 					},
 					(query) =>
@@ -164,7 +194,6 @@ export class SelfTrainingRoomWorkflow extends WorkflowEntrypoint<Env, {}> {
 			.where(and(eq(simulationRoom.id, simulationRoomId), eq(simulationRoom.selfTraining, true)));
 
 		if (!simulationRoomResult) {
-			console.log('NO ROOM FOUND');
 			throw new NonRetryableError(`Room with ID ${simulationRoomId} not found or not self trainable.`);
 		}
 

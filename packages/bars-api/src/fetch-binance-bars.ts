@@ -64,6 +64,11 @@ export async function fetchBinanceBars(input: {
       if (data.length === 0) {
         break; // No more data
       }
+      if (!Array.isArray(data)) {
+        console.error('Unexpected data format:');
+        console.error(data);
+        throw new Error('Unexpected data format from Binance API');
+      }
 
       const newBars = data.map((kline) => {
         const Volume = parseFloat(kline[5]);

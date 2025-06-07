@@ -171,6 +171,9 @@ importers:
       '@baron/trpc-server':
         specifier: workspace:*
         version: link:../../packages/trpc-server
+      '@paralleldrive/cuid2':
+        specifier: 'catalog:'
+        version: 2.2.2
       '@trpc/server':
         specifier: 'catalog:'
         version: 11.1.3(typescript@5.8.3)

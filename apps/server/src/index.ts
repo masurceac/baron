@@ -2,8 +2,8 @@ import { asyncLocalStorage, createAsyncStorageContext, createTrpcContext } from 
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import { appRouter } from './trpc';
 import { eventBus } from './events';
-import { ProcessSimulationExecutionWorkflow } from './workflows/process-simulation-execution';
 import { SelfTrainingRoomWorkflow } from './workflows/self-training-room';
+import { SimulationIterationWorkflow } from './workflows/simulation-iteration-workflow';
 
 const worker = {
 	async fetch(request, env): Promise<Response> {
@@ -58,6 +58,6 @@ const handleCORSPreflight = () => {
 	return addCORSHeaders(rs);
 };
 
-export { ProcessSimulationExecutionWorkflow, SelfTrainingRoomWorkflow };
+export { SelfTrainingRoomWorkflow, SimulationIterationWorkflow };
 
 export default worker;

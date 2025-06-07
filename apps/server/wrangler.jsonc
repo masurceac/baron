@@ -16,14 +16,14 @@
 	},
 	"workflows": [
 		{
-			"name": "process-simulation-execution",
-			"binding": "PROCESS_SIMULATION_EXECUTION",
-			"class_name": "ProcessSimulationExecutionWorkflow",
-		},
-		{
 			"name": "self-training-room",
 			"binding": "SELF_TRAINING_ROOM",
 			"class_name": "SelfTrainingRoomWorkflow",
+		},
+		{
+			"name": "simulation-iteration-workflow",
+			"binding": "SIMULATION_ITERATION_WORKFLOW",
+			"class_name": "SimulationIterationWorkflow",
 		},
 	],
 	/**

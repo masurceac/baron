@@ -18,10 +18,6 @@ export async function checkTradeSuccess(order: TradeType): Promise<{
 	exitPrice: number;
 	resultBalance: number;
 }> {
-	if (order.loopNumber && order.loopNumber > 8) {
-		throw 'Loop limit exceeded';
-	}
-
 	if (order.aiOrder.type === 'hold' || !order.aiOrder.takeProfitPrice || !order.aiOrder.stopLossPrice) {
 		throw 'Order is not valid for success check';
 	}
@@ -103,6 +99,17 @@ export async function checkTradeSuccess(order: TradeType): Promise<{
 			}
 		}
 	}
+
+	if (order.loopNumber && order.loopNumber > 8) {
+		return {
+			order: order,
+			type: TradeResult.Unknown,
+			timestamp: bars.at(-1)?.Timestamp!,
+			exitPrice: bars.at(-1)?.Close ?? 0,
+			resultBalance: 0,
+		};
+	}
+
 	const nestedResult = await checkTradeSuccess({
 		...order,
 		loopNumber: (order.loopNumber || 0) + 1,
