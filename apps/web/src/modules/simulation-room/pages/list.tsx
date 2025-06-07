@@ -66,6 +66,24 @@ function ListData() {
         ),
       },
       {
+        id: 'train',
+        enableSorting: false,
+        header: 'Train',
+        cell: ({ row: { original } }) => (
+          <Button
+            variant="link"
+            className="-ml-2"
+            onClick={() =>
+              train.mutate({
+                id: original.id,
+              })
+            }
+          >
+            Train <ArrowRightIcon className="w-4" />
+          </Button>
+        ),
+      },
+      {
         accessorKey: 'description',
         enableSorting: false,
         header: 'Simulations',
@@ -83,26 +101,7 @@ function ListData() {
           </div>
         ),
       },
-      {
-        id: 'train',
-        enableSorting: false,
-        header: 'Train',
-        cell: ({ row: { original } }) => (
-          <div>
-            <Button
-              variant="link"
-              className="-ml-2"
-              onClick={() =>
-                train.mutate({
-                  id: original.id,
-                })
-              }
-            >
-              Train <ArrowRightIcon className="w-4" />
-            </Button>
-          </div>
-        ),
-      },
+
       {
         accessorKey: 'id',
         header: () => (
