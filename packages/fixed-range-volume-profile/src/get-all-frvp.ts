@@ -209,7 +209,13 @@ export async function getFrvpProfiles(
       });
     }
   }
-  log();
+  const result = log();
+  if (result > 20) {
+    console.warn(
+      `⚠️ Processing took ${result}s, consider increasing the buffer size or reducing the number of buffers to process.`,
+    );
+    console.warn(input);
+  }
 
   return volumeProfilesResult;
 }

@@ -14,5 +14,7 @@ export function measure(log: string) {
   return () => {
     const end = Date.now();
     console.log(`🟥 STOP ${Math.trunc((end - start) / 1000)}s: ${log}`);
+
+    return Math.trunc((end - start) / 1000);
   };
 }
