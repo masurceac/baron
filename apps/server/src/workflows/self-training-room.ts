@@ -11,44 +11,19 @@ import { SelfTrainingRoomWorkflowArgs } from './types';
 import { fetchBars } from '@baron/bars-api';
 import { TimeUnit } from '@baron/common';
 
-const getPrompt = (
-	aiPrompt: string,
-) => `You are a trading AI expert. Generate a prompt for the AI to analyze current market data and suggest a trade action.
-Here's user input:
-${aiPrompt}`;
-
 const IMPROVEMENT_PROMPT = `
-You are an expert trading AI. Your task is to rewrite a trading prompt to improve its performance.
-
-**1. Previous Prompt:**
-This is the prompt that was used to execute the trades.
+This is the prompt:
 \`\`\`json
 {{previous_prompt}}
 \`\`\`
-
-**2. Trade History:**
-These are the trades that resulted from the previous prompt. Analyze them internally to identify mistakes, poor entries/exits, and flawed logic.
+Thse are the trades executed based on the above prompt:
 \`\`\`json
 {{trades}}
 \`\`\`
-
-**3. Market Data:**
-This is the market data from the trading period. Use it to understand the context in which the trades failed or succeeded.
+This is the market data used for the trades:
 \`\`\`
 {{market_data}}
 \`\`\`
-
-**Your Task:**
-
-Based on your internal analysis of the mistakes found in the 'trades' and the context from the 'market_data', create a new, superior prompt.
-
-The new prompt must contain clearer, more robust rules for:
-* Trade entry signals
-* Position sizing
-* Take-profit levels
-* Stop-loss levels
-
-**Your output should ONLY be the final, rewritten prompt. Do not provide any explanation, justification, or analysis in your response.**
 `;
 
 export class SelfTrainingRoomWorkflow extends WorkflowEntrypoint<Env, {}> {
@@ -58,29 +33,10 @@ export class SelfTrainingRoomWorkflow extends WorkflowEntrypoint<Env, {}> {
 		});
 
 		if (!room.lastExecution?.id) {
-			console.log('into prompt');
-			const aiGeneratedPrompt = await step.do('generate first AI prompt', async () => {
-				const aiPrompt = getPrompt(room.aiPrompt);
-
-				const aiResult = await getOpenAiResponse({
-					prompt: aiPrompt,
-					responseSchema: selfTrainingAIResponseJsonOrgSchema,
-					responseValidationSchema: selfTrainingAiResponseSchema,
-					apiKey: env.OPENAI_API_KEY,
-				});
-
-				console.log('Generated AI Promp');
-				if (!aiResult || !aiResult.prompt) {
-					throw new Error('AI did not return a valid prompt.');
-				}
-
-				return aiResult;
-			});
-
 			await step.do('create simulation execution', async () => {
 				const result = await createSimulationExecutionFromPrompt({
 					simulationRoomId: room.id,
-					prompt: aiGeneratedPrompt.prompt,
+					prompt: room.aiPrompt,
 				});
 
 				if (!result) {
@@ -116,11 +72,13 @@ export class SelfTrainingRoomWorkflow extends WorkflowEntrypoint<Env, {}> {
 				if (!room.lastExecution?.aiPrompt) {
 					throw new Error('No previous AI prompt found for self-training.');
 				}
-				const aiPrompt = replacePromptVariables(IMPROVEMENT_PROMPT, {
-					previous_prompt: room.lastExecution.aiPrompt,
-					trades: JSON.stringify(room.lastExecution.trades),
-					market_data: JSON.stringify(marketData),
-				});
+				const aiPrompt = (room.selfTrainingPrompt ?? 'Improve the prompt for better efficiency.').concat(
+					replacePromptVariables(IMPROVEMENT_PROMPT, {
+						previous_prompt: room.lastExecution.aiPrompt,
+						trades: JSON.stringify(room.lastExecution.trades),
+						market_data: JSON.stringify(marketData),
+					}),
+				);
 
 				const aiResult = await getOpenAiResponse({
 					prompt: aiPrompt,
@@ -155,6 +113,7 @@ export class SelfTrainingRoomWorkflow extends WorkflowEntrypoint<Env, {}> {
 			.select({
 				id: simulationRoom.id,
 				aiPrompt: simulationRoom.aiPrompt,
+				selfTrainingPrompt: simulationRoom.selfTrainingPrompt,
 				pair: simulationRoom.pair,
 				tradesToExecute: simulationRoom.tradesToExecute,
 				lastExecution: queryJoinOne(

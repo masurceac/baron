@@ -49,10 +49,11 @@ export const simulationRoomRouter = {
 					aiPrompt: input.aiPrompt.trim(),
 					pair: input.pair,
 					trailingStop: input.trailingStop ?? false,
-					selfTraining: input.selfTraining ?? false,
 					startDate: input.startDate,
 					tradesToExecute: input.tradesToExecute,
+					selfTraining: input.selfTraining ?? false,
 					selfTrainingCycles: input.selfTrainingCycles,
+					selfTrainingPrompt: input.selfTrainingPrompt,
 				})
 				.returning();
 

@@ -6,5 +6,6 @@ export const simulationRoomSchema = z
     description: z.string(),
     selfTraining: z.boolean().optional().default(false),
     selfTrainingCycles: z.number().optional(),
+    selfTrainingPrompt: z.string().optional(),
   })
   .merge(simulationConfigSchema);

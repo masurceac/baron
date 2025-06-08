@@ -154,13 +154,21 @@ export function ItemForm(props: {
                   />
                 )}
               />
+              <FormFieldWrapper
+                control={form.control}
+                name="selfTrainingPrompt"
+                label="Self training Prompt"
+                description="This prompt will be used to generate further prompts for self-training and self-improvement."
+                render={({ field }) => (
+                  <Textarea value={field.value} onChange={field.onChange} />
+                )}
+              />
             </>
           )}
           <FormFieldWrapper
             control={form.control}
             name="aiPrompt"
             label="AI Prompt"
-            rightLabel="make sure to include all the variables"
             description={
               <DetailedTextDialog
                 title="This is the default AI prompt"

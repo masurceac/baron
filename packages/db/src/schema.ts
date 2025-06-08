@@ -150,6 +150,7 @@ export const simulationRoom = pgTable('simulation_room', {
   authorId: text('author_id').notNull(),
   selfTraining: boolean('is_self_training').notNull().default(false),
   selfTrainingCycles: integer('self_training_cycles'),
+  selfTrainingPrompt: text('self_training_prompt'),
 });
 
 export const simulationRoomToVolumeProfileConfig = pgTable(
