@@ -24,6 +24,8 @@ This is the market data used for the trades:
 \`\`\`
 {{market_data}}
 \`\`\`
+
+Stricly reply with only a JSON according to the requested response schema.
 `;
 
 export class SelfTrainingRoomWorkflow extends WorkflowEntrypoint<Env, {}> {

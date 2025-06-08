@@ -15,7 +15,7 @@ export async function triggerIteration(iterationId: string) {
 	const iterationExists = await getExistingWorkflow(iterationId);
 	if (iterationExists) {
 		const { status } = await iterationExists.status();
-		if (status === 'errored' || status === 'complete') {
+		if (status === 'errored' || status === 'complete' || status === 'terminated') {
 			await env.SIMULATION_ITERATION_WORKFLOW.create({
 				id: `${iterationId}-retried-${createId()}`,
 				params: {
