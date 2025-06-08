@@ -1,4 +1,4 @@
-import { Button } from '@baron/ui/components/button';
+import { Badge } from '@baron/ui/components/badge';
 import {
   Dialog,
   DialogContent,
@@ -17,9 +17,9 @@ export function DetailedTextDialog(props: {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button size="sm" className="mt-1">
+        <Badge className="cursor-pointer">
           {props.label ?? 'View Default'}
-        </Button>
+        </Badge>
       </DialogTrigger>
       <DialogContent className="w-full sm:max-w-screen-lg">
         <DialogHeader>

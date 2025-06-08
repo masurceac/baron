@@ -12,6 +12,7 @@ import { Link, useParams } from 'react-router-dom';
 import { TradeResult } from '../components/trade-result';
 import { ExecutionStatus } from '../components/execution-status';
 import { TradingPairSelect } from '@/modules/inputs/trading-pair-select';
+import { SimulationRoomDetails } from '@/modules/simulation-room/components/simulation-room-details';
 
 type TableItem = RouterOutput['simulationExecution']['list']['data'][number];
 
@@ -122,7 +123,8 @@ function ListData() {
   );
 
   return (
-    <div>
+    <div className="space-y-8">
+      <SimulationRoomDetails simulationRoomId={params.roomId ?? ''} />
       <DataTable columns={columns} data={list.data} />
 
       {list.count ? (

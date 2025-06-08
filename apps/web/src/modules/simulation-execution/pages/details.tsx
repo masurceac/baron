@@ -34,6 +34,7 @@ import {
 } from '@baron/ui/components/tabs';
 import {
   ArrowLeftIcon,
+  CirclePlayIcon,
   OctagonMinusIcon,
   StepForwardIcon,
   StopCircleIcon,
@@ -71,7 +72,13 @@ function DetailsData() {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>{data.name}</CardTitle>
+          <CardTitle>
+            <Badge variant="orange" className="mb-2">
+              Simulation Execution
+            </Badge>
+            <br />
+            {data.name}
+          </CardTitle>
           <CardDescription>
             These are the details used for the AI in this simulation execution.
           </CardDescription>
@@ -158,7 +165,7 @@ function DetailsData() {
             </DialogContent>
           </Dialog>
         </CardContent>
-        <CardContent>
+        <CardContent className="space-x-4">
           {data.status === SimulationExecutionStatus.Running && (
             <>
               <Button
@@ -194,7 +201,7 @@ function DetailsData() {
                 }}
               >
                 Retry Execution
-                <StopCircleIcon className="w-4 ml-2" />
+                <CirclePlayIcon className="w-4 ml-2" />
               </Button>
             </>
           )}

@@ -214,6 +214,9 @@ export const simulationRoomRouter = {
 				pair: simulationRoom.pair,
 				startDate: simulationRoom.startDate,
 				trailingStop: simulationRoom.trailingStop,
+				selfTraining: simulationRoom.selfTraining,
+				selfTrainingCycles: simulationRoom.selfTrainingCycles,
+				tradesToExecute: simulationRoom.tradesToExecute,
 				vpcIds: queryJoin(db, { id: volumeProfileConfig.id }, (query) =>
 					query
 						.from(simulationRoomToVolumeProfileConfig)
