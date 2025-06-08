@@ -3,4 +3,5 @@ export enum SimulationExecutionStatus {
   Running = 'running',
   Completed = 'completed',
   Failed = 'failed',
+  LimitReached = 'limit_reached',
 }

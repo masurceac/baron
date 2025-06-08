@@ -79,6 +79,25 @@ export class SimulationIterationWorkflow extends WorkflowEntrypoint<Env, {}> {
 			return log;
 		});
 
+		const totalLogs = await step.do('Get total logs count', async () => {
+			const [countResult] = await db
+				.select({ count: count(simulationExecutionLog.id) })
+				.from(simulationExecutionLog)
+				.where(eq(simulationExecutionLog.simulationExecutionId, currentIteration.simulationExecutionId));
+
+			return countResult?.count ?? 0;
+		});
+		if (totalLogs >= 150) {
+			await step.do('Logs exceeded maximum 150. Terminating', async () => {
+				await db
+					.update(simulationExecution)
+					.set({ status: SimulationExecutionStatus.LimitReached })
+					.where(eq(simulationExecution.id, currentIteration.simulationExecutionId));
+			});
+
+			return;
+		}
+
 		const executionConfig = await step.do(`Get execution config ${simulationExecution.id}`, async () => {
 			const [config] = await db
 				.select({

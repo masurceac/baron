@@ -231,6 +231,7 @@ export const simulationExecution = pgTable('simulation_execution', {
       SimulationExecutionStatus.Running,
       SimulationExecutionStatus.Completed,
       SimulationExecutionStatus.Failed,
+      SimulationExecutionStatus.LimitReached,
     ],
   })
     .notNull()
