@@ -39,13 +39,13 @@ function ListData() {
           `${list.count - pagination.skip * pagination.take - index}`,
       },
       {
-        accessorKey: 'createdAt',
+        accessorKey: 'name',
         enableSorting: false,
-        header: 'Created At',
+        header: 'Name',
         cell: ({ row: { original } }) => (
           <div>
+            <p>{original.name}</p>
             <FormatDate date={original.createdAt} format="long" />
-            <p className="text-xs text-muted-foreground">{original.id}</p>
           </div>
         ),
       },
