@@ -165,7 +165,7 @@ export class OrderPlacementWorkflow extends WorkflowEntrypoint<Env, {}> {
 
 			const aiResponse = await getDeepSeekResponse({
 				prompt,
-				apiKey: env.OPENAI_API_KEY,
+				apiKey: env.DEEPSEEK_API_KEY_ID,
 				responseValidationSchema: openOrderAiResponseSchema,
 				responseSchema: openOrderAIResponseJsonOrgSchema,
 			});
