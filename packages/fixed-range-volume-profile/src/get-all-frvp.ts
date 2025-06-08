@@ -117,9 +117,6 @@ export async function getFrvpProfiles(
     `Processing  ${consolidationBuffers.length} consolidation buffers`,
   );
 
-  const conslidationBuffersToProcess: BarsStack[] = [];
-  // find one buffer that includes current price
-
   const containingCurrentPrice = consolidationBuffers.filter(
     (barsStack) =>
       barsStack.minPrice() <= input.currentPrice &&
@@ -135,22 +132,14 @@ export async function getFrvpProfiles(
       }, containingCurrentPrice[0]!)
     : null;
 
-  if (mostRecentBuffer) {
-    conslidationBuffersToProcess.push(mostRecentBuffer);
-  }
-  const higherBuffers = consolidationBuffers
-    .filter((barsStack) => barsStack.minPrice() > input.currentPrice)
-    // sort ascending by lower price
-    .sort((a, b) => a.minPrice() - b.minPrice());
-
-  conslidationBuffersToProcess.push(...higherBuffers.slice(0, 2));
-
-  const lowerBuffers = consolidationBuffers
-    .filter((barsStack) => barsStack.maxPrice() < input.currentPrice)
-    // sort descending by higher price
-    .sort((a, b) => b.maxPrice() - a.maxPrice());
-
-  conslidationBuffersToProcess.push(...lowerBuffers.slice(0, 2));
+  const conslidationBuffersToProcess = consolidationBuffers
+    .filter(
+      // include buffers above and below the current price
+      (barsStack) =>
+        barsStack.minPrice() <= input.currentPrice &&
+        barsStack.maxPrice() >= input.currentPrice,
+    )
+    .concat(...(mostRecentBuffer ? [mostRecentBuffer] : []));
 
   log = measure(
     `getFrvpProfiles - processing ${conslidationBuffersToProcess.length} buffers`,
