@@ -2,6 +2,7 @@ import { trpc } from '@/core/trpc';
 import { InfoBarList } from '@/modules/info-bars/components/info-bar-list';
 import { TradingPairSelect } from '@/modules/inputs/trading-pair-select';
 import { DetailedTextDialog } from '@/modules/shared/components/detailed-text-dialog';
+import { TradeCountResult, TradeMoneyResult } from '@/modules/simulation-execution/components/trade-result';
 import { VolumeProfileList } from '@/modules/volume-profile-config/components/volume-profile-list';
 import { Badge } from '@baron/ui/components/badge';
 import { Button } from '@baron/ui/components/button';
@@ -90,9 +91,9 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
           </DialogContent>
         </Dialog>
       </CardContent>
-      <CardContent className="text-lg font-semibold">
-        Simulation result: $
-        {parseFloat(data.finalBalance?.sum ?? '0')?.toFixed(2)}
+      <CardContent className="flex justify-start items-center space-x-4">
+        <TradeMoneyResult trades={data.trades ?? []} />
+        <TradeCountResult trades={data.trades ?? []} />
       </CardContent>
     </Card>
   );
