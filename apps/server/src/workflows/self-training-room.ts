@@ -12,7 +12,7 @@ import { fetchBars } from '@baron/bars-api';
 import { TimeUnit } from '@baron/common';
 
 const IMPROVEMENT_PROMPT = `
-This is the prompt:
+Original prompt:
 \`\`\`json
 {{previous_prompt}}
 \`\`\`
@@ -20,12 +20,13 @@ Thse are the trades executed based on the above prompt:
 \`\`\`json
 {{trades}}
 \`\`\`
-This is the market data used for the trades:
+Market data used for the trades:
 \`\`\`
 {{market_data}}
 \`\`\`
 
-Stricly reply with only a JSON according to the requested response schema.
+Do not include any reasoning in your response, strictly the updated prompt.
+Strictly reply with JSON according to the response schema.
 `;
 
 export class SelfTrainingRoomWorkflow extends WorkflowEntrypoint<Env, {}> {
