@@ -103,15 +103,15 @@ function DetailsData() {
                 disabled
               />
               <ExecutionStatus status={data.status} />
-              <Badge>
+              <Badge variant="outline">
                 <TargetIcon className="w-4 mr-1" /> {data.trades?.length ?? 0}/
                 {data.tradesToExecute} trades
               </Badge>
-              <Badge>
+              <Badge variant="outline">
                 <StepForwardIcon className="w-4 mr-1" /> {data.stepMinutes}{' '}
                 minute(s) step
               </Badge>
-              <Badge title="Trailing Stop">
+              <Badge variant="outline">
                 <OctagonMinusIcon className="w-4 mr-1" /> Trailing stop{' '}
                 {data.trailingStop ? 'enabled' : 'disabled'}
               </Badge>
