@@ -141,6 +141,7 @@ export const simulationExecutionRouter = {
 				trailingStop: simulationExecution.trailingStop,
 				status: simulationExecution.status,
 				stepMinutes: simulationExecution.stepMinutes,
+				holdPriceEnabled: simulationExecution.holdPriceEnabled,
 				pair: simulationExecution.pair,
 				trades: queryJoin(
 					db,

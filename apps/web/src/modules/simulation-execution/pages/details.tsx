@@ -122,6 +122,10 @@ function DetailsData() {
                 <OctagonMinusIcon className="w-4 mr-1" /> Trailing stop{' '}
                 {data.trailingStop ? 'enabled' : 'disabled'}
               </Badge>
+              <Badge variant="outline">
+                <OctagonMinusIcon className="w-4 mr-1" /> Hold Price{' '}
+                {data.holdPriceEnabled ? 'enabled' : 'disabled'}
+              </Badge>
             </div>
           </div>
         </CardContent>

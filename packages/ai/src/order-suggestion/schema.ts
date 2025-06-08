@@ -5,8 +5,8 @@ export const openOrderAiResponseSchema = z.object({
   stopLossPrice: z.number().nullable(),
   takeProfitPrice: z.number().nullable(),
   reason: z.string().nullable(),
-  holdUntilPriceBreaksUp: z.number().nullable(),
-  holdUntilPriceBreaksDown: z.number().nullable(),
+  waitUntilPriceBreaksUp: z.number().nullable(),
+  waitUntilPriceBreaksDown: z.number().nullable(),
 });
 
 export const openOrderAIResponseJsonOrgSchema = {
@@ -30,17 +30,17 @@ export const openOrderAIResponseJsonOrgSchema = {
       type: 'string',
       nullable: true,
     },
-    holdUntilPriceBreaksUp: {
+    waitUntilPriceBreaksUp: {
       type: 'number',
       nullable: true,
       description:
-        "The upper price boundary to monitor for a breakout. Required only when 'type' is 'hold'.",
+        "The upper price when to enter next trade. Required only when 'type' is 'hold'.",
     },
-    holdUntilPriceBreaksDown: {
+    waitUntilPriceBreaksDown: {
       type: 'number',
       nullable: true,
       description:
-        "The lower price boundary to monitor for a breakdown. Required only when 'type' is 'hold'.",
+        "The lower price when to enter next trade. Required only when 'type' is 'hold'.",
     },
   },
   required: [
@@ -48,8 +48,8 @@ export const openOrderAIResponseJsonOrgSchema = {
     'stopLossPrice',
     'takeProfitPrice',
     'reason',
-    'holdUntilPriceBreaksUp',
-    'holdUntilPriceBreaksDown',
+    'waitUntilPriceBreaksUp',
+    'waitUntilPriceBreaksDown',
   ],
   additionalProperties: false,
 } as const;

@@ -2,7 +2,10 @@ import { trpc } from '@/core/trpc';
 import { InfoBarList } from '@/modules/info-bars/components/info-bar-list';
 import { TradingPairSelect } from '@/modules/inputs/trading-pair-select';
 import { DetailedTextDialog } from '@/modules/shared/components/detailed-text-dialog';
-import { TradeCountResult, TradeMoneyResult } from '@/modules/simulation-execution/components/trade-result';
+import {
+  TradeCountResult,
+  TradeMoneyResult,
+} from '@/modules/simulation-execution/components/trade-result';
 import { VolumeProfileList } from '@/modules/volume-profile-config/components/volume-profile-list';
 import { Badge } from '@baron/ui/components/badge';
 import { Button } from '@baron/ui/components/button';
@@ -42,7 +45,7 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
           {data.description || 'No description provided.'}
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid md:grid-cols-2 gap-4 lg:flex space-x-8">
+      <CardContent className="grid md:grid-cols-2 gap-2 lg:flex space-x-4">
         <TradingPairSelect value={data.pair} onChange={() => null} disabled />
         <Badge variant="outline" title="Trailing Stop">
           <OctagonMinusIcon className="w-4 mr-1" /> Trailing stop{' '}
@@ -54,6 +57,12 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
             ? `enabled (${data.selfTrainingCycles} cycles)`
             : 'disabled'}
         </Badge>
+        <Badge variant="outline">
+          <BookIcon className="w-4 mr-1" /> Hold Price{' '}
+          {data.holdPriceEnabled ? `enabled` : 'disabled'}
+        </Badge>
+      </CardContent>
+      <CardContent className="grid md:grid-cols-2 gap-2 lg:flex space-x-4">
         <DetailedTextDialog
           title="This is the default AI prompt "
           content={data.aiPrompt}

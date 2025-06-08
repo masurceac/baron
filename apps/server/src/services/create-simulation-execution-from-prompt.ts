@@ -51,6 +51,7 @@ export async function createSimulationExecutionFromPrompt(input: { simulationRoo
 		vpcIds: vpcList.map((vpc) => vpc.id),
 		name: simulationRoomResult.name + ' - AI Test',
 		infoBarIds: linkedInfoBars.map((i) => i.informativeBarConfigId),
+		holdPriceEnabled: simulationRoomResult.holdPriceEnabled ?? false,
 	});
 
 	return true;

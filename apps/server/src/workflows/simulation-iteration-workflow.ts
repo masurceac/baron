@@ -312,8 +312,8 @@ export class SimulationIterationWorkflow extends WorkflowEntrypoint<Env, {}> {
 					direction: TradeLogDirection.Hold,
 					reason: aiPromptResult.reason ?? '',
 					date: currentStartTime,
-					holdUntilPriceBreaksUp: executionConfig.holdPriceEnabled ? (aiPromptResult.holdUntilPriceBreaksUp ?? null) : null,
-					holdUntilPriceBreaksDown: executionConfig.holdPriceEnabled ? (aiPromptResult.holdUntilPriceBreaksDown ?? null) : null,
+					holdUntilPriceBreaksUp: executionConfig.holdPriceEnabled ? (aiPromptResult.waitUntilPriceBreaksUp ?? null) : null,
+					holdUntilPriceBreaksDown: executionConfig.holdPriceEnabled ? (aiPromptResult.waitUntilPriceBreaksDown ?? null) : null,
 				});
 			});
 		} else {
