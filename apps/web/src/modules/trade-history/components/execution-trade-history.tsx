@@ -17,6 +17,12 @@ function ExecutionTradeHistoryItems(props: { executionId: string }) {
   const columns = useMemo<ColumnDef<TableItem>[]>(
     () => [
       {
+        id: 'index',
+        enableSorting: false,
+        header: '#',
+        cell: ({ row: { index } }) => `${data.length - index}`,
+      },
+      {
         accessorKey: 'createdAt',
         enableSorting: false,
         header: 'Created At',
@@ -116,6 +122,7 @@ function ExecutionTradeHistoryItems(props: { executionId: string }) {
             <RedGreenHighlight
               variant={original.balanceResult >= 0 ? 'green' : 'red'}
             >
+              $
               {original.balanceResult >= 0
                 ? `+${original.balanceResult.toFixed(2)}`
                 : `-${Math.abs(original.balanceResult).toFixed(2)}`}

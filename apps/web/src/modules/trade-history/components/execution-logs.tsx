@@ -17,6 +17,12 @@ function ExecutionLogsItems(props: { executionId: string }) {
   const columns = useMemo<ColumnDef<TableItem>[]>(
     () => [
       {
+        id: 'index',
+        enableSorting: false,
+        header: '#',
+        cell: ({ row: { index } }) => `${data.length - index}`,
+      },
+      {
         accessorKey: 'createdAt',
         enableSorting: false,
         header: 'Created At',

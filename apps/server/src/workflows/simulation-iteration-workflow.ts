@@ -20,7 +20,7 @@ import {
 import { getStartDate } from '@baron/fixed-range-volume-profile';
 import { env, WorkflowEntrypoint, WorkflowEvent, WorkflowStep } from 'cloudflare:workers';
 import { NonRetryableError } from 'cloudflare:workflows';
-import { addMinutes, isBefore, sub } from 'date-fns';
+import { add, addMinutes, sub } from 'date-fns';
 import { and, count, desc, eq, gt } from 'drizzle-orm';
 import { SimulationIterationgWorkflowArgs } from './types';
 import { triggerIteration, triggerSelfTrainingRoom } from './utils';
@@ -68,7 +68,18 @@ export class SimulationIterationWorkflow extends WorkflowEntrypoint<Env, {}> {
 			return iteration;
 		});
 
-		const executionConfig = await step.do('Get execution config', async () => {
+		const lastLog = await step.do('Get last log', async () => {
+			const [log] = await db
+				.select()
+				.from(simulationExecutionLog)
+				.where(eq(simulationExecutionLog.simulationExecutionId, currentIteration.simulationExecutionId))
+				.orderBy(desc(simulationExecutionLog.createdAt))
+				.limit(1);
+
+			return log;
+		});
+
+		const executionConfig = await step.do(`Get execution config ${simulationExecution.id}`, async () => {
 			const [config] = await db
 				.select({
 					id: simulationExecution.id,
@@ -78,6 +89,7 @@ export class SimulationIterationWorkflow extends WorkflowEntrypoint<Env, {}> {
 					tradesToExecute: simulationExecution.tradesToExecute,
 					selfTrainingRoom: simulationRoom.selfTraining,
 					selfTrainingCycles: simulationRoom.selfTrainingCycles,
+					holdPriceEnabled: simulationExecution.holdPriceEnabled,
 					simulationRoomId: simulationExecution.simulationRoomId,
 				})
 				.from(simulationExecution)
@@ -97,7 +109,12 @@ export class SimulationIterationWorkflow extends WorkflowEntrypoint<Env, {}> {
 					exitDate: simulationExecutionTrade.exitDate,
 				})
 				.from(simulationExecutionTrade)
-				.where(eq(simulationExecutionTrade.simulationExecutionId, currentIteration.simulationExecutionId))
+				.where(
+					and(
+						eq(simulationExecutionTrade.simulationExecutionId, currentIteration.simulationExecutionId),
+						gt(simulationExecutionTrade.exitDate, currentIteration.date),
+					),
+				)
 				.orderBy(desc(simulationExecutionTrade.exitDate))
 				.limit(1);
 
@@ -105,12 +122,57 @@ export class SimulationIterationWorkflow extends WorkflowEntrypoint<Env, {}> {
 				return currentIteration.date;
 			}
 
-			if (isBefore(lastTrade.exitDate, currentIteration.date)) {
-				return addMinutes(currentIteration.date, executionConfig.stepMinutes);
-			}
-
 			return addMinutes(lastTrade.exitDate, executionConfig.stepMinutes);
 		});
+
+		const skipToNext = await step.do('Check if we need to skip to next iteration', async () => {
+			if (!executionConfig.holdPriceEnabled) {
+				console.log('early return');
+				return false;
+			}
+			if (!lastLog?.holdUntilPriceBreaksUp || !lastLog.holdUntilPriceBreaksDown) {
+				return false;
+			}
+
+			const timeInOneHour = add(currentStartTime, {
+				minutes: 60,
+			});
+			const bars = await fetchBars({
+				start: currentStartTime,
+				end: timeInOneHour,
+				timeframeAmount: 1,
+				timeframeUnit: TimeUnit.Min,
+				pair: executionConfig.pair,
+			});
+
+			if (!bars?.length) {
+				return false;
+			}
+
+			if (bars.at(0)?.High! >= lastLog.holdUntilPriceBreaksUp! || bars.at(0)?.Low! <= lastLog.holdUntilPriceBreaksDown!) {
+				return false;
+			}
+
+			const nextBar = bars.find((b) => b.High >= lastLog.holdUntilPriceBreaksUp! || b.Low <= lastLog.holdUntilPriceBreaksDown!);
+			if (nextBar) {
+				console.log('Price Found');
+				await this.triggerNextIteration({
+					simulationExecutionId: currentIteration.simulationExecutionId,
+					startTime: new Date(nextBar.Timestamp),
+				});
+			} else {
+				console.log('Price not found, skipping to next hour ' + timeInOneHour.toISOString());
+				await this.triggerNextIteration({
+					simulationExecutionId: currentIteration.simulationExecutionId,
+					startTime: timeInOneHour,
+				});
+			}
+			return true;
+		});
+
+		if (skipToNext) {
+			return;
+		}
 
 		const currentPrice = await step.do(`Get price at ${currentStartTime.toISOString()}`, async () => {
 			const result = await fetchBars({
@@ -250,6 +312,8 @@ export class SimulationIterationWorkflow extends WorkflowEntrypoint<Env, {}> {
 					direction: TradeLogDirection.Hold,
 					reason: aiPromptResult.reason ?? '',
 					date: currentStartTime,
+					holdUntilPriceBreaksUp: aiPromptResult.holdUntilPriceBreaksUp ?? null,
+					holdUntilPriceBreaksDown: aiPromptResult.holdUntilPriceBreaksDown ?? null,
 				});
 			});
 		} else {
@@ -334,19 +398,31 @@ export class SimulationIterationWorkflow extends WorkflowEntrypoint<Env, {}> {
 			});
 		} else {
 			await step.do('Create and submit next iteration', async () => {
-				const [iteration] = await db
-					.insert(simulationExecutionIteration)
-					.values({
-						simulationExecutionId: currentIteration.simulationExecutionId,
-						date: addMinutes(currentStartTime, executionConfig.stepMinutes),
-					})
-					.returning();
-
-				if (!iteration) {
-					throw new NonRetryableError('Failed to create next iteration');
-				}
-				await triggerIteration(iteration.id);
+				console.log('nothing. NExt');
+				console.log(currentStartTime.toISOString());
+				console.log(executionConfig.stepMinutes);
+				await this.triggerNextIteration({
+					simulationExecutionId: currentIteration.simulationExecutionId,
+					startTime: addMinutes(currentStartTime, executionConfig.stepMinutes),
+				});
 			});
 		}
+	}
+
+	private async triggerNextIteration(input: { simulationExecutionId: string; startTime: Date }) {
+		const db = getDrizzleClient(env.DATABASE_CONNECTION_STRING);
+		console.log(`NEXT ${input.startTime.toISOString()}`);
+		const [iteration] = await db
+			.insert(simulationExecutionIteration)
+			.values({
+				simulationExecutionId: input.simulationExecutionId,
+				date: input.startTime,
+			})
+			.returning();
+
+		if (!iteration) {
+			throw new NonRetryableError('Failed to create next iteration');
+		}
+		await triggerIteration(iteration.id);
 	}
 }

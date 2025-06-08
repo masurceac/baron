@@ -5,6 +5,8 @@ export const openOrderAiResponseSchema = z.object({
   stopLossPrice: z.number().nullable(),
   takeProfitPrice: z.number().nullable(),
   reason: z.string().nullable(),
+  holdUntilPriceBreaksUp: z.number().nullable(),
+  holdUntilPriceBreaksDown: z.number().nullable(),
 });
 
 export const openOrderAIResponseJsonOrgSchema = {
@@ -28,9 +30,29 @@ export const openOrderAIResponseJsonOrgSchema = {
       type: 'string',
       nullable: true,
     },
+    holdUntilPriceBreaksUp: {
+      type: 'number',
+      nullable: true,
+      description:
+        "The upper price boundary to monitor for a breakout. Required only when 'type' is 'hold'.",
+    },
+    holdUntilPriceBreaksDown: {
+      type: 'number',
+      nullable: true,
+      description:
+        "The lower price boundary to monitor for a breakdown. Required only when 'type' is 'hold'.",
+    },
   },
-  required: ['type', 'stopLossPrice', 'takeProfitPrice', 'reason'],
+  required: [
+    'type',
+    'stopLossPrice',
+    'takeProfitPrice',
+    'reason',
+    'holdUntilPriceBreaksUp',
+    'holdUntilPriceBreaksDown',
+  ],
   additionalProperties: false,
 } as const;
 export type OpenOrderAiResponse = z.infer<typeof openOrderAiResponseSchema>;
-export type OpenOrderAIResponseJsonOrg = typeof openOrderAIResponseJsonOrgSchema;
+export type OpenOrderAIResponseJsonOrg =
+  typeof openOrderAIResponseJsonOrgSchema;

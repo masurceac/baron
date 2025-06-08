@@ -13,14 +13,14 @@ export function TradeCountResult(props: {
 
   return (
     <div className="grid grid-cols-2 gap-0.5 min-w-40">
-      <Badge variant="green">{positiveTrades} positive</Badge>
-      <Badge variant="destructive">{negativeTrades} negative</Badge>
       <Badge
         variant="outline"
         className="font-semibold text-base col-span-2 w-full"
       >
         {props.trades.length} total
       </Badge>
+      <Badge variant="green">{positiveTrades} positive</Badge>
+      <Badge variant="destructive">{negativeTrades} negative</Badge>
     </div>
   );
 }
@@ -42,8 +42,6 @@ export function TradeMoneyResult(props: {
 
   return (
     <div className="grid grid-cols-2 gap-1 min-w-40">
-      <Badge variant="green">+${positiveBalance.toFixed(2)}</Badge>
-      <Badge variant="destructive">${negativeBalance.toFixed(2)}</Badge>
       <Badge
         variant="outline"
         className={cn(
@@ -53,6 +51,8 @@ export function TradeMoneyResult(props: {
       >
         ${result.toFixed(2)}
       </Badge>
+      <Badge variant="green">+${positiveBalance.toFixed(2)}</Badge>
+      <Badge variant="destructive">${negativeBalance.toFixed(2)}</Badge>
     </div>
   );
 }

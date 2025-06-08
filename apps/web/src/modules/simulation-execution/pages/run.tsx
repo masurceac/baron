@@ -58,6 +58,7 @@ function RunSimulationExecutionContent() {
               infoBarIds: room.infoBarIds?.map((i) => i.id) ?? [],
               startDate: room.startDate,
               name: `${room.name ?? ''} - `,
+              holdPriceEnabled: room.holdPriceEnabled ?? false,
             }}
             onSubmit={(d) => createItem.mutate(d)}
           />

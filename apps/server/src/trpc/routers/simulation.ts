@@ -54,6 +54,7 @@ export const simulationRoomRouter = {
 					selfTraining: input.selfTraining ?? false,
 					selfTrainingCycles: input.selfTrainingCycles,
 					selfTrainingPrompt: input.selfTrainingPrompt,
+					holdPriceEnabled: input.holdPriceEnabled ?? false,
 				})
 				.returning();
 
@@ -220,6 +221,7 @@ export const simulationRoomRouter = {
 				selfTraining: simulationRoom.selfTraining,
 				selfTrainingCycles: simulationRoom.selfTrainingCycles,
 				tradesToExecute: simulationRoom.tradesToExecute,
+				holdPriceEnabled: simulationRoom.holdPriceEnabled,
 				trades: queryJoin(
 					db,
 					{

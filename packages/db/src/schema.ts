@@ -151,6 +151,7 @@ export const simulationRoom = pgTable('simulation_room', {
   selfTraining: boolean('is_self_training').notNull().default(false),
   selfTrainingCycles: integer('self_training_cycles'),
   selfTrainingPrompt: text('self_training_prompt'),
+  holdPriceEnabled: boolean('hold_price_enabled'),
 });
 
 export const simulationRoomToVolumeProfileConfig = pgTable(
@@ -238,6 +239,7 @@ export const simulationExecution = pgTable('simulation_execution', {
   startDate: timestamp('start_date', { withTimezone: true }).notNull(),
   tradesToExecute: integer('trades_to_execute').notNull().default(10),
   stepMinutes: integer('step_minutes').notNull().default(1),
+  holdPriceEnabled: boolean('hold_price_enabled'),
 });
 
 export const simulationExecutionToVolumeProfileConfig = pgTable(
@@ -359,6 +361,8 @@ export const simulationExecutionLog = pgTable('simulation_execution_log', {
   ),
 
   reason: text('reason').notNull(),
+  holdUntilPriceBreaksUp: real('hold_until_price_breaks_up'),
+  holdUntilPriceBreaksDown: real('hold_until_price_breaks_down'),
 });
 
 export const simulationExecutionIteration = pgTable(

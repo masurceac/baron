@@ -32,6 +32,13 @@ function ListData() {
   const columns = useMemo<ColumnDef<TableItem>[]>(
     () => [
       {
+        id: 'index',
+        enableSorting: false,
+        header: '#',
+        cell: ({ row: { index } }) =>
+          `${list.count - pagination.skip * pagination.take - index}`,
+      },
+      {
         accessorKey: 'createdAt',
         enableSorting: false,
         header: 'Created At',

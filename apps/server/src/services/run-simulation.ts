@@ -67,6 +67,7 @@ export async function runSimulation(input: z.infer<typeof simulationRunSchema>) 
 				trailingStop: input.trailingStop ?? false,
 				name: input.name.trim(),
 				status: SimulationExecutionStatus.Running,
+				holdPriceEnabled: input.holdPriceEnabled ?? false,
 			})
 			.returning();
 

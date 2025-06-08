@@ -73,6 +73,14 @@ export function ItemForm(props: {
           />
           <FormFieldWrapper
             control={form.control}
+            name="holdPriceEnabled"
+            label="Price Hold Until Break"
+            render={({ field }) => (
+              <Switch checked={field.value} onCheckedChange={field.onChange} />
+            )}
+          />
+          <FormFieldWrapper
+            control={form.control}
             name="tradesToExecute"
             label="Iterations Amount"
             description="How many trades should be completed before the simulation ends."

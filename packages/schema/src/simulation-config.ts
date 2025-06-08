@@ -8,6 +8,7 @@ export const simulationConfigSchema = z.object({
   trailingStop: z.boolean().optional(),
   startDate: z.date(),
   tradesToExecute: z.number().int().optional(),
+  holdPriceEnabled: z.boolean().optional(),
 
   vpcIds: z.array(z.string()),
   infoBarIds: z.array(z.string()),

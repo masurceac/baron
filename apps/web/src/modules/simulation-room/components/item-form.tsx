@@ -125,6 +125,14 @@ export function ItemForm(props: {
           />
           <FormFieldWrapper
             control={form.control}
+            name="holdPriceEnabled"
+            label="Price Hold Until Break"
+            render={({ field }) => (
+              <Switch checked={field.value} onCheckedChange={field.onChange} />
+            )}
+          />
+          <FormFieldWrapper
+            control={form.control}
             name="selfTraining"
             label="Self Training"
             render={({ field }) => (

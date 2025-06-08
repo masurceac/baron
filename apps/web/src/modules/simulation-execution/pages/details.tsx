@@ -35,6 +35,7 @@ import {
 import {
   ArrowLeftIcon,
   CirclePlayIcon,
+  MoreHorizontalIcon,
   OctagonMinusIcon,
   StepForwardIcon,
   StopCircleIcon,
@@ -45,6 +46,12 @@ import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ExecutionStatus } from '../components/execution-status';
 import { TradeCountResult, TradeMoneyResult } from '../components/trade-result';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@baron/ui/components/dropdown-menu';
 
 function DetailsData() {
   const params =
@@ -164,46 +171,50 @@ function DetailsData() {
               </DialogContent>
             </DialogContent>
           </Dialog>
-        </CardContent>
-        <CardContent className="space-x-4">
           {data.status === SimulationExecutionStatus.Running && (
-            <>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  stopExecution.mutate(
-                    { executionId: params.executionId ?? '' },
-                    {
-                      onSuccess: () => {
-                        toast('Execution stopped');
-                        utils.simulationExecution.getDetails.invalidate({
-                          executionId: params.executionId ?? '',
-                        });
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <MoreHorizontalIcon />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem
+                  onClick={() => {
+                    retryExecution.mutate(
+                      { executionId: params.executionId ?? '' },
+                      {
+                        onSuccess: () => {
+                          toast('Execution Restarted');
+                        },
                       },
-                    },
-                  );
-                }}
-              >
-                Stop Execution
-                <StopCircleIcon className="w-4 ml-2" />
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  retryExecution.mutate(
-                    { executionId: params.executionId ?? '' },
-                    {
-                      onSuccess: () => {
-                        toast('Execution Restarted');
+                    );
+                  }}
+                >
+                  Retry Execution
+                  <CirclePlayIcon className="w-4 ml-2" />
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => {
+                    stopExecution.mutate(
+                      { executionId: params.executionId ?? '' },
+                      {
+                        onSuccess: () => {
+                          toast('Execution stopped');
+                          utils.simulationExecution.getDetails.invalidate({
+                            executionId: params.executionId ?? '',
+                          });
+                        },
                       },
-                    },
-                  );
-                }}
-              >
-                Retry Execution
-                <CirclePlayIcon className="w-4 ml-2" />
-              </Button>
-            </>
+                    );
+                  }}
+                >
+                  Stop Execution
+                  <StopCircleIcon className="w-4 ml-2" />
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </CardContent>
       </Card>
