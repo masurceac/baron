@@ -23,6 +23,7 @@ export function ExecutionStatus(props: { status: SimulationExecutionStatus }) {
         </Badge>
       );
     case SimulationExecutionStatus.Failed:
+    case SimulationExecutionStatus.LimitReached:
       return (
         <Badge variant="destructive" className="capitalize">
           {props.status}
