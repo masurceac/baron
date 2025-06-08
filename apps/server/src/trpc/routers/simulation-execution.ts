@@ -1,10 +1,12 @@
 import { getDatabase } from '@/database';
 import { runSimulation } from '@/services/run-simulation';
+import { triggerIteration } from '@/workflows/utils';
 import { paginate, paginatedSchema } from '@baron/common';
 import { queryJoin, queryJoinOne } from '@baron/db/client';
 import { SimulationExecutionStatus } from '@baron/db/enum';
 import {
 	simulationExecution,
+	simulationExecutionIteration,
 	simulationExecutionToInformativeBarConfig,
 	simulationExecutionToVolumeProfileConfig,
 	simulationExecutionTrade,
@@ -46,6 +48,34 @@ export const simulationExecutionRouter = {
 			.set({ status: SimulationExecutionStatus.Completed })
 			.where(eq(simulationExecution.id, input.executionId));
 
+		return { success: true };
+	}),
+	retryExecution: protectedProcedure.input(z.object({ executionId: z.string() })).mutation(async ({ input }) => {
+		const db = getDatabase();
+
+		const [execution] = await db
+			.select({ id: simulationExecution.id, status: simulationExecution.status })
+			.from(simulationExecution)
+			.where(eq(simulationExecution.id, input.executionId))
+			.limit(1);
+		if (!execution) {
+			throw new TRPCError({
+				code: 'NOT_FOUND',
+			});
+		}
+		const [lastIteration] = await db
+			.select({ id: simulationExecutionIteration.id })
+			.from(simulationExecutionIteration)
+			.where(eq(simulationExecutionIteration.simulationExecutionId, input.executionId))
+			.orderBy(desc(simulationExecutionIteration.createdAt))
+			.limit(1);
+
+		if (!lastIteration) {
+			throw new TRPCError({
+				code: 'NOT_FOUND',
+			});
+		}
+		await triggerIteration(lastIteration.id);
 		return { success: true };
 	}),
 

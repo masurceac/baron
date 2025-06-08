@@ -3,12 +3,20 @@ import { env } from 'cloudflare:workers';
 import { SelfTrainingRoomWorkflowArgs, SimulationIterationgWorkflowArgs } from './types';
 
 export async function triggerIteration(iterationId: string) {
-	await env.SIMULATION_ITERATION_WORKFLOW.create({
-		id: iterationId,
-		params: {
-			simulationIterationId: iterationId,
-		} satisfies SimulationIterationgWorkflowArgs,
-	});
+	const iterationExists = await env.SIMULATION_ITERATION_WORKFLOW.get(iterationId);
+	if (iterationExists) {
+		const { status } = await iterationExists.status();
+		if (status === 'errored' || status === 'complete') {
+			await iterationExists.restart();
+		}
+	} else {
+		await env.SIMULATION_ITERATION_WORKFLOW.create({
+			id: iterationId,
+			params: {
+				simulationIterationId: iterationId,
+			} satisfies SimulationIterationgWorkflowArgs,
+		});
+	}
 }
 
 export async function triggerSelfTrainingRoom(roomId: string) {

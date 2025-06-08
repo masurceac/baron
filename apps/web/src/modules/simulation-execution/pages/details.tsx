@@ -65,6 +65,7 @@ function DetailsData() {
   );
 
   const stopExecution = trpc.simulationExecution.stopExecution.useMutation();
+  const retryExecution = trpc.simulationExecution.retryExecution.useMutation();
 
   return (
     <div className="space-y-4">
@@ -159,25 +160,43 @@ function DetailsData() {
         </CardContent>
         <CardContent>
           {data.status === SimulationExecutionStatus.Running && (
-            <Button
-              variant="destructive"
-              onClick={() => {
-                stopExecution.mutate(
-                  { executionId: params.executionId ?? '' },
-                  {
-                    onSuccess: () => {
-                      toast('Execution stopped');
-                      utils.simulationExecution.getDetails.invalidate({
-                        executionId: params.executionId ?? '',
-                      });
+            <>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  stopExecution.mutate(
+                    { executionId: params.executionId ?? '' },
+                    {
+                      onSuccess: () => {
+                        toast('Execution stopped');
+                        utils.simulationExecution.getDetails.invalidate({
+                          executionId: params.executionId ?? '',
+                        });
+                      },
                     },
-                  },
-                );
-              }}
-            >
-              Stop Execution
-              <StopCircleIcon className="w-4 ml-2" />
-            </Button>
+                  );
+                }}
+              >
+                Stop Execution
+                <StopCircleIcon className="w-4 ml-2" />
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  retryExecution.mutate(
+                    { executionId: params.executionId ?? '' },
+                    {
+                      onSuccess: () => {
+                        toast('Execution Restarted');
+                      },
+                    },
+                  );
+                }}
+              >
+                Retry Execution
+                <StopCircleIcon className="w-4 ml-2" />
+              </Button>
+            </>
           )}
         </CardContent>
       </Card>
