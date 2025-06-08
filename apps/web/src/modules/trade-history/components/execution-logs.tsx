@@ -82,12 +82,13 @@ function ExecutionLogsItems(props: { executionId: string }) {
         accessorKey: 'holdUntilPriceBreaksDown',
         enableSorting: false,
         header: 'Hold Until',
-        cell: ({ row: { original } }) => (
-          <div>
-            <p>${original.holdUntilPriceBreaksDown}</p>
-            <p>${original.holdUntilPriceBreaksUp}</p>
-          </div>
-        ),
+        cell: ({ row: { original } }) =>
+          original.holdUntilPriceBreaksDown ? (
+            <div>
+              <p>${original.holdUntilPriceBreaksDown}</p>
+              <p>${original.holdUntilPriceBreaksUp}</p>
+            </div>
+          ) : null,
       },
       {
         accessorKey: 'simulationExecutionTradeId',
