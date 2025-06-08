@@ -1,9 +1,11 @@
 import { getDatabase } from '@/database';
 import { triggerSelfTrainingRoom } from '@/workflows/utils';
 import { paginate, paginatedSchema } from '@baron/common';
-import { queryJoin } from '@baron/db/client';
+import { queryJoin, queryJoinOne } from '@baron/db/client';
 import {
 	informativeBarConfig,
+	simulationExecution,
+	simulationExecutionTrade,
 	simulationRoom,
 	simulationRoomToInformativeBar,
 	simulationRoomToVolumeProfileConfig,
@@ -13,7 +15,7 @@ import { simulationRoomSchema } from '@baron/schema';
 import { protectedProcedure } from '@baron/trpc-server';
 import { getAuth, getClerkClient } from '@baron/trpc-server/async-storage/getters';
 import { TRPCError } from '@trpc/server';
-import { and, count, desc, eq, ilike, inArray, SQL } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, inArray, SQL, sum } from 'drizzle-orm';
 import { z } from 'zod';
 
 export const simulationRoomRouter = {
@@ -217,6 +219,17 @@ export const simulationRoomRouter = {
 				selfTraining: simulationRoom.selfTraining,
 				selfTrainingCycles: simulationRoom.selfTrainingCycles,
 				tradesToExecute: simulationRoom.tradesToExecute,
+				finalBalance: queryJoinOne(
+					db,
+					{
+						sum: sum(simulationExecutionTrade.balanceResult),
+					},
+					(query) =>
+						query
+							.from(simulationExecutionTrade)
+							.innerJoin(simulationExecution, eq(simulationExecutionTrade.simulationExecutionId, simulationExecution.id))
+							.where(eq(simulationExecution.simulationRoomId, simulationRoom.id)),
+				),
 				vpcIds: queryJoin(db, { id: volumeProfileConfig.id }, (query) =>
 					query
 						.from(simulationRoomToVolumeProfileConfig)

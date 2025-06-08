@@ -90,6 +90,10 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
           </DialogContent>
         </Dialog>
       </CardContent>
+      <CardContent className="text-lg font-semibold">
+        Simulation result: $
+        {parseFloat(data.finalBalance?.sum ?? '0')?.toFixed(2)}
+      </CardContent>
     </Card>
   );
 }

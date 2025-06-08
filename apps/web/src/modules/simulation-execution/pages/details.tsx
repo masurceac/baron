@@ -44,7 +44,7 @@ import { Suspense } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ExecutionStatus } from '../components/execution-status';
-import { TradeResult } from '../components/trade-result';
+import { TradeCountResult, TradeMoneyResult } from '../components/trade-result';
 
 function DetailsData() {
   const params =
@@ -214,8 +214,10 @@ function DetailsData() {
           <TabsTrigger value="logs">Logs</TabsTrigger>
         </TabsList>
         <TabsContent value="trades" className="space-y-6">
-          <TradeResult trades={data.trades ?? []} key={data.trades?.length} />
-
+          <div className="flex items-center justify-start space-x-4">
+            <TradeMoneyResult trades={data.trades ?? []} />
+            <TradeCountResult trades={data.trades ?? []} />
+          </div>
           <ExecutionTradeHistory executionId={params.executionId ?? ''} />
         </TabsContent>
 

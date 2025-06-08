@@ -9,7 +9,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { ArrowLeftIcon, ArrowRightIcon, PlusCircleIcon } from 'lucide-react';
 import { Suspense, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { TradeResult } from '../components/trade-result';
+import { TradeMoneyResult, TradeCountResult } from '../components/trade-result';
 import { ExecutionStatus } from '../components/execution-status';
 import { TradingPairSelect } from '@/modules/inputs/trading-pair-select';
 import { SimulationRoomDetails } from '@/modules/simulation-room/components/simulation-room-details';
@@ -81,11 +81,19 @@ function ListData() {
         ),
       },
       {
+        id: 'trade-balance',
+        enableSorting: false,
+        header: 'Balance',
+        cell: ({ row: { original } }) => (
+          <TradeMoneyResult trades={original.trades ?? []} />
+        ),
+      },
+      {
         accessorKey: 'trades',
         enableSorting: false,
-        header: 'Trade Success',
+        header: 'Trades',
         cell: ({ row: { original } }) => (
-          <TradeResult trades={original.trades ?? []} />
+          <TradeCountResult trades={original.trades ?? []} />
         ),
       },
       {

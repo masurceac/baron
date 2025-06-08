@@ -1,18 +1,37 @@
 import { Badge } from '@baron/ui/components/badge';
+import { cn } from '@baron/ui/lib/utils';
 
-export function TradeResult(props: {
+export function TradeCountResult(props: {
   trades: Array<{ balanceResult: number }>;
 }) {
-  const result = props.trades.reduce(
-    (acc, trade) => acc + trade.balanceResult,
-    0,
-  );
   const positiveTrades = props.trades.filter(
     (trade) => trade.balanceResult >= 0,
   ).length;
   const negativeTrades = props.trades.filter(
     (trade) => trade.balanceResult < 0,
   ).length;
+
+  return (
+    <div className="grid grid-cols-2 gap-0.5 min-w-40">
+      <Badge variant="green">{positiveTrades} positive</Badge>
+      <Badge variant="destructive">{negativeTrades} negative</Badge>
+      <Badge
+        variant="outline"
+        className="font-semibold text-base col-span-2 w-full"
+      >
+        {props.trades.length} total
+      </Badge>
+    </div>
+  );
+}
+
+export function TradeMoneyResult(props: {
+  trades: Array<{ balanceResult: number }>;
+}) {
+  const result = props.trades.reduce(
+    (acc, trade) => acc + trade.balanceResult,
+    0,
+  );
 
   const positiveBalance = props.trades
     .filter((trade) => trade.balanceResult > 0)
@@ -22,19 +41,18 @@ export function TradeResult(props: {
     .reduce((acc, trade) => acc + trade.balanceResult, 0);
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center space-x-4">
-        <Badge variant="green">{positiveTrades} positive trades</Badge>
-        <span className="text-sm font-medium">
-          {positiveTrades + negativeTrades} total
-        </span>
-        <Badge variant="destructive">{negativeTrades} negative trades</Badge>
-      </div>
-      <div className="flex items-center space-x-4">
-        <Badge variant="green">+${positiveBalance.toFixed(2)} earned</Badge>
-        <span className="font-semibold">${result.toFixed(2)}</span>
-        <Badge variant="destructive">${negativeBalance.toFixed(2)} lost</Badge>
-      </div>
+    <div className="grid grid-cols-2 gap-1 min-w-40">
+      <Badge variant="green">+${positiveBalance.toFixed(2)}</Badge>
+      <Badge variant="destructive">${negativeBalance.toFixed(2)}</Badge>
+      <Badge
+        variant="outline"
+        className={cn(
+          'font-semibold text-base col-span-2 w-full',
+          result >= 0 ? 'text-green-700' : 'text-destructive',
+        )}
+      >
+        ${result.toFixed(2)}
+      </Badge>
     </div>
   );
 }
