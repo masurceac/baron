@@ -4,10 +4,24 @@ import { exec } from 'child_process';
 import { Hono } from 'hono';
 import { promisify } from 'util';
 import { getFrvpProfilesWithDb } from './services/get-frvp-profiles-with-db';
+import { cors } from 'hono/cors';
 
 const execPromise = promisify(exec);
 
 const app = new Hono();
+// Apply CORS middleware to all routes
+app.use(
+  '*',
+  cors({
+    origin: 'http://localhost:2300', // Allow requests from this origin
+    allowHeaders: ['Content-Type', 'Authorization'], // Allowed headers
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
+    exposeHeaders: ['Content-Length'], // Headers exposed to the client
+    maxAge: 600, // How long (in seconds) the preflight response can be cached
+    credentials: true, // Allow cookies and credentials to be sent
+  }),
+);
+
 const BINANCE_API = 'https://api.binance.com';
 
 app.get('/binance/*', async (c) => {
