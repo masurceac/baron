@@ -54,3 +54,13 @@ export enum TradeResult {
 export enum EntityFlagEnum {
   Deafult = 'default',
 }
+
+export enum TradingPlatform {
+  Binance = 'binance',
+}
+
+export enum TradingStrategyStatus {
+  Pending = 'pending',
+  Running = 'running',
+  Stopped = 'stopped',
+}

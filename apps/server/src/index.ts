@@ -1,7 +1,9 @@
 import { asyncLocalStorage, createAsyncStorageContext, createTrpcContext } from '@baron/trpc-server';
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
-import { appRouter } from './trpc';
+import { cronHandler } from './cron/cron-handler';
 import { eventBus } from './events';
+import { appRouter } from './trpc';
+import { OrderPlacementWorkflow } from './workflows/order-placement';
 import { SelfTrainingRoomWorkflow } from './workflows/self-training-room';
 import { SimulationIterationWorkflow } from './workflows/simulation-iteration-workflow';
 
@@ -40,6 +42,9 @@ const worker = {
 				),
 		);
 	},
+	async scheduled(_, _2, ctx) {
+		await ctx.waitUntil(cronHandler());
+	},
 } satisfies ExportedHandler<Env>;
 
 const addCORSHeaders = (res: Response) => {
@@ -58,6 +63,6 @@ const handleCORSPreflight = () => {
 	return addCORSHeaders(rs);
 };
 
-export { SelfTrainingRoomWorkflow, SimulationIterationWorkflow };
+export { OrderPlacementWorkflow, SelfTrainingRoomWorkflow, SimulationIterationWorkflow };
 
 export default worker;

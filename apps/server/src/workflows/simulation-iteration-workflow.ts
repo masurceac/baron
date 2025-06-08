@@ -1,6 +1,6 @@
 import { checkTradeSuccess } from '@/services/check-trade-success';
 import { getFrvpProfilesWithDb } from '@/services/get-frvp-profiles-with-db';
-import { getOpenAiResponse } from '@baron/ai/api';
+import { getDeepSeekResponse } from '@baron/ai/api';
 import { getOderSuggestionPromptVariables, openOrderAIResponseJsonOrgSchema, openOrderAiResponseSchema } from '@baron/ai/order-suggestion';
 import { fetchBars } from '@baron/bars-api';
 import { TimeUnit, TradeDirection, TradeLogDirection, ZoneVolumeProfile } from '@baron/common';
@@ -230,7 +230,7 @@ export class SimulationIterationWorkflow extends WorkflowEntrypoint<Env, {}> {
 			const prompt = executionConfig.aiPrompt.concat(`\n${promptEnd}`);
 			console.log('Asking AI...');
 
-			const aiResponse = await getOpenAiResponse({
+			const aiResponse = await getDeepSeekResponse({
 				prompt,
 				apiKey: env.OPENAI_API_KEY,
 				responseValidationSchema: openOrderAiResponseSchema,

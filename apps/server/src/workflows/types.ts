@@ -5,3 +5,7 @@ export type SimulationIterationgWorkflowArgs = {
 export type SelfTrainingRoomWorkflowArgs = {
 	simulationRoomId: string;
 };
+
+export type OrderPlacementWorkflowArgs = {
+	orderSetupId: string;
+};

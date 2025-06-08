@@ -5,11 +5,14 @@ import {
   TradeLogDirection,
   TradeResult,
   TradingPair,
+  TradingPlatform,
+  TradingStrategyStatus,
 } from '@baron/common';
 import { createId } from '@paralleldrive/cuid2';
 import {
   boolean,
   integer,
+  jsonb,
   pgTable,
   real,
   text,
@@ -375,5 +378,86 @@ export const simulationExecutionIteration = pgTable(
       }),
 
     date: timestamp('date', { withTimezone: true }).notNull(),
+  },
+);
+
+type BinancePlatformSetup = {
+  type: 'binance';
+  settings: {
+    apiKey: string;
+    apiSecret: string;
+  };
+};
+
+export const orderSetup = pgTable('order_setup', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(
+    () => new Date(),
+  ),
+  name: text('name').notNull(),
+  pair: text('pair', {
+    enum: [TradingPair.BTCUSDT, TradingPair.ETHUSDT],
+  }).notNull(),
+  platform: text('platform', {
+    enum: [TradingPlatform.Binance],
+  }).notNull(),
+  settings: jsonb('settings').notNull().$type<BinancePlatformSetup>(),
+  status: text('status', {
+    enum: [
+      TradingStrategyStatus.Pending,
+      TradingStrategyStatus.Running,
+      TradingStrategyStatus.Stopped,
+    ],
+  })
+    .notNull()
+    .default(TradingStrategyStatus.Pending),
+  leverage: integer('leverage').notNull().default(2),
+  aiPrompt: text('ai_prompt').notNull(),
+});
+
+export const orderSetupToVolumeProfileConfig = pgTable(
+  'order_setup_to_volume_profile_config',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    orderSetupId: text('order_setup_id')
+      .notNull()
+      .references(() => orderSetup.id, {
+        onDelete: 'cascade',
+        onUpdate: 'cascade',
+      }),
+    volumeProfileConfigId: text('volume_profile_config_id')
+      .notNull()
+      .references(() => volumeProfileConfig.id, {
+        onDelete: 'cascade',
+        onUpdate: 'cascade',
+      }),
+  },
+);
+
+export const orderSetupToInformativeBarConfig = pgTable(
+  'order_setup_to_informative_bar_config',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    orderSetupId: text('order_setup_id')
+      .notNull()
+      .references(() => orderSetup.id, {
+        onDelete: 'cascade',
+        onUpdate: 'cascade',
+      }),
+    informativeBarConfigId: text('informative_bar_config_id')
+      .notNull()
+      .references(() => informativeBarConfig.id, {
+        onDelete: 'cascade',
+        onUpdate: 'cascade',
+      }),
   },
 );

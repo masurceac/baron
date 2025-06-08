@@ -1,0 +1,14 @@
+{
+  "name": "@baron/order-api",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0"
+  },
+  "dependencies": {
+    "@baron/common": "workspace:*"
+  }
+}

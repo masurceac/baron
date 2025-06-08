@@ -16,6 +16,7 @@
 		"@baron/trpc-server": "workspace:*",
 		"@baron/ai": "workspace:",
 		"@baron/bars-api": "workspace:",
+		"@baron/order-api": "workspace:",
 		"@baron/db": "workspace:",
 		"@baron/fixed-range-volume-profile": "workspace:",
 		"@baron/schema": "workspace:",
