@@ -423,6 +423,7 @@ export const orderSetup = pgTable('order_setup', {
     .notNull()
     .default(TradingStrategyStatus.Pending),
   leverage: integer('leverage').notNull().default(2),
+  positionSizeUsd: integer('position_size_usd').notNull().default(10),
   aiPrompt: text('ai_prompt').notNull(),
 });
 
@@ -467,3 +468,27 @@ export const orderSetupToInformativeBarConfig = pgTable(
       }),
   },
 );
+
+export const orderSetupLog = pgTable('order_setup_log', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  orderSetupId: text('order_setup_id')
+    .notNull()
+    .references(() => orderSetup.id, {
+      onDelete: 'cascade',
+      onUpdate: 'cascade',
+    }),
+  direction: text('direction', {
+    enum: [TradeDirection.Buy, TradeDirection.Sell],
+  }).notNull(),
+  reason: text('reason').notNull(),
+  currentPrice: real('current_price').notNull(),
+  takeProfitPrice: real('take_profit_price').notNull(),
+  stopLossPrice: real('stop_loss_price').notNull(),
+  remoteOrderId: text('remote_order_id').notNull(),
+  balanceResult: real('balance_result'),
+});

@@ -196,38 +196,38 @@ export async function getFuturesPosition(input: {
   }
 }
 
-export async function openMarketFuturesOrder(input: {
-  pair: TradingPair;
-  quantity: number;
-  direction: TradeDirection;
-  keys: BinanceKeys;
-}) {
-  try {
-    const result = await makeRequest(
-      '/fapi/v1/order',
-      'POST',
-      {
-        symbol: input.pair,
-        side: input.direction === 'buy' ? 'BUY' : 'SELL',
-        type: 'MARKET',
-        quantity: input.quantity,
-      },
-      input.keys,
-    );
-    console.log('Order placed:', result);
-  } catch (error: any) {
-    console.error('Error placing order:', error.message);
-  }
-}
+// export async function openMarketFuturesOrder(input: {
+//   pair: TradingPair;
+//   quantity: number;
+//   direction: TradeDirection;
+//   keys: BinanceKeys;
+// }) {
+//   try {
+//     const result = await makeRequest(
+//       '/fapi/v1/order',
+//       'POST',
+//       {
+//         symbol: input.pair,
+//         side: input.direction === 'buy' ? 'BUY' : 'SELL',
+//         type: 'MARKET',
+//         quantity: input.quantity,
+//       },
+//       input.keys,
+//     );
+//     console.log('Order placed:', result);
+//   } catch (error: any) {
+//     console.error('Error placing order:', error.message);
+//   }
+// }
 
-export async function placeFuturesOrderNew(input: {
+export async function openMarketFuturesOrderWithTPSL(input: {
   pair: TradingPair;
   quantity: number;
   direction: TradeDirection;
   takeProfitPrice: number; // Optional: Price for take-profit (e.g., 4000 for ETHUSDT BUY)
   stopLossPrice: number; // Optional: Price for stop-loss (e.g., 3000 for ETHUSDT BUY)
   keys: BinanceKeys;
-}) {
+}): Promise<BinanceOrder> {
   try {
     // Step 1: Place the main market order
     const marketOrder = await makeRequest(
@@ -254,9 +254,8 @@ export async function placeFuturesOrderNew(input: {
           side: tpSide,
           type: 'TAKE_PROFIT_MARKET',
           stopPrice: input.takeProfitPrice.toFixed(2), // Trigger price
-          quantity: input.quantity.toFixed(3),
-          reduceOnly: 'true',
-          priceProtect: 'TRUE', // Optional: Adjusts trigger for volatility
+          closePosition: 'true',
+          priceProtect: 'true',
         },
         input.keys,
       );
@@ -274,9 +273,8 @@ export async function placeFuturesOrderNew(input: {
           side: slSide,
           type: 'STOP_MARKET',
           stopPrice: input.stopLossPrice.toFixed(2), // Trigger price
-          quantity: input.quantity.toFixed(3),
-          reduceOnly: 'true',
-          priceProtect: 'TRUE', // Optional: Adjusts trigger for volatility
+          closePosition: 'true',
+          priceProtect: 'true',
         },
         input.keys,
       );

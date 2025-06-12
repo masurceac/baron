@@ -12,7 +12,10 @@
     "lint": "eslint . --max-warnings 0"
   },
   "dependencies": {
+    "@ai-sdk/xai": "^1.2.16",
     "@baron/common": "workspace:*",
+    "@google/genai": "^1.4.0",
+    "ai": "^4.3.16",
     "openai": "^5.0.1",
     "zod": "catalog:"
   }

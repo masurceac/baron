@@ -1,5 +1,5 @@
 import { measure, TimeUnit, TradingPair } from '@baron/common';
-import { getFrvpProfilesWithDb } from './services/get-frvp-profiles-with-db';
+import { getFrvpProfilesService } from './services/get-frvp-profiles-with-db';
 
 const lines = [
 	{
@@ -56,7 +56,7 @@ async function testPerformance() {
 	await Promise.all(
 		lines.map(async (line) => {
 			const log = measure(`getFrvpProfiles for ${line.name}`);
-			await getFrvpProfilesWithDb({
+			await getFrvpProfilesService({
 				end: new Date('2025-05-18 17:00:00+00'),
 				timeframeAmount: line.timeframe_amount,
 				timeframeUnit: line.timeframe_unit as TimeUnit,

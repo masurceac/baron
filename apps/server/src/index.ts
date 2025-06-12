@@ -1,11 +1,13 @@
 import { asyncLocalStorage, createAsyncStorageContext, createTrpcContext } from '@baron/trpc-server';
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
-import { cronHandler } from './cron/cron-handler';
+import { triggerOrderPlacement } from './triggers/order-placement';
 import { eventBus } from './events';
 import { appRouter } from './trpc';
 import { OrderPlacementWorkflow } from './workflows/order-placement';
 import { SelfTrainingRoomWorkflow } from './workflows/self-training-room';
 import { SimulationIterationWorkflow } from './workflows/simulation-iteration-workflow';
+import { OrderPlacementTriggerWorkflow } from './workflows/order-placement-trigger';
+import { checkOrderLogBalance } from './services/check-order-log-balance';
 
 const worker = {
 	async fetch(request, env): Promise<Response> {
@@ -13,6 +15,15 @@ const worker = {
 			return handleCORSPreflight();
 		}
 
+		if (env.ENV === 'local') {
+			if (request.url.endsWith('trigger-start-serghei')) {
+				await triggerOrderPlacement();
+				// await checkOrderLogBalance();
+				return Response.json({
+					message: "✅🚀 Rocket",
+				});
+			}
+		}
 		return asyncLocalStorage.run(
 			await createAsyncStorageContext(
 				{
@@ -33,17 +44,11 @@ const worker = {
 							const { error } = opts;
 							console.error(error);
 							console.error(JSON.stringify({ error }, null, 2));
-							// if (error.code === 'INTERNAL_SERVER_ERROR') {
-							//   // send to bug reporting
-							// }
 						},
 						createContext: createTrpcContext,
 					}),
 				),
 		);
-	},
-	async scheduled(_, _2, ctx) {
-		await ctx.waitUntil(cronHandler());
 	},
 } satisfies ExportedHandler<Env>;
 
@@ -63,6 +68,6 @@ const handleCORSPreflight = () => {
 	return addCORSHeaders(rs);
 };
 
-export { OrderPlacementWorkflow, SelfTrainingRoomWorkflow, SimulationIterationWorkflow };
+export { OrderPlacementWorkflow, SelfTrainingRoomWorkflow, OrderPlacementTriggerWorkflow, SimulationIterationWorkflow };
 
 export default worker;

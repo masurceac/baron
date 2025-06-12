@@ -175,7 +175,8 @@ function DetailsData() {
               </DialogContent>
             </DialogContent>
           </Dialog>
-          {data.status === SimulationExecutionStatus.Running && (
+          {(data.status === SimulationExecutionStatus.Running ||
+            data.status === SimulationExecutionStatus.LimitReached) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon">

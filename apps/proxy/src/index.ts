@@ -3,8 +3,9 @@ import { serve } from '@hono/node-server';
 import { exec } from 'child_process';
 import { Hono } from 'hono';
 import { promisify } from 'util';
-import { getFrvpProfilesWithDb } from './services/get-frvp-profiles-with-db';
+import { getFrvpProfilesWithDb } from '@baron/fixed-range-volume-profile';
 import { cors } from 'hono/cors';
+import { getDatabase } from './database';
 
 const execPromise = promisify(exec);
 
@@ -75,7 +76,7 @@ app.get('/vpc', async (c) => {
     search.get('historicalBarsToConsider')!,
     10,
   );
-  const result = await getFrvpProfilesWithDb({
+  const result = await getFrvpProfilesWithDb(getDatabase(), {
     end,
     timeframeAmount,
     timeframeUnit,

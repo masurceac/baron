@@ -13,20 +13,20 @@
 		"gen-types": "wrangler types"
 	},
 	"devDependencies": {
-		"@baron/trpc-server": "workspace:*",
 		"@baron/ai": "workspace:",
 		"@baron/bars-api": "workspace:",
-		"@baron/order-api": "workspace:",
+		"@baron/common": "workspace:",
 		"@baron/db": "workspace:",
 		"@baron/fixed-range-volume-profile": "workspace:",
+		"@baron/order-api": "workspace:",
 		"@baron/schema": "workspace:",
-		"@baron/common": "workspace:",
-		"typescript": "catalog:",
-		"drizzle-orm": "catalog:",
-		"date-fns": "catalog:",
-		"zod": "catalog:",
+		"@baron/trpc-server": "workspace:*",
+		"@paralleldrive/cuid2": "catalog:",
 		"@trpc/server": "catalog:",
-    "@paralleldrive/cuid2": "catalog:",
-		"wrangler": "catalog:"
+		"date-fns": "catalog:",
+		"drizzle-orm": "catalog:",
+		"typescript": "catalog:",
+		"wrangler": "catalog:",
+		"zod": "catalog:"
 	}
 }

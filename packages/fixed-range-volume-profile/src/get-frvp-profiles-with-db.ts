@@ -1,4 +1,4 @@
-import { getDatabase } from '@/database';
+import { getDrizzleClient } from '@baron/db/client';
 import { zoneVolumeProfile } from '@baron/db/schema';
 import {
   getFrvpProfiles,
@@ -6,8 +6,10 @@ import {
 } from '@baron/fixed-range-volume-profile';
 import { and, eq } from 'drizzle-orm';
 
-export async function getFrvpProfilesWithDb(input: GetFrvpProfilesInput) {
-  const db = getDatabase();
+export async function getFrvpProfilesWithDb(
+  db: ReturnType<typeof getDrizzleClient>,
+  input: GetFrvpProfilesInput,
+) {
   const profiles = await getFrvpProfiles(input, {
     writeFrvp: async (input) => {
       try {

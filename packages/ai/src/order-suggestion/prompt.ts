@@ -54,7 +54,7 @@ export function getOderSuggestionPromptVariables(variables: {
     json_input: JSON.stringify(variables, null, 2),
   });
 
-  return `Here's the market data and your last trades (if any):
+  return `Below is the structured market data and last trades you have made:
   \`\`\`json
 ${templateReplaced}
   \`\`\`

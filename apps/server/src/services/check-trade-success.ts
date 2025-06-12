@@ -4,7 +4,7 @@ import { TimeUnit, TradeResult, TradingPair } from '@baron/common';
 import { add } from 'date-fns';
 
 type TradeType = {
-	aiOrder: OpenOrderAiResponse;
+	aiOrder: Pick<OpenOrderAiResponse, 'type' | 'takeProfitPrice' | 'stopLossPrice'>;
 	entryPrice: number;
 	entryTimestamp: string;
 	loopNumber?: number;

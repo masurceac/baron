@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@baron/common": "workspace:*",
+    "@baron/db": "workspace:*",
     "@baron/bars-api": "workspace:*",
     "@baron/volume-profile": "workspace:*",
+    "drizzle-orm": "catalog:",
     "date-fns": "catalog:"
   }
 }

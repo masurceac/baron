@@ -88,6 +88,7 @@ export class SelfTrainingRoomWorkflow extends WorkflowEntrypoint<Env, {}> {
 					responseSchema: selfTrainingAIResponseJsonOrgSchema,
 					responseValidationSchema: selfTrainingAiResponseSchema,
 					apiKey: env.OPENAI_API_KEY,
+					model: 'o4-mini-2025-04-16',
 				});
 
 				console.log('Generated AI Promp');

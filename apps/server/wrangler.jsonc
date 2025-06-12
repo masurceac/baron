@@ -14,9 +14,6 @@
 	"limits": {
 		"cpu_ms": 300000, // 300,000 milliseconds = 5 minutes
 	},
-	"triggers": {
-		"crons": ["* * * * *"],
-	},
 	"workflows": [
 		{
 			"name": "self-training-room",
@@ -32,6 +29,11 @@
 			"name": "order-placement-workflow",
 			"binding": "ORDER_PLACEMENT_WORKFLOW",
 			"class_name": "OrderPlacementWorkflow",
+		},
+		{
+			"name": "order-placement-trigger",
+			"binding": "ORDER_PLACEMENT_TRIGGER",
+			"class_name": "OrderPlacementTriggerWorkflow",
 		},
 	],
 	/**

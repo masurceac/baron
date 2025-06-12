@@ -11,6 +11,7 @@ export async function getDeepSeekResponse<T extends z.ZodSchema>(input: {
   responseValidationSchema: T;
   responseSchema: JsonOrgResponseSchema;
   apiKey: string;
+  model: 'deepseek-chat' | 'deepseek-reasoner';
 }): Promise<z.infer<T> | null> {
   const openai = new OpenAI({
     apiKey: input.apiKey,
@@ -22,7 +23,7 @@ export async function getDeepSeekResponse<T extends z.ZodSchema>(input: {
   });
 
   const response = await openai.chat.completions.create({
-    model: 'deepseek-chat',
+    model: input.model,
     messages: [
       {
         role: 'system',

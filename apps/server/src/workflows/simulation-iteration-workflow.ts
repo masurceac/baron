@@ -1,5 +1,5 @@
 import { checkTradeSuccess } from '@/services/check-trade-success';
-import { getFrvpProfilesWithDb } from '@/services/get-frvp-profiles-with-db';
+import { getFrvpProfilesService } from '@/services/get-frvp-profiles-with-db';
 import { getDeepSeekResponse } from '@baron/ai/api';
 import { getOderSuggestionPromptVariables, openOrderAIResponseJsonOrgSchema, openOrderAiResponseSchema } from '@baron/ai/order-suggestion';
 import { fetchBars } from '@baron/bars-api';
@@ -78,25 +78,6 @@ export class SimulationIterationWorkflow extends WorkflowEntrypoint<Env, {}> {
 
 			return log;
 		});
-
-		const totalLogs = await step.do('Get total logs count', async () => {
-			const [countResult] = await db
-				.select({ count: count(simulationExecutionLog.id) })
-				.from(simulationExecutionLog)
-				.where(eq(simulationExecutionLog.simulationExecutionId, currentIteration.simulationExecutionId));
-
-			return countResult?.count ?? 0;
-		});
-		if (totalLogs >= 150) {
-			await step.do('Logs exceeded maximum 150. Terminating', async () => {
-				await db
-					.update(simulationExecution)
-					.set({ status: SimulationExecutionStatus.LimitReached })
-					.where(eq(simulationExecution.id, currentIteration.simulationExecutionId));
-			});
-
-			return;
-		}
 
 		const executionConfig = await step.do(`Get execution config ${simulationExecution.id}`, async () => {
 			const [config] = await db
@@ -237,7 +218,7 @@ export class SimulationIterationWorkflow extends WorkflowEntrypoint<Env, {}> {
 		}> = await step.do('Get VPC profiles', async () => {
 			return await Promise.all(
 				vpcConfigs.map(async (vpc) => {
-					const profiles = await getFrvpProfilesWithDb({
+					const profiles = await getFrvpProfilesService({
 						end: currentStartTime,
 						pair: executionConfig.pair,
 						historicalBarsToConsider: vpc.historicalBarsToConsider,
@@ -316,6 +297,7 @@ export class SimulationIterationWorkflow extends WorkflowEntrypoint<Env, {}> {
 				apiKey: env.DEEPSEEK_API_KEY_ID,
 				responseValidationSchema: openOrderAiResponseSchema,
 				responseSchema: openOrderAIResponseJsonOrgSchema,
+				model: 'deepseek-chat',
 			});
 			if (!aiResponse) {
 				throw new Error('AI response is empty or does not contain open_order');
@@ -416,10 +398,25 @@ export class SimulationIterationWorkflow extends WorkflowEntrypoint<Env, {}> {
 				}
 			});
 		} else {
+			const totalLogs = await step.do('Get total logs count', async () => {
+				const [countResult] = await db
+					.select({ count: count(simulationExecutionLog.id) })
+					.from(simulationExecutionLog)
+					.where(eq(simulationExecutionLog.simulationExecutionId, currentIteration.simulationExecutionId));
+
+				return countResult?.count ?? 0;
+			});
+			if (totalLogs % 500 === 0) {
+				await step.do('Logs exceeded maximum 500. Terminating', async () => {
+					await db
+						.update(simulationExecution)
+						.set({ status: SimulationExecutionStatus.LimitReached })
+						.where(eq(simulationExecution.id, currentIteration.simulationExecutionId));
+				});
+
+				return;
+			}
 			await step.do('Create and submit next iteration', async () => {
-				console.log('nothing. NExt');
-				console.log(currentStartTime.toISOString());
-				console.log(executionConfig.stepMinutes);
 				await this.triggerNextIteration({
 					simulationExecutionId: currentIteration.simulationExecutionId,
 					startTime: addMinutes(currentStartTime, executionConfig.stepMinutes),
