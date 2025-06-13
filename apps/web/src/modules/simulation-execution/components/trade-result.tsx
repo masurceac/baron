@@ -19,8 +19,8 @@ export function TradeCountResult(props: {
       >
         {props.trades.length} total
       </Badge>
-      <Badge variant="green">{positiveTrades} positive</Badge>
-      <Badge variant="destructive">{negativeTrades} negative</Badge>
+      <Badge variant="greenOutline">{positiveTrades} positive</Badge>
+      <Badge variant="destructiveOutline">{negativeTrades} negative</Badge>
     </div>
   );
 }
@@ -51,8 +51,8 @@ export function TradeMoneyResult(props: {
       >
         ${result.toFixed(2)}
       </Badge>
-      <Badge variant="green">+${positiveBalance.toFixed(2)}</Badge>
-      <Badge variant="destructive">${negativeBalance.toFixed(2)}</Badge>
+      <Badge variant="greenOutline">+${positiveBalance.toFixed(2)}</Badge>
+      <Badge variant="destructiveOutline">${negativeBalance.toFixed(2)}</Badge>
     </div>
   );
 }

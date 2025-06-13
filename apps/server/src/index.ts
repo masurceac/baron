@@ -1,13 +1,7 @@
 import { asyncLocalStorage, createAsyncStorageContext, createTrpcContext } from '@baron/trpc-server';
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
-import { triggerOrderPlacement } from './triggers/order-placement';
 import { eventBus } from './events';
 import { appRouter } from './trpc';
-import { OrderPlacementWorkflow } from './workflows/order-placement';
-import { SelfTrainingRoomWorkflow } from './workflows/self-training-room';
-import { SimulationIterationWorkflow } from './workflows/simulation-iteration-workflow';
-import { OrderPlacementTriggerWorkflow } from './workflows/order-placement-trigger';
-import { checkOrderLogBalance } from './services/check-order-log-balance';
 
 const worker = {
 	async fetch(request, env): Promise<Response> {
@@ -17,10 +11,8 @@ const worker = {
 
 		if (env.ENV === 'local') {
 			if (request.url.endsWith('trigger-start-serghei')) {
-				await triggerOrderPlacement();
-				// await checkOrderLogBalance();
 				return Response.json({
-					message: "✅🚀 Rocket",
+					message: '✅🚀 Rocket',
 				});
 			}
 		}
@@ -68,6 +60,6 @@ const handleCORSPreflight = () => {
 	return addCORSHeaders(rs);
 };
 
-export { OrderPlacementWorkflow, SelfTrainingRoomWorkflow, OrderPlacementTriggerWorkflow, SimulationIterationWorkflow };
+// export { OrderPlacementWorkflow, OrderPlacementTriggerWorkflow, SimulationIterationWorkflow };
 
 export default worker;

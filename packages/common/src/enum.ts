@@ -9,6 +9,12 @@ export enum TimeUnit {
 export enum TradingPair {
   BTCUSDT = 'BTCUSDT',
   ETHUSDT = 'ETHUSDT',
+  SOLUSDT = 'SOLUSDT',
+  XRPUSDT = 'XRPUSDT',
+  LINKUSDT = 'LINKUSDT',
+  ATOMUSDT = 'ATOMUSDT',
+  AAVEUSDT = 'AAVEUSDT',
+  ARBUSDT = 'ARBUSDT',
 }
 
 export enum TradingTimeSetups {
@@ -63,4 +69,13 @@ export enum TradingStrategyStatus {
   Pending = 'pending',
   Running = 'running',
   Stopped = 'stopped',
+}
+
+export enum SimulationExecutionStatus {
+  Pending = 'pending',
+  Running = 'running',
+  Completed = 'completed',
+  Failed = 'failed',
+  LimitReached = 'limit_reached',
+  Canceled = 'canceled',
 }

@@ -3,9 +3,8 @@ import { RouteObject } from 'react-router-dom';
 import { AuthGuard } from './app-root/components/auth-guard';
 import { MainPage } from './app-root/pages/main-page';
 import { infoBarsRouter } from './info-bars';
-import { vpcRouter } from './volume-profile-config';
+import { frvpRouter } from './predefined-frvp';
 import { simulationRoomsRouter } from './simulation-room';
-import { tradingChartRouter } from './trading-chart';
 
 export const appRouter = defineModuleRouting([
   {
@@ -15,12 +14,11 @@ export const appRouter = defineModuleRouting([
         path: '',
         Component: MainPage,
       },
-      ...vpcRouter,
       ...infoBarsRouter,
       ...simulationRoomsRouter,
       {
-        path: 'chart',
-        children: tradingChartRouter,
+        path: 'frvp',
+        children: frvpRouter,
       },
     ],
   },

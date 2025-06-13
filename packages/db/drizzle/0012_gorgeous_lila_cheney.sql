@@ -1,1 +1,0 @@
-ALTER TABLE "order_setup_log" ADD COLUMN "balance_result" real;

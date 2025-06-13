@@ -1,2 +1,0 @@
-ALTER TABLE "simulation_room" ADD COLUMN "start_date" timestamp with time zone NOT NULL;--> statement-breakpoint
-ALTER TABLE "simulation_room" ADD COLUMN "trades_to_execute" integer DEFAULT 10 NOT NULL;

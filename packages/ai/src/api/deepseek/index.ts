@@ -5,13 +5,14 @@ import {
   replacePromptVariables,
   RESPONSE_SCHEMA_PROMPT,
 } from '../../common';
+import { DeepSeekModelEnum } from '@baron/schema';
 
 export async function getDeepSeekResponse<T extends z.ZodSchema>(input: {
   prompt: string;
   responseValidationSchema: T;
   responseSchema: JsonOrgResponseSchema;
   apiKey: string;
-  model: 'deepseek-chat' | 'deepseek-reasoner';
+  model: DeepSeekModelEnum;
 }): Promise<z.infer<T> | null> {
   const openai = new OpenAI({
     apiKey: input.apiKey,

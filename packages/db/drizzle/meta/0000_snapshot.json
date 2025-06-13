@@ -1,5 +1,5 @@
 {
-  "id": "faddd899-e787-4e93-a2b6-4c101e96916f",
+  "id": "82f40323-250d-4b91-be47-f02a90976ba9",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -60,8 +60,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.simulation_execution": {
-      "name": "simulation_execution",
+    "public.order_setup": {
+      "name": "order_setup",
       "schema": "",
       "columns": {
         "id": {
@@ -95,27 +95,15 @@
           "primaryKey": false,
           "notNull": true
         },
-        "ai_prompt": {
-          "name": "ai_prompt",
+        "platform": {
+          "name": "platform",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "system_prompt": {
-          "name": "system_prompt",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "trailing_stop": {
-          "name": "trailing_stop",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "simulation_room_id": {
-          "name": "simulation_room_id",
-          "type": "text",
+        "settings": {
+          "name": "settings",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": true
         },
@@ -126,35 +114,123 @@
           "notNull": true,
           "default": "'pending'"
         },
-        "start_date": {
-          "name": "start_date",
-          "type": "timestamp with time zone",
+        "leverage": {
+          "name": "leverage",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": 2
         },
-        "trades_to_execute": {
-          "name": "trades_to_execute",
+        "position_size_usd": {
+          "name": "position_size_usd",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "default": 10
         },
-        "step_minutes": {
-          "name": "step_minutes",
-          "type": "integer",
+        "ai_prompt": {
+          "name": "ai_prompt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.predefined_frvp": {
+      "name": "predefined_frvp",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
-          "default": 1
+          "default": "now()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pair": {
+          "name": "pair",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_date": {
+          "name": "last_date",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "zones": {
+          "name": "zones",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.simulation_execution_iteration": {
+      "name": "simulation_execution_iteration",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "simulation_execution_id": {
+          "name": "simulation_execution_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date": {
+          "name": "date",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "simulation_execution_simulation_room_id_simulation_room_id_fk": {
-          "name": "simulation_execution_simulation_room_id_simulation_room_id_fk",
-          "tableFrom": "simulation_execution",
-          "tableTo": "simulation_room",
+        "simulation_execution_iteration_simulation_execution_id_simulation_room_execution_id_fk": {
+          "name": "simulation_execution_iteration_simulation_execution_id_simulation_room_execution_id_fk",
+          "tableFrom": "simulation_execution_iteration",
+          "tableTo": "simulation_room_execution",
           "columnsFrom": [
-            "simulation_room_id"
+            "simulation_execution_id"
           ],
           "columnsTo": [
             "id"
@@ -215,14 +291,26 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "hold_until_price_breaks_up": {
+          "name": "hold_until_price_breaks_up",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hold_until_price_breaks_down": {
+          "name": "hold_until_price_breaks_down",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "simulation_execution_log_simulation_execution_id_simulation_execution_id_fk": {
-          "name": "simulation_execution_log_simulation_execution_id_simulation_execution_id_fk",
+        "simulation_execution_log_simulation_execution_id_simulation_room_execution_id_fk": {
+          "name": "simulation_execution_log_simulation_execution_id_simulation_room_execution_id_fk",
           "tableFrom": "simulation_execution_log",
-          "tableTo": "simulation_execution",
+          "tableTo": "simulation_room_execution",
           "columnsFrom": [
             "simulation_execution_id"
           ],
@@ -277,10 +365,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "simulation_execution_to_informative_bar_config_simulation_execution_id_simulation_execution_id_fk": {
-          "name": "simulation_execution_to_informative_bar_config_simulation_execution_id_simulation_execution_id_fk",
+        "simulation_execution_to_informative_bar_config_simulation_execution_id_simulation_room_execution_id_fk": {
+          "name": "simulation_execution_to_informative_bar_config_simulation_execution_id_simulation_room_execution_id_fk",
           "tableFrom": "simulation_execution_to_informative_bar_config",
-          "tableTo": "simulation_execution",
+          "tableTo": "simulation_room_execution",
           "columnsFrom": [
             "simulation_execution_id"
           ],
@@ -296,64 +384,6 @@
           "tableTo": "informative_bar_config",
           "columnsFrom": [
             "informative_bar_config_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.simulation_execution_to_volume_profile_config": {
-      "name": "simulation_execution_to_volume_profile_config",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "simulation_execution_id": {
-          "name": "simulation_execution_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "volume_profile_config_id": {
-          "name": "volume_profile_config_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "simulation_execution_to_volume_profile_config_simulation_execution_id_simulation_execution_id_fk": {
-          "name": "simulation_execution_to_volume_profile_config_simulation_execution_id_simulation_execution_id_fk",
-          "tableFrom": "simulation_execution_to_volume_profile_config",
-          "tableTo": "simulation_execution",
-          "columnsFrom": [
-            "simulation_execution_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        },
-        "simulation_execution_to_volume_profile_config_volume_profile_config_id_volume_profile_config_id_fk": {
-          "name": "simulation_execution_to_volume_profile_config_volume_profile_config_id_volume_profile_config_id_fk",
-          "tableFrom": "simulation_execution_to_volume_profile_config",
-          "tableTo": "volume_profile_config",
-          "columnsFrom": [
-            "volume_profile_config_id"
           ],
           "columnsTo": [
             "id"
@@ -450,14 +480,20 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "simulation_execution_trade_simulation_execution_id_simulation_execution_id_fk": {
-          "name": "simulation_execution_trade_simulation_execution_id_simulation_execution_id_fk",
+        "simulation_execution_trade_simulation_execution_id_simulation_room_execution_id_fk": {
+          "name": "simulation_execution_trade_simulation_execution_id_simulation_room_execution_id_fk",
           "tableFrom": "simulation_execution_trade",
-          "tableTo": "simulation_execution",
+          "tableTo": "simulation_room_execution",
           "columnsFrom": [
             "simulation_execution_id"
           ],
@@ -507,7 +543,20 @@
           "name": "description",
           "type": "text",
           "primaryKey": false,
+          "notNull": false
+        },
+        "start_date": {
+          "name": "start_date",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
           "notNull": true
+        },
+        "max_trades_to_execute": {
+          "name": "max_trades_to_execute",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 10
         },
         "pair": {
           "name": "pair",
@@ -518,18 +567,6 @@
         "ai_prompt": {
           "name": "ai_prompt",
           "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "system_prompt": {
-          "name": "system_prompt",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "trailing_stop": {
-          "name": "trailing_stop",
-          "type": "boolean",
           "primaryKey": false,
           "notNull": true
         },
@@ -544,10 +581,128 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "predefined_frvp_id": {
+          "name": "predefined_frvp_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ai_models": {
+          "name": "ai_models",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bulk_executions_count": {
+          "name": "bulk_executions_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "bulk_executions_interval_units": {
+          "name": "bulk_executions_interval_units",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'hour'"
+        },
+        "bulk_executions_interval_amount": {
+          "name": "bulk_executions_interval_amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "simulation_room_predefined_frvp_id_predefined_frvp_id_fk": {
+          "name": "simulation_room_predefined_frvp_id_predefined_frvp_id_fk",
+          "tableFrom": "simulation_room",
+          "tableTo": "predefined_frvp",
+          "columnsFrom": [
+            "predefined_frvp_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.simulation_room_execution": {
+      "name": "simulation_room_execution",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ai_prompt": {
+          "name": "ai_prompt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start_date": {
+          "name": "start_date",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "simulation_room_id": {
+          "name": "simulation_room_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "simulation_room_execution_simulation_room_id_simulation_room_id_fk": {
+          "name": "simulation_room_execution_simulation_room_id_simulation_room_id_fk",
+          "tableFrom": "simulation_room_execution",
+          "tableTo": "simulation_room",
+          "columnsFrom": [
+            "simulation_room_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -606,250 +761,6 @@
           "onUpdate": "cascade"
         }
       },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.simulation_room_to_volume_profile_config": {
-      "name": "simulation_room_to_volume_profile_config",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "simulation_room_id": {
-          "name": "simulation_room_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "volume_profile_config_id": {
-          "name": "volume_profile_config_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "simulation_room_to_volume_profile_config_simulation_room_id_simulation_room_id_fk": {
-          "name": "simulation_room_to_volume_profile_config_simulation_room_id_simulation_room_id_fk",
-          "tableFrom": "simulation_room_to_volume_profile_config",
-          "tableTo": "simulation_room",
-          "columnsFrom": [
-            "simulation_room_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        },
-        "simulation_room_to_volume_profile_config_volume_profile_config_id_volume_profile_config_id_fk": {
-          "name": "simulation_room_to_volume_profile_config_volume_profile_config_id_volume_profile_config_id_fk",
-          "tableFrom": "simulation_room_to_volume_profile_config",
-          "tableTo": "volume_profile_config",
-          "columnsFrom": [
-            "volume_profile_config_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.volume_profile_config": {
-      "name": "volume_profile_config",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "timeframe_unit": {
-          "name": "timeframe_unit",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "timeframe_amount": {
-          "name": "timeframe_amount",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "max_deviation_percent": {
-          "name": "max_deviation_percent",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "minimum_bars_to_consider": {
-          "name": "minimum_bars_to_consider",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "historical_time_to_consider_amount": {
-          "name": "historical_time_to_consider_amount",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "volume_profile_percentage": {
-          "name": "volume_profile_percentage",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 70
-        },
-        "flag": {
-          "name": "flag",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "volume_profile_config_timeframe_unit_timeframe_amount_max_deviation_percent_historical_time_to_consider_amount_volume_profile_percentage_unique": {
-          "name": "volume_profile_config_timeframe_unit_timeframe_amount_max_deviation_percent_historical_time_to_consider_amount_volume_profile_percentage_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "timeframe_unit",
-            "timeframe_amount",
-            "max_deviation_percent",
-            "historical_time_to_consider_amount",
-            "volume_profile_percentage"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.zone_volume_profile": {
-      "name": "zone_volume_profile",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "volume_area_high": {
-          "name": "volume_area_high",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "volume_area_low": {
-          "name": "volume_area_low",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "point_of_control": {
-          "name": "point_of_control",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "zone_start_at": {
-          "name": "zone_start_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "zone_end_at": {
-          "name": "zone_end_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "trading_pair": {
-          "name": "trading_pair",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "time_interval": {
-          "name": "time_interval",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "time_amount": {
-          "name": "time_amount",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "max_deviation_percent": {
-          "name": "max_deviation_percent",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "minimum_bars_to_consider": {
-          "name": "minimum_bars_to_consider",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "volume_profile_percentage": {
-          "name": "volume_profile_percentage",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 70
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},

@@ -15,26 +15,21 @@
 		"cpu_ms": 300000, // 300,000 milliseconds = 5 minutes
 	},
 	"workflows": [
-		{
-			"name": "self-training-room",
-			"binding": "SELF_TRAINING_ROOM",
-			"class_name": "SelfTrainingRoomWorkflow",
-		},
-		{
-			"name": "simulation-iteration-workflow",
-			"binding": "SIMULATION_ITERATION_WORKFLOW",
-			"class_name": "SimulationIterationWorkflow",
-		},
-		{
-			"name": "order-placement-workflow",
-			"binding": "ORDER_PLACEMENT_WORKFLOW",
-			"class_name": "OrderPlacementWorkflow",
-		},
-		{
-			"name": "order-placement-trigger",
-			"binding": "ORDER_PLACEMENT_TRIGGER",
-			"class_name": "OrderPlacementTriggerWorkflow",
-		},
+		// {
+		// 	"name": "simulation-iteration-workflow",
+		// 	"binding": "SIMULATION_ITERATION_WORKFLOW",
+		// 	"class_name": "SimulationIterationWorkflow",
+		// },
+		// {
+		// 	"name": "order-placement-workflow",
+		// 	"binding": "ORDER_PLACEMENT_WORKFLOW",
+		// 	"class_name": "OrderPlacementWorkflow",
+		// },
+		// {
+		// 	"name": "order-placement-trigger",
+		// 	"binding": "ORDER_PLACEMENT_TRIGGER",
+		// 	"class_name": "OrderPlacementTriggerWorkflow",
+		// },
 	],
 	/**
 	 * Smart Placement

@@ -2,17 +2,15 @@ import { getAppRoute, GetRouteParams } from '@/core/route';
 import { trpc } from '@/core/trpc';
 import { DataTable, PageLayout, useCurrentPagination } from '@/modules/shared';
 import { SpaPagination } from '@/modules/shared/components/pagination';
+import { SimulationRoomDetails } from '@/modules/simulation-room/components/simulation-room-details';
 import { RouterOutput } from '@baron/server';
 import { Button } from '@baron/ui/components/button';
 import { FormatDate } from '@baron/ui/components/format-date';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowLeftIcon, ArrowRightIcon, PlusCircleIcon } from 'lucide-react';
+import { ArrowLeftIcon, ArrowRightIcon } from 'lucide-react';
 import { Suspense, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { TradeMoneyResult, TradeCountResult } from '../components/trade-result';
-import { ExecutionStatus } from '../components/execution-status';
-import { TradingPairSelect } from '@/modules/inputs/trading-pair-select';
-import { SimulationRoomDetails } from '@/modules/simulation-room/components/simulation-room-details';
+import { TradeCountResult, TradeMoneyResult } from '../components/trade-result';
 
 type TableItem = RouterOutput['simulationExecution']['list']['data'][number];
 
@@ -39,52 +37,11 @@ function ListData() {
           `${list.count - pagination.skip * pagination.take - index}`,
       },
       {
-        accessorKey: 'name',
-        enableSorting: false,
-        header: 'Name',
-        cell: ({ row: { original } }) => (
-          <div>
-            <p>{original.name}</p>
-            <FormatDate date={original.createdAt} format="long" />
-          </div>
-        ),
-      },
-      {
-        accessorKey: 'status',
-        enableSorting: false,
-        header: 'Status',
-        cell: ({ row: { original } }) => (
-          <ExecutionStatus status={original.status} />
-        ),
-      },
-      {
-        accessorKey: 'pair',
-        enableSorting: false,
-        header: 'Symbol',
-        cell: ({ row: { original } }) => (
-          <TradingPairSelect
-            value={original.pair}
-            onChange={() => null}
-            disabled
-          />
-        ),
-      },
-      {
         accessorKey: 'startDate',
         enableSorting: false,
         header: 'Symbol / Start Date',
         cell: ({ row: { original } }) => (
           <FormatDate date={original.startDate} utc />
-        ),
-      },
-      {
-        accessorKey: 'tradesToExecute',
-        enableSorting: false,
-        header: 'Executions',
-        cell: ({ row: { original } }) => (
-          <p>
-            {`${original.trades?.length ?? 0} / ${original.tradesToExecute ?? 0} executed`}
-          </p>
         ),
       },
       {
@@ -106,17 +63,7 @@ function ListData() {
       {
         id: 'actions',
         enableSorting: false,
-        header: () => (
-          <Button asChild size="icon" variant="link">
-            <Link
-              to={getAppRoute('/app/simulation/room/:roomId/run', {
-                roomId: params.roomId ?? '',
-              })}
-            >
-              <PlusCircleIcon className="w-4" />
-            </Link>
-          </Button>
-        ),
+        header: () => null,
         cell: ({ row: { original } }) => (
           <Button asChild variant="link" className="-ml-2">
             <Link

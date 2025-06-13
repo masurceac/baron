@@ -23,8 +23,11 @@ export function TradingPairSelect(props: {
         <SelectValue placeholder="Choose Trading Pair" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value={TradingPair.BTCUSDT}>BTC/USD</SelectItem>
-        <SelectItem value={TradingPair.ETHUSDT}>ETH/USD</SelectItem>
+        {Object.values(TradingPair).map((pair) => (
+          <SelectItem key={pair} value={pair}>
+            {pair.replace('USDT', '/USD')}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );

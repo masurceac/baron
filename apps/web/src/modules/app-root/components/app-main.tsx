@@ -1,15 +1,10 @@
-import { getAppRoute } from '@/core/route';
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from '@baron/ui/components/card';
-import { Separator } from '@baron/ui/components/separator';
 import { useUser } from '@clerk/clerk-react';
-import { ArrowRightIcon } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { SimulationExecutionStats } from './simulation-execution-stats';
 
 export function AppHomepage() {
@@ -33,22 +28,6 @@ export function AppHomepage() {
             <SimulationExecutionStats />
           </div>
         </CardHeader>
-        <Separator />
-        <CardContent>
-          <Link to={getAppRoute('/app')} className="flex">
-            Main App
-            <ArrowRightIcon className="w-4 ml-1" />
-          </Link>
-        </CardContent>
-        <CardContent>
-          <Link
-            to={getAppRoute('/app/volume-profile-config/list')}
-            className="flex"
-          >
-            Volume Profile Config
-            <ArrowRightIcon className="w-4 ml-1" />
-          </Link>
-        </CardContent>
       </Card>
     </div>
   );

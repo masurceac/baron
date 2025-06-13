@@ -1,13 +1,14 @@
 import { GoogleGenAI } from '@google/genai';
 import { z } from 'zod';
 import { JsonOrgResponseSchema } from '../../common';
+import { GeminiModelEnum } from '@baron/schema';
 
 export async function getGeminiAiResponse<T extends z.ZodSchema>(input: {
   prompt: string;
   responseValidationSchema: T;
   responseSchema: JsonOrgResponseSchema;
   apiKey: string;
-  model: 'gemini-2.5-flash-preview-05-20' | 'gemini-2.5-pro-preview-06-05';
+  model: GeminiModelEnum;
 }): Promise<z.infer<T> | null> {
   const ai = new GoogleGenAI({ vertexai: false, apiKey: input.apiKey });
   const response = await ai.models.generateContent({

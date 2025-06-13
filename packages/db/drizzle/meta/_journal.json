@@ -5,92 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1748979995829,
-      "tag": "0000_flat_wonder_man",
+      "when": 1749832596958,
+      "tag": "0000_open_prism",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1749225274732,
-      "tag": "0001_jazzy_bloodstrike",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1749229166860,
-      "tag": "0002_misty_otto_octavius",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1749311459490,
-      "tag": "0003_charming_shocker",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1749312718211,
-      "tag": "0004_woozy_hex",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1749318570765,
-      "tag": "0005_daily_miss_america",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1749389860870,
-      "tag": "0006_soft_warlock",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1749393177768,
-      "tag": "0007_complete_titanium_man",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1749399416042,
-      "tag": "0008_flashy_red_shift",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1749401036284,
-      "tag": "0009_sharp_firedrake",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "7",
-      "when": 1749538392002,
-      "tag": "0010_lovely_jack_murdock",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "7",
-      "when": 1749538620411,
-      "tag": "0011_outgoing_lady_ursula",
-      "breakpoints": true
-    },
-    {
-      "idx": 12,
-      "version": "7",
-      "when": 1749547460580,
-      "tag": "0012_gorgeous_lila_cheney",
+      "when": 1749834325717,
+      "tag": "0001_wet_angel",
       "breakpoints": true
     }
   ]

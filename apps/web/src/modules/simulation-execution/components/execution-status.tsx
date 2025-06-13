@@ -1,5 +1,5 @@
 import { assertNever } from '@baron/common';
-import { SimulationExecutionStatus } from '@baron/db/enum';
+import { SimulationExecutionStatus } from '@baron/common';
 import { Badge } from '@baron/ui/components/badge';
 
 export function ExecutionStatus(props: { status: SimulationExecutionStatus }) {
@@ -24,6 +24,7 @@ export function ExecutionStatus(props: { status: SimulationExecutionStatus }) {
       );
     case SimulationExecutionStatus.Failed:
     case SimulationExecutionStatus.LimitReached:
+    case SimulationExecutionStatus.Canceled:
       return (
         <Badge variant="destructive" className="capitalize">
           {props.status}

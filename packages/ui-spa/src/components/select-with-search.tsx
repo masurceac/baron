@@ -5,10 +5,13 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@baron/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@baron/ui/popover';
+} from '@baron/ui/components/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@baron/ui/components/popover';
 import { ReactNode, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
 export function SelectWithSearch<T extends { id: string }>(props: {
   data: T[];
@@ -23,7 +26,6 @@ export function SelectWithSearch<T extends { id: string }>(props: {
   listFooter?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const { t } = useTranslation();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -36,7 +38,7 @@ export function SelectWithSearch<T extends { id: string }>(props: {
             onValueChange={props.onSearch}
           />
           <CommandList>
-            <CommandEmpty>{t('No results.')}</CommandEmpty>
+            <CommandEmpty>No results.</CommandEmpty>
             <CommandGroup>
               {props.data.map((item) => (
                 <CommandItem

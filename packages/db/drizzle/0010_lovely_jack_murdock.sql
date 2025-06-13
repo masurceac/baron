@@ -1,1 +1,0 @@
-ALTER TABLE "order_setup" ADD COLUMN "position_size_usd" integer DEFAULT 10 NOT NULL;

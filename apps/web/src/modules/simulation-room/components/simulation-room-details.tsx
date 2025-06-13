@@ -6,7 +6,6 @@ import {
   TradeCountResult,
   TradeMoneyResult,
 } from '@/modules/simulation-execution/components/trade-result';
-import { VolumeProfileList } from '@/modules/volume-profile-config/components/volume-profile-list';
 import { Badge } from '@baron/ui/components/badge';
 import { Button } from '@baron/ui/components/button';
 import {
@@ -23,7 +22,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@baron/ui/components/dialog';
-import { BookIcon, OctagonMinusIcon } from 'lucide-react';
 import { Suspense } from 'react';
 
 function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
@@ -47,20 +45,6 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
       </CardHeader>
       <CardContent className="grid md:grid-cols-2 gap-2 lg:flex space-x-4">
         <TradingPairSelect value={data.pair} onChange={() => null} disabled />
-        <Badge variant="outline" title="Trailing Stop">
-          <OctagonMinusIcon className="w-4 mr-1" /> Trailing stop{' '}
-          {data.trailingStop ? 'enabled' : 'disabled'}
-        </Badge>
-        <Badge variant="outline">
-          <BookIcon className="w-4 mr-1" /> Self Training{' '}
-          {data.selfTraining
-            ? `enabled (${data.selfTrainingCycles} cycles)`
-            : 'disabled'}
-        </Badge>
-        <Badge variant="outline">
-          <BookIcon className="w-4 mr-1" /> Hold Price{' '}
-          {data.holdPriceEnabled ? `enabled` : 'disabled'}
-        </Badge>
       </CardContent>
       <CardContent className="grid md:grid-cols-2 gap-2 lg:flex space-x-4">
         <DetailedTextDialog
@@ -68,21 +52,6 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
           content={data.aiPrompt}
           label="AI Prompt"
         />
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>Volume Profile Config</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                Volume Profile Config used in this simulation execution
-              </DialogTitle>
-            </DialogHeader>
-            <DialogContent>
-              <VolumeProfileList items={data.vpcIds?.map((v) => v.id) ?? []} />
-            </DialogContent>
-          </DialogContent>
-        </Dialog>
 
         <Dialog>
           <DialogTrigger asChild>

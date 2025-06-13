@@ -1,28 +1,29 @@
+import { ModelsMultiSelect } from '@/modules/ai-models';
 import { InfoBarMultiselect } from '@/modules/info-bars/lib';
 import { TradingPairSelect } from '@/modules/inputs/trading-pair-select';
-import { DetailedTextDialog } from '@/modules/shared/components/detailed-text-dialog';
-import { VolumeProfileMultiselect } from '@/modules/volume-profile-config/lib';
-import { ORDER_SUGGESTION_PROMPT } from '@baron/ai/order-suggestion';
+import { FrvpSelect } from '@/modules/predefined-frvp/lib';
 import { simulationRoomSchema } from '@baron/schema';
 import { Button } from '@baron/ui/components/button';
+import { DateTimeInput } from '@baron/ui/components/date-time-input';
 import { Form } from '@baron/ui/components/form';
 import { FormFieldWrapper } from '@baron/ui/components/form-field-wrapper';
+import { FormatDate } from '@baron/ui/components/format-date';
 import { Input } from '@baron/ui/components/input';
-import { Separator } from '@baron/ui/components/separator';
+import { NumericInput } from '@baron/ui/components/numeric-input';
 import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '@baron/ui/components/alert';
-import { Switch } from '@baron/ui/components/switch';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@baron/ui/components/select';
+import { Separator } from '@baron/ui/components/separator';
 import { Textarea } from '@baron/ui/components/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ForwardedRef, useImperativeHandle } from 'react';
 import { SubmitHandler, useForm, UseFormReturn } from 'react-hook-form';
 import { z } from 'zod';
-import { NumericInput } from '@baron/ui/components/numeric-input';
-import { DateTimeInput } from '@baron/ui/components/date-time-input';
-import { FormatDate } from '@baron/ui/components/format-date';
+import { TimeUnit } from '@baron/common';
 
 type FormSchema = z.infer<typeof simulationRoomSchema>;
 
@@ -40,8 +41,6 @@ export function ItemForm(props: {
     resolver: zodResolver(simulationRoomSchema),
   });
 
-  const selfTraining = form.watch('selfTraining');
-
   useImperativeHandle(props.ref, () => ({
     form,
   }));
@@ -55,7 +54,7 @@ export function ItemForm(props: {
             name="name"
             label="Name"
             render={({ field }) => (
-              <Input {...field} placeholder="Enter name" />
+              <Input {...field} placeholder="Choose a name" />
             )}
           />
           <FormFieldWrapper
@@ -63,13 +62,9 @@ export function ItemForm(props: {
             name="description"
             label="Description"
             render={({ field }) => (
-              <Input {...field} placeholder="Enter Description" />
+              <Textarea value={field.value ?? ''} onChange={field.onChange} placeholder="Enter description" />
             )}
           />
-          <Separator />
-          <p className="text-lg">
-            Data below will be used as template for running simulations.
-          </p>
           <FormFieldWrapper
             control={form.control}
             name="pair"
@@ -84,14 +79,13 @@ export function ItemForm(props: {
           />
           <FormFieldWrapper
             control={form.control}
-            name="tradesToExecute"
-            label="Trades Amount"
-            description="How many trades should be completed before the simulation ends."
+            name="maxTradesToExecute"
+            label="Maximum Trades to Execute per simulation"
             render={({ field }) => (
               <NumericInput
                 value={field.value}
                 onChange={field.onChange}
-                placeholder="Enter Trades Amount"
+                placeholder="Enter max trades"
               />
             )}
           />
@@ -117,76 +111,8 @@ export function ItemForm(props: {
           />
           <FormFieldWrapper
             control={form.control}
-            name="trailingStop"
-            label="Trailing Stop"
-            render={({ field }) => (
-              <Switch checked={field.value} onCheckedChange={field.onChange} />
-            )}
-          />
-          <FormFieldWrapper
-            control={form.control}
-            name="holdPriceEnabled"
-            label="Price Hold Until Break"
-            render={({ field }) => (
-              <Switch checked={field.value} onCheckedChange={field.onChange} />
-            )}
-          />
-          <FormFieldWrapper
-            control={form.control}
-            name="selfTraining"
-            label="Self Training"
-            render={({ field }) => (
-              <Switch checked={field.value} onCheckedChange={field.onChange} />
-            )}
-          />
-          {selfTraining && (
-            <>
-              <Alert>
-                <AlertTitle>Self Training Mode Enabled</AlertTitle>
-                <AlertDescription>
-                  When in self-training mode, the AI will use the prompt below
-                  as requirements to generate further prompts for trading. All
-                  required variables will be included automatically.
-                </AlertDescription>
-              </Alert>
-              <FormFieldWrapper
-                control={form.control}
-                name="selfTrainingCycles"
-                label="Self Training Cycles"
-                description="How many self-training cycles should be made."
-                render={({ field }) => (
-                  <NumericInput
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Enter Self Training Cycles"
-                  />
-                )}
-              />
-              <FormFieldWrapper
-                control={form.control}
-                name="selfTrainingPrompt"
-                label="Self training Prompt"
-                description="This prompt will be used to generate further prompts for self-training and self-improvement."
-                render={({ field }) => (
-                  <Textarea value={field.value} onChange={field.onChange} />
-                )}
-              />
-            </>
-          )}
-          <FormFieldWrapper
-            control={form.control}
             name="aiPrompt"
             label="AI Prompt"
-            description={
-              <DetailedTextDialog
-                title="This is the default AI prompt"
-                content={
-                  selfTraining
-                    ? 'Example: Provide a high-risk trading strategy that relies on S/R volume profiles.'
-                    : ORDER_SUGGESTION_PROMPT
-                }
-              />
-            }
             render={({ field }) => (
               <Textarea value={field.value} onChange={field.onChange} />
             )}
@@ -195,10 +121,19 @@ export function ItemForm(props: {
 
           <FormFieldWrapper
             control={form.control}
-            name="vpcIds"
-            label="Volume Profile Configs"
+            name="predefinedFrvpId"
+            label="FRVP ID"
             render={({ field }) => (
-              <VolumeProfileMultiselect
+              <FrvpSelect value={field.value} onChange={field.onChange} />
+            )}
+          />
+
+          <FormFieldWrapper
+            control={form.control}
+            name="aiModels"
+            label="AI Models"
+            render={({ field }) => (
+              <ModelsMultiSelect
                 value={field.value}
                 onChange={field.onChange}
               />
@@ -216,6 +151,63 @@ export function ItemForm(props: {
               />
             )}
           />
+
+          <Separator />
+
+          <div className="grid grid-cols-3 gap-4">
+            <FormFieldWrapper
+              control={form.control}
+              name="bulkExecutionsCount"
+              label="Number of Bulk Executions"
+              render={({ field }) => (
+                <NumericInput
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Enter number of executions"
+                />
+              )}
+            />
+
+            <FormFieldWrapper
+              control={form.control}
+              name="bulkExecutionsIntervalAmount"
+              label="Interval Amount"
+              render={({ field }) => (
+                <NumericInput
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Enter interval amount"
+                />
+              )}
+            />
+
+            <FormFieldWrapper
+              control={form.control}
+              name="bulkExecutionsIntervalUnits"
+              label="Interval Units"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Choose Time Unit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={TimeUnit.Min}>Minutes</SelectItem>
+                    <SelectItem value={TimeUnit.Hour}>Hours</SelectItem>
+                    <SelectItem value={TimeUnit.Day}>Days</SelectItem>
+                    <SelectItem value={TimeUnit.Week}>Weeks</SelectItem>
+                    <SelectItem value={TimeUnit.Month}>Months</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+
+            <p className="col-span-3 text-sm text-muted-foregroun capitalized">
+              The simulation will launch{' '}
+              {form.watch('bulkExecutionsCount') || 0} parallel executions, with
+              interval of {form.watch('bulkExecutionsIntervalAmount') || 0}{' '}
+              {form.watch('bulkExecutionsIntervalUnits') || 'time units'}.
+            </p>
+          </div>
 
           <Button type="submit" className="w-full">
             Submit

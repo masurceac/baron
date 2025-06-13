@@ -1,6 +1,7 @@
 import { getAppRoute } from '@/core/route';
 import { trpc } from '@/core/trpc';
 import { PageLayout } from '@/modules/shared';
+import { TradingPair } from '@baron/common';
 import {
   Card,
   CardContent,
@@ -12,14 +13,13 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { BackToList } from '../components/back-to-list';
 import { ItemForm } from '../components/item-form';
-import { TradingPair } from '@baron/common';
 
-export function SimulationRoomCreatePage() {
+export function FRVPCreatePage() {
   const history = useNavigate();
-  const createItem = trpc.simulationRoom.create.useMutation({
+  const createItem = trpc.frvp.create.useMutation({
     onSuccess: () => {
       toast(`Item created`);
-      history(getAppRoute('/app/simulation/list'));
+      history(getAppRoute('/app/frvp/list'));
     },
     onError() {
       toast.error('Failed to create Item');
@@ -27,13 +27,13 @@ export function SimulationRoomCreatePage() {
   });
 
   return (
-    <PageLayout title="Create Simulation Room">
+    <PageLayout title="Create FRVP">
       <BackToList />
       <Card className="max-w-screen-lg mx-auto w-full">
         <CardHeader>
-          <CardTitle>Create Simulation Room</CardTitle>
+          <CardTitle>Create FRVP</CardTitle>
           <CardDescription>
-            Inside you'll be able to test your Trading Strategies
+            Create a new FRVP to use in your simulations
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -41,10 +41,6 @@ export function SimulationRoomCreatePage() {
             defaultValues={{
               name: '',
               pair: TradingPair.ETHUSDT,
-              aiPrompt: '',
-              startDate: new Date(),
-              maxTradesToExecute: 10,
-              infoBarIds: [],
             }}
             onSubmit={(d) => {
               console.log(d);

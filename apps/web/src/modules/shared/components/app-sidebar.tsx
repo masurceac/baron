@@ -5,11 +5,11 @@ import {
   ChartCandlestickIcon,
   FolderIcon,
   LayoutDashboardIcon,
-  UsersIcon,
 } from 'lucide-react';
 import * as React from 'react';
 
 import { getAppRoute } from '@/core/route';
+import { ThemeSwitcher } from '@baron/ui-spa/theme-switcher';
 import {
   Sidebar,
   SidebarContent,
@@ -21,7 +21,6 @@ import {
 } from '@baron/ui/components/sidebar';
 import { UserButton } from '@clerk/clerk-react';
 import { NavMain } from './nav-main';
-import { ThemeSwitcher } from '@baron/ui-spa/theme-switcher';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const nav = React.useMemo(
@@ -33,8 +32,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: LayoutDashboardIcon,
       },
       {
-        title: 'VPC',
-        url: getAppRoute('/app/volume-profile-config'),
+        title: 'FRVP',
+        url: getAppRoute('/app/frvp'),
         end: false,
         icon: ChartBarStackedIcon,
       },
@@ -48,12 +47,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: 'Simulation',
         url: getAppRoute('/app/simulation'),
         icon: FolderIcon,
-      },
-      {
-        title: 'Team',
-        end: true,
-        url: '/app/team',
-        icon: UsersIcon,
       },
     ],
     [],

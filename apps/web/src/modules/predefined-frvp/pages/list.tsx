@@ -6,18 +6,18 @@ import { RouterOutput } from '@baron/server';
 import { Button } from '@baron/ui/components/button';
 import { FormatDate } from '@baron/ui/components/format-date';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowRightIcon, PlusCircleIcon } from 'lucide-react';
+import { PencilIcon, PlusCircleIcon } from 'lucide-react';
 import { Suspense, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ItemActions } from '../components/item-actions';
 
-type TableItem = RouterOutput['simulationRoom']['list']['data'][number];
+type TableItem = RouterOutput['frvp']['list']['data'][number];
 
 const TAKE = 10;
 
 function ListData() {
   const pagination = useCurrentPagination({ take: TAKE });
-  const [list] = trpc.simulationRoom.list.useSuspenseQuery({
+  const [list] = trpc.frvp.list.useSuspenseQuery({
     skip: pagination.skip,
     take: TAKE,
   });
@@ -31,9 +31,6 @@ function ListData() {
         cell: ({ row: { original } }) => (
           <div>
             <p>{original.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {original.description}
-            </p>
           </div>
         ),
       },
@@ -48,41 +45,30 @@ function ListData() {
           </div>
         ),
       },
-
       {
-        accessorKey: 'authorName',
+        id: 'details',
         enableSorting: false,
-        header: 'Author',
+        header: 'Edit',
         cell: ({ row: { original } }) => (
           <div>
-            <p>{original.authorName}</p>
-          </div>
-        ),
-      },
-      {
-        accessorKey: 'description',
-        enableSorting: false,
-        header: 'Simulations',
-        cell: ({ row: { original } }) => (
-          <div>
-            <Button asChild variant="link" className="-ml-2">
+            <Button asChild size="icon" variant="link">
               <Link
-                to={getAppRoute('/app/simulation/room/:roomId/list', {
-                  roomId: original.id,
+                to={getAppRoute('/app/frvp/edit/:frvpId', {
+                  frvpId: original.id,
                 })}
               >
-                View Simulations <ArrowRightIcon className="w-4" />
+                <PencilIcon className="w-4 mr-2" />
+                Edit
               </Link>
             </Button>
           </div>
         ),
       },
-
       {
         accessorKey: 'id',
         header: () => (
           <Button asChild size="icon" variant="link">
-            <Link to={getAppRoute('/app/simulation/create')}>
+            <Link to={getAppRoute('/app/frvp/create')}>
               <PlusCircleIcon className="w-4" />
             </Link>
           </Button>
@@ -111,9 +97,9 @@ function ListData() {
   );
 }
 
-export function SimulationRoomListPage() {
+export function FRVPListPage() {
   return (
-    <PageLayout title="Simulation Rooms">
+    <PageLayout title="FRVPs">
       <div>
         <Suspense>
           <ListData />
