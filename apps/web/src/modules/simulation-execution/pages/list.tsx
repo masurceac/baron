@@ -11,6 +11,7 @@ import { ArrowLeftIcon, ArrowRightIcon } from 'lucide-react';
 import { Suspense, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { TradeCountResult, TradeMoneyResult } from '../components/trade-result';
+import { ExecutionStatus } from '../components/execution-status';
 
 type TableItem = RouterOutput['simulationExecution']['list']['data'][number];
 
@@ -42,6 +43,14 @@ function ListData() {
         header: 'Symbol / Start Date',
         cell: ({ row: { original } }) => (
           <FormatDate date={original.startDate} utc />
+        ),
+      },
+      {
+        accessorKey: 'status',
+        enableSorting: false,
+        header: 'Status',
+        cell: ({ row: { original } }) => (
+          <ExecutionStatus status={original.status} />
         ),
       },
       {

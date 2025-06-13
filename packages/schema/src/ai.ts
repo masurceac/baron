@@ -21,6 +21,17 @@ export enum GeminiModelEnum {
   Gemini25ProPreview0605 = 'gemini-2.5-pro-preview-06-05',
 }
 
+export enum AiModelStrategyEnum {
+  And = 'and',
+  Or = 'or',
+}
+
+export enum AiModelPriceStrategyEnum {
+  Max = 'max',
+  Min = 'min',
+  Average = 'average',
+}
+
 export const aiModelSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal(AiModelEnum.DeepSeek),

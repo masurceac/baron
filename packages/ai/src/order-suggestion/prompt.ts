@@ -44,7 +44,7 @@ export function getOderSuggestionPromptVariables(variables: {
   support_resistance_zones: any;
   price_action_bars: any;
   current_price: any;
-  previous_trades: any;
+  // previous_trades: any;
 }) {
   const template = `\`\`\`json
 {{json_input}}

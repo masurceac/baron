@@ -1,9 +1,10 @@
 import { getDatabase } from '@/database';
-import { paginate, paginatedSchema, TimeUnit } from '@baron/common';
+import { SimulationRoomExecutionWorkflowParams } from '@/workflows/types';
+import { addTimeUnits, paginate, paginatedSchema, TimeUnit } from '@baron/common';
 import { queryJoin } from '@baron/db/client';
 import {
 	informativeBarConfig,
-	simulationRoomExecution,
+	simulationExecution,
 	simulationExecutionTrade,
 	simulationRoom,
 	simulationRoomToInformativeBar,
@@ -12,6 +13,7 @@ import { simulationRoomSchema } from '@baron/schema';
 import { protectedProcedure } from '@baron/trpc-server';
 import { getAuth, getClerkClient } from '@baron/trpc-server/async-storage/getters';
 import { TRPCError } from '@trpc/server';
+import { env } from 'cloudflare:workers';
 import { and, count, desc, eq, ilike, inArray, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -49,6 +51,8 @@ export const simulationRoomRouter = {
 					maxTradesToExecute: input.maxTradesToExecute,
 					aiModels: input.aiModels,
 					predefinedFrvpId: input.predefinedFrvpId,
+					aiModelStrategy: input.aiModelStrategy,
+					aiModelPriceStrategy: input.aiModelPriceStrategy,
 
 					bulkExecutionsCount: input.bulkExecutionsCount,
 					bulkExecutionsIntervalUnits: input.bulkExecutionsIntervalUnits,
@@ -90,6 +94,23 @@ export const simulationRoomRouter = {
 			});
 		}
 
+		const executionsToCreate = Array.from({ length: roomResult.bulkExecutionsCount }).map((_, index) => ({
+			simulationRoomId: roomResult.id,
+			startDate: addTimeUnits(input.startDate, roomResult.bulkExecutionsIntervalUnits, roomResult.bulkExecutionsIntervalAmount * index),
+			aiPrompt: roomResult.aiPrompt,
+		}));
+
+		const executions = await db.insert(simulationExecution).values(executionsToCreate).returning();
+		await Promise.all(
+			executions.map((execution) =>
+				env.SIMULATION_ROOM_EXECUTION_WORKFLOW.create({
+					params: {
+						simulationRoomExecutionId: execution.id,
+					} satisfies SimulationRoomExecutionWorkflowParams,
+				}),
+			),
+		);
+
 		return roomResult;
 	}),
 
@@ -128,6 +149,8 @@ export const simulationRoomRouter = {
 						maxTradesToExecute: input.data.maxTradesToExecute,
 						aiModels: input.data.aiModels,
 						predefinedFrvpId: input.data.predefinedFrvpId,
+						aiModelStrategy: input.data.aiModelStrategy,
+						aiModelPriceStrategy: input.data.aiModelPriceStrategy,
 
 						bulkExecutionsCount: input.data.bulkExecutionsCount,
 						bulkExecutionsIntervalUnits: input.data.bulkExecutionsIntervalUnits ?? TimeUnit.Hour,
@@ -190,8 +213,8 @@ export const simulationRoomRouter = {
 					(query) =>
 						query
 							.from(simulationExecutionTrade)
-							.innerJoin(simulationRoomExecution, eq(simulationExecutionTrade.simulationExecutionId, simulationRoomExecution.id))
-							.where(eq(simulationRoomExecution.simulationRoomId, simulationRoom.id)),
+							.innerJoin(simulationExecution, eq(simulationExecutionTrade.simulationExecutionId, simulationExecution.id))
+							.where(eq(simulationExecution.simulationRoomId, simulationRoom.id)),
 				),
 				infoBarIds: queryJoin(db, { id: informativeBarConfig.id }, (query) =>
 					query
@@ -252,6 +275,8 @@ export const simulationRoomRouter = {
 							authorName: simulationRoom.authorName,
 							aiPrompt: simulationRoom.aiPrompt,
 							aiModels: simulationRoom.aiModels,
+							aiModelStrategy: simulationRoom.aiModelStrategy,
+							aiModelPriceStrategy: simulationRoom.aiModelPriceStrategy,
 						})
 						.from(simulationRoom)
 						.where(and(...where))

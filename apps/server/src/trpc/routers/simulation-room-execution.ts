@@ -5,7 +5,7 @@ import {
 	simulationExecutionToInformativeBarConfig,
 	simulationExecutionTrade,
 	simulationRoom,
-	simulationRoomExecution,
+	simulationExecution,
 } from '@baron/db/schema';
 import { protectedProcedure } from '@baron/trpc-server';
 import { TRPCError } from '@trpc/server';
@@ -15,7 +15,7 @@ import { z } from 'zod';
 export const simulationRoomExecutionRouter = {
 	list: protectedProcedure.input(z.object({ simulationRoomId: z.string() }).merge(paginatedSchema)).query(async ({ input }) => {
 		const db = getDatabase();
-		const where: (SQL | undefined)[] = [eq(simulationRoomExecution.simulationRoomId, input.simulationRoomId)];
+		const where: (SQL | undefined)[] = [eq(simulationExecution.simulationRoomId, input.simulationRoomId)];
 
 		return paginate({
 			skip: input.skip,
@@ -23,8 +23,8 @@ export const simulationRoomExecutionRouter = {
 			maxTake: 100,
 			count: async () => {
 				const query = db
-					.select({ count: count(simulationRoomExecution.id) })
-					.from(simulationRoomExecution)
+					.select({ count: count(simulationExecution.id) })
+					.from(simulationExecution)
 					.where(and(...where));
 
 				const result = await query;
@@ -33,10 +33,11 @@ export const simulationRoomExecutionRouter = {
 			query: async ({ take, skip }) => {
 				return db
 					.select({
-						id: simulationRoomExecution.id,
-						createdAt: simulationRoomExecution.createdAt,
-						startDate: simulationRoomExecution.startDate,
-						simulationRoomId: simulationRoomExecution.simulationRoomId,
+						id: simulationExecution.id,
+						createdAt: simulationExecution.createdAt,
+						startDate: simulationExecution.startDate,
+						status: simulationExecution.status,
+						simulationRoomId: simulationExecution.simulationRoomId,
 						trades: queryJoin(
 							db,
 							{
@@ -44,12 +45,12 @@ export const simulationRoomExecutionRouter = {
 								balanceResult: simulationExecutionTrade.balanceResult,
 							},
 							(query) =>
-								query.from(simulationExecutionTrade).where(eq(simulationExecutionTrade.simulationExecutionId, simulationRoomExecution.id)),
+								query.from(simulationExecutionTrade).where(eq(simulationExecutionTrade.simulationExecutionId, simulationExecution.id)),
 						),
 					})
-					.from(simulationRoomExecution)
+					.from(simulationExecution)
 					.where(and(...where))
-					.orderBy(desc(simulationRoomExecution.createdAt))
+					.orderBy(desc(simulationExecution.createdAt))
 					.limit(take)
 					.offset(skip);
 			},
@@ -61,11 +62,11 @@ export const simulationRoomExecutionRouter = {
 
 		const [execution] = await db
 			.select({
-				id: simulationRoomExecution.id,
-				createdAt: simulationRoomExecution.createdAt,
-				simulationRoomId: simulationRoomExecution.simulationRoomId,
-				startDate: simulationRoomExecution.startDate,
-				aiPrompt: simulationRoomExecution.aiPrompt,
+				id: simulationExecution.id,
+				createdAt: simulationExecution.createdAt,
+				simulationRoomId: simulationExecution.simulationRoomId,
+				startDate: simulationExecution.startDate,
+				aiPrompt: simulationExecution.aiPrompt,
 				status: simulationRoom.status,
 				trades: queryJoin(
 					db,
@@ -74,7 +75,7 @@ export const simulationRoomExecutionRouter = {
 						balanceResult: simulationExecutionTrade.balanceResult,
 					},
 					(query) =>
-						query.from(simulationExecutionTrade).where(eq(simulationExecutionTrade.simulationExecutionId, simulationRoomExecution.id)),
+						query.from(simulationExecutionTrade).where(eq(simulationExecutionTrade.simulationExecutionId, simulationExecution.id)),
 				),
 				infoBars: queryJoin(
 					db,
@@ -85,12 +86,12 @@ export const simulationRoomExecutionRouter = {
 					(query) =>
 						query
 							.from(simulationExecutionToInformativeBarConfig)
-							.where(eq(simulationExecutionToInformativeBarConfig.simulationExecutionId, simulationRoomExecution.id)),
+							.where(eq(simulationExecutionToInformativeBarConfig.simulationExecutionId, simulationExecution.id)),
 				),
 			})
-			.from(simulationRoomExecution)
-			.innerJoin(simulationRoom, eq(simulationRoom.id, simulationRoomExecution.simulationRoomId))
-			.where(eq(simulationRoomExecution.id, input.executionId))
+			.from(simulationExecution)
+			.innerJoin(simulationRoom, eq(simulationRoom.id, simulationExecution.simulationRoomId))
+			.where(eq(simulationExecution.id, input.executionId))
 			.limit(1);
 
 		if (!execution) {
@@ -107,53 +108,53 @@ export const simulationRoomExecutionRouter = {
 
 		const [stats] = await db
 			.select({
-				total: count(simulationRoomExecution.id),
+				total: count(simulationExecution.id),
 				pending: queryJoinOne(
 					db,
 					{
-						count: count(simulationRoomExecution.id),
+						count: count(simulationExecution.id),
 					},
 					(query) =>
 						query
-							.from(simulationRoomExecution)
-							.innerJoin(simulationRoom, eq(simulationRoom.id, simulationRoomExecution.simulationRoomId))
+							.from(simulationExecution)
+							.innerJoin(simulationRoom, eq(simulationRoom.id, simulationExecution.simulationRoomId))
 							.where(eq(simulationRoom.status, SimulationExecutionStatus.Pending)),
 				),
 				completed: queryJoinOne(
 					db,
 					{
-						count: count(simulationRoomExecution.id),
+						count: count(simulationExecution.id),
 					},
 					(query) =>
 						query
-							.from(simulationRoomExecution)
-							.innerJoin(simulationRoom, eq(simulationRoom.id, simulationRoomExecution.simulationRoomId))
+							.from(simulationExecution)
+							.innerJoin(simulationRoom, eq(simulationRoom.id, simulationExecution.simulationRoomId))
 							.where(eq(simulationRoom.status, SimulationExecutionStatus.Completed)),
 				),
 				failed: queryJoinOne(
 					db,
 					{
-						count: count(simulationRoomExecution.id),
+						count: count(simulationExecution.id),
 					},
 					(query) =>
 						query
-							.from(simulationRoomExecution)
-							.innerJoin(simulationRoom, eq(simulationRoom.id, simulationRoomExecution.simulationRoomId))
+							.from(simulationExecution)
+							.innerJoin(simulationRoom, eq(simulationRoom.id, simulationExecution.simulationRoomId))
 							.where(eq(simulationRoom.status, SimulationExecutionStatus.Failed)),
 				),
 				running: queryJoinOne(
 					db,
 					{
-						count: count(simulationRoomExecution.id),
+						count: count(simulationExecution.id),
 					},
 					(query) =>
 						query
-							.from(simulationRoomExecution)
-							.innerJoin(simulationRoom, eq(simulationRoom.id, simulationRoomExecution.simulationRoomId))
+							.from(simulationExecution)
+							.innerJoin(simulationRoom, eq(simulationRoom.id, simulationExecution.simulationRoomId))
 							.where(eq(simulationRoom.status, SimulationExecutionStatus.Running)),
 				),
 			})
-			.from(simulationRoomExecution);
+			.from(simulationExecution);
 
 		if (!stats) {
 			throw new TRPCError({

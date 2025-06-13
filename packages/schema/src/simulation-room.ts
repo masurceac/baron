@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { TimeUnit, TradingPair } from '@baron/common';
-import { aiModelSchema } from './ai';
+import {
+  AiModelPriceStrategyEnum,
+  AiModelStrategyEnum,
+  aiModelSchema,
+} from './ai';
 
 export const simulationRoomSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -11,6 +15,9 @@ export const simulationRoomSchema = z.object({
   maxTradesToExecute: z.number().int().optional(),
 
   aiModels: z.array(aiModelSchema).min(1),
+  aiModelStrategy: z.nativeEnum(AiModelStrategyEnum).optional(),
+  aiModelPriceStrategy: z.nativeEnum(AiModelPriceStrategyEnum).optional(),
+
   predefinedFrvpId: z.string(),
   infoBarIds: z.array(z.string()),
 

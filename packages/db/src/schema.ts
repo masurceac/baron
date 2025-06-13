@@ -9,7 +9,12 @@ import {
   TradingPlatform,
   TradingStrategyStatus,
 } from '@baron/common';
-import { AiModel, PredefinedFrvpProfile } from '@baron/schema';
+import {
+  AiModel,
+  AiModelPriceStrategyEnum,
+  AiModelStrategyEnum,
+  PredefinedFrvpProfile,
+} from '@baron/schema';
 import { createId } from '@paralleldrive/cuid2';
 import {
   integer,
@@ -93,6 +98,20 @@ export const simulationRoom = pgTable('simulation_room', {
     }),
 
   aiModels: jsonb('ai_models').notNull().$type<AiModel[]>(),
+  aiModelStrategy: text('ai_model_strategy', {
+    enum: [AiModelStrategyEnum.And, AiModelStrategyEnum.Or],
+  })
+    .notNull()
+    .default(AiModelStrategyEnum.And),
+  aiModelPriceStrategy: text('ai_model_price_strategy', {
+    enum: [
+      AiModelPriceStrategyEnum.Max,
+      AiModelPriceStrategyEnum.Min,
+      AiModelPriceStrategyEnum.Average,
+    ],
+  })
+    .notNull()
+    .default(AiModelPriceStrategyEnum.Max),
 
   bulkExecutionsCount: integer('bulk_executions_count').notNull().default(1),
   bulkExecutionsIntervalUnits: text('bulk_executions_interval_units', {
@@ -141,7 +160,7 @@ export const simulationRoomToInformativeBar = pgTable(
   },
 );
 
-export const simulationRoomExecution = pgTable('simulation_room_execution', {
+export const simulationExecution = pgTable('simulation_execution', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => createId()),
@@ -161,6 +180,19 @@ export const simulationRoomExecution = pgTable('simulation_room_execution', {
       onDelete: 'cascade',
       onUpdate: 'cascade',
     }),
+
+  status: text('status', {
+    enum: [
+      SimulationExecutionStatus.Pending,
+      SimulationExecutionStatus.Running,
+      SimulationExecutionStatus.Completed,
+      SimulationExecutionStatus.Failed,
+      SimulationExecutionStatus.LimitReached,
+      SimulationExecutionStatus.Canceled,
+    ],
+  })
+    .notNull()
+    .default(SimulationExecutionStatus.Pending),
 });
 
 export const simulationExecutionToInformativeBarConfig = pgTable(
@@ -172,7 +204,7 @@ export const simulationExecutionToInformativeBarConfig = pgTable(
 
     simulationExecutionId: text('simulation_execution_id')
       .notNull()
-      .references(() => simulationRoomExecution.id, {
+      .references(() => simulationExecution.id, {
         onDelete: 'cascade',
         onUpdate: 'cascade',
       }),
@@ -199,7 +231,7 @@ export const simulationExecutionTrade = pgTable('simulation_execution_trade', {
 
   simulationExecutionId: text('simulation_execution_id')
     .notNull()
-    .references(() => simulationRoomExecution.id, {
+    .references(() => simulationExecution.id, {
       onDelete: 'cascade',
       onUpdate: 'cascade',
     }),
@@ -236,7 +268,7 @@ export const simulationExecutionLog = pgTable('simulation_execution_log', {
 
   simulationExecutionId: text('simulation_execution_id')
     .notNull()
-    .references(() => simulationRoomExecution.id, {
+    .references(() => simulationExecution.id, {
       onDelete: 'cascade',
       onUpdate: 'cascade',
     }),
@@ -262,27 +294,6 @@ export const simulationExecutionLog = pgTable('simulation_execution_log', {
   holdUntilPriceBreaksUp: real('hold_until_price_breaks_up'),
   holdUntilPriceBreaksDown: real('hold_until_price_breaks_down'),
 });
-
-export const simulationExecutionIteration = pgTable(
-  'simulation_execution_iteration',
-  {
-    id: text('id')
-      .primaryKey()
-      .$defaultFn(() => createId()),
-    createdAt: timestamp('created_at', { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-
-    simulationExecutionId: text('simulation_execution_id')
-      .notNull()
-      .references(() => simulationRoomExecution.id, {
-        onDelete: 'cascade',
-        onUpdate: 'cascade',
-      }),
-
-    date: timestamp('date', { withTimezone: true }).notNull(),
-  },
-);
 
 type BinancePlatformSetup = {
   type: 'binance';

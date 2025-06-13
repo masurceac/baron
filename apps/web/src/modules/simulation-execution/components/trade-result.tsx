@@ -12,15 +12,18 @@ export function TradeCountResult(props: {
   ).length;
 
   return (
-    <div className="grid grid-cols-2 gap-0.5 min-w-40">
-      <Badge
-        variant="outline"
-        className="font-semibold text-base col-span-2 w-full"
-      >
+    <div className="flex flex-col gap-1 min-w-40">
+      <Badge variant="outline" className="font-semibold text-base w-full">
         {props.trades.length} total
       </Badge>
-      <Badge variant="greenOutline">{positiveTrades} positive</Badge>
-      <Badge variant="destructiveOutline">{negativeTrades} negative</Badge>
+      <div className="flex gap-2">
+        <Badge variant="greenOutline" className="flex-1">
+          {positiveTrades} positive
+        </Badge>
+        <Badge variant="destructiveOutline" className="flex-1">
+          {negativeTrades} negative
+        </Badge>
+      </div>
     </div>
   );
 }
@@ -41,18 +44,24 @@ export function TradeMoneyResult(props: {
     .reduce((acc, trade) => acc + trade.balanceResult, 0);
 
   return (
-    <div className="grid grid-cols-2 gap-1 min-w-40">
+    <div className="flex flex-col gap-1 min-w-40">
       <Badge
         variant="outline"
         className={cn(
-          'font-semibold text-base col-span-2 w-full',
+          'font-semibold text-base w-full',
           result >= 0 ? 'text-green-700' : 'text-destructive',
         )}
       >
         ${result.toFixed(2)}
       </Badge>
-      <Badge variant="greenOutline">+${positiveBalance.toFixed(2)}</Badge>
-      <Badge variant="destructiveOutline">${negativeBalance.toFixed(2)}</Badge>
+      <div className="flex gap-2">
+        <Badge variant="greenOutline" className="flex-1">
+          +${positiveBalance.toFixed(2)}
+        </Badge>
+        <Badge variant="destructiveOutline" className="flex-1">
+          ${negativeBalance.toFixed(2)}
+        </Badge>
+      </div>
     </div>
   );
 }

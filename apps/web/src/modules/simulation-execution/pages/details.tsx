@@ -15,6 +15,7 @@ import { ArrowLeftIcon } from 'lucide-react';
 import { Suspense } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { TradeCountResult, TradeMoneyResult } from '../components/trade-result';
+import { ExecutionStatus } from '../components/execution-status';
 
 function DetailsData() {
   const params =
@@ -36,6 +37,7 @@ function DetailsData() {
 
   return (
     <div className="space-y-4">
+      <ExecutionStatus status={data.status} />
       <Tabs defaultValue="trades">
         <TabsList>
           <TabsTrigger value="trades">Trades List</TabsTrigger>

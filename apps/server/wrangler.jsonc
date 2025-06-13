@@ -15,11 +15,11 @@
 		"cpu_ms": 300000, // 300,000 milliseconds = 5 minutes
 	},
 	"workflows": [
-		// {
-		// 	"name": "simulation-iteration-workflow",
-		// 	"binding": "SIMULATION_ITERATION_WORKFLOW",
-		// 	"class_name": "SimulationIterationWorkflow",
-		// },
+		{
+			"name": "simulation-room-execution-workflow",
+			"binding": "SIMULATION_ROOM_EXECUTION_WORKFLOW",
+			"class_name": "SimulationRoomExecutionWorkflow",
+		},
 		// {
 		// 	"name": "order-placement-workflow",
 		// 	"binding": "ORDER_PLACEMENT_WORKFLOW",

@@ -24,6 +24,7 @@ import { ForwardedRef, useImperativeHandle } from 'react';
 import { SubmitHandler, useForm, UseFormReturn } from 'react-hook-form';
 import { z } from 'zod';
 import { TimeUnit } from '@baron/common';
+import { AiModelStrategyEnum, AiModelPriceStrategyEnum } from '@baron/schema';
 
 type FormSchema = z.infer<typeof simulationRoomSchema>;
 
@@ -137,6 +138,41 @@ export function ItemForm(props: {
                 value={field.value}
                 onChange={field.onChange}
               />
+            )}
+          />
+
+          <FormFieldWrapper
+            control={form.control}
+            name="aiModelStrategy"
+            label="AI Model Strategy"
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose Strategy" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={AiModelStrategyEnum.And}>And</SelectItem>
+                  <SelectItem value={AiModelStrategyEnum.Or}>Or</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+
+          <FormFieldWrapper
+            control={form.control}
+            name="aiModelPriceStrategy"
+            label="AI Model Price Strategy"
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose Price Strategy" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={AiModelPriceStrategyEnum.Max}>Max</SelectItem>
+                  <SelectItem value={AiModelPriceStrategyEnum.Min}>Min</SelectItem>
+                  <SelectItem value={AiModelPriceStrategyEnum.Average}>Average</SelectItem>
+                </SelectContent>
+              </Select>
             )}
           />
 
