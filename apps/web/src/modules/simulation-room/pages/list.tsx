@@ -13,7 +13,7 @@ import { ItemActions } from '../components/item-actions';
 
 type TableItem = RouterOutput['simulationRoom']['list']['data'][number];
 
-const TAKE = 10;
+const TAKE = 25;
 
 function ListData() {
   const pagination = useCurrentPagination({ take: TAKE });

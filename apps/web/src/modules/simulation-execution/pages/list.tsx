@@ -15,7 +15,7 @@ import { ExecutionStatus } from '../components/execution-status';
 
 type TableItem = RouterOutput['simulationExecution']['list']['data'][number];
 
-const TAKE = 10;
+const TAKE = 25;
 
 function ListData() {
   const pagination = useCurrentPagination({ take: TAKE });
