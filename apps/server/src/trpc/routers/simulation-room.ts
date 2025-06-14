@@ -327,6 +327,12 @@ export const simulationRoomRouter = {
 			})
 			.where(eq(simulationRoom.id, input.id));
 
+		await db
+			.update(simulationExecution)
+			.set({
+				status: SimulationExecutionStatus.Canceled,
+			})
+			.where(eq(simulationExecution.simulationRoomId, input.id));
 		return {
 			success: true,
 		};

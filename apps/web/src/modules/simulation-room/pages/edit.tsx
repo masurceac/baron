@@ -16,6 +16,9 @@ import { ItemForm } from '../components/item-form';
 export function SimulationRoomEditPage() {
   const history = useNavigate();
   const params = useParams<GetRouteParams<'/app/simulation/edit/:roomId'>>();
+  const [data] = trpc.simulationRoom.get.useSuspenseQuery({
+    id: params.roomId ?? '',
+  });
   const editItem = trpc.simulationRoom.edit.useMutation({
     onSuccess: () => {
       toast(`Item created`);
@@ -38,6 +41,10 @@ export function SimulationRoomEditPage() {
         </CardHeader>
         <CardContent>
           <ItemForm
+            defaultValues={{
+              ...data,
+              infoBarIds: data.infoBarIds?.map((b) => b.id) ?? [],
+            }}
             onSubmit={(d) =>
               editItem.mutate({
                 id: params.roomId ?? '',
