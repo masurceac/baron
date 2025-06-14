@@ -146,19 +146,19 @@ export class SimulationRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Sim
 				}) ?? [],
 			);
 		});
-		const currentPrice = await step.do(`Get latest price`, async () => {
+		const currentPrice = await step.do(`Get price at ${executionTime.toISOString()}`, async () => {
 			const result = await fetchBars({
-				start: sub(new Date(), {
+				start: sub(executionTime, {
 					minutes: 5,
 				}),
-				end: addMinutes(new Date(), 10),
+				end: executionTime,
 				timeframeAmount: 1,
 				timeframeUnit: TimeUnit.Min,
 				pair: execution.simulationRoom.pair,
 			});
 
 			if (!result?.length) {
-				throw new NonRetryableError(`No bars found for`);
+				throw new NonRetryableError(`No bars found for ${execution.simulationRoom.pair} at ${executionTime.toISOString()}`);
 			}
 
 			const entryPrice = result[result.length - 1]?.Close ?? 0;
