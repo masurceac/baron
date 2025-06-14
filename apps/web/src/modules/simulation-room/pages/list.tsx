@@ -15,6 +15,11 @@ import {
   TradeCountResult,
   TradeMoneyResult,
 } from '@/modules/simulation-execution/components/trade-result';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@baron/ui/components/tooltip';
 
 type TableItem = RouterOutput['simulationRoom']['list']['data'][number];
 
@@ -35,10 +40,24 @@ function ListData() {
         header: 'Name',
         cell: ({ row: { original } }) => (
           <div>
-            <p>{original.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {original.description}
-            </p>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <p className="max-w-80 truncate">{original.name}</p>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" align="start">
+                {original.name}
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <p className="text-xs text-muted-foreground max-w-80 truncate">
+                  {original.description}
+                </p>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" align="start">
+                {original.description}
+              </TooltipContent>
+            </Tooltip>
             <p className="text-xs text-muted-foreground">
               <FormatDate date={original.createdAt} format="long" />
             </p>
