@@ -39,7 +39,21 @@ export function FRVPEditPage() {
         </CardHeader>
         <CardContent>
           <ItemForm
-            defaultValues={item}
+            defaultValues={{
+              name: item.name,
+              pair: item.pair,
+              lastDate: new Date(item.lastDate),
+              profiles: item.profiles.map((profile) => ({
+                label: profile.label,
+                zones: profile.zones.map((zone) => ({
+                  volumeAreaHigh: zone.volumeAreaHigh,
+                  volumeAreaLow: zone.volumeAreaLow,
+                  pointOfControl: zone.pointOfControl,
+                  zoneStartAt: new Date(zone.zoneStartAt),
+                  zoneEndAt: new Date(zone.zoneEndAt),
+                })),
+              })),
+            }}
             onSubmit={(d) =>
               editItem.mutate({
                 id: params.frvpId ?? '',
