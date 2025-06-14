@@ -203,6 +203,7 @@ export const simulationRoomRouter = {
 				authorName: simulationRoom.authorName,
 				aiPrompt: simulationRoom.aiPrompt,
 				pair: simulationRoom.pair,
+				status: simulationRoom.status,
 				startDate: simulationRoom.startDate,
 				trades: queryJoin(
 					db,

@@ -2,6 +2,7 @@ import { trpc } from '@/core/trpc';
 import { InfoBarList } from '@/modules/info-bars/components/info-bar-list';
 import { TradingPairSelect } from '@/modules/inputs/trading-pair-select';
 import { DetailedTextDialog } from '@/modules/shared/components/detailed-text-dialog';
+import { ExecutionStatus } from '@/modules/simulation-execution/components/execution-status';
 import {
   TradeCountResult,
   TradeMoneyResult,
@@ -41,6 +42,7 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
         </CardTitle>
         <CardDescription>
           {data.description || 'No description provided.'}
+          <ExecutionStatus status={data.status} />
         </CardDescription>
       </CardHeader>
       <CardContent className="grid md:grid-cols-2 gap-2 lg:flex space-x-4">
