@@ -1,6 +1,6 @@
 import { getDatabase } from '@/database';
 import { SimulationRoomExecutionWorkflowParams } from '@/workflows/types';
-import { addTimeUnits, paginate, paginatedSchema, TimeUnit } from '@baron/common';
+import { addTimeUnits, paginate, paginatedSchema, SimulationExecutionStatus, TimeUnit } from '@baron/common';
 import { queryJoin } from '@baron/db/client';
 import {
 	informativeBarConfig,
@@ -16,6 +16,41 @@ import { TRPCError } from '@trpc/server';
 import { env } from 'cloudflare:workers';
 import { and, count, desc, eq, ilike, inArray, SQL } from 'drizzle-orm';
 import { z } from 'zod';
+
+async function triggerRoomExecution(roomId: string) {
+	const db = getDatabase();
+
+	const [room] = await db
+		.update(simulationRoom)
+		.set({
+			status: SimulationExecutionStatus.Running,
+		})
+		.where(eq(simulationRoom.id, roomId))
+		.returning();
+
+	if (!room) {
+		throw new TRPCError({
+			code: 'NOT_FOUND',
+		});
+	}
+
+	const executionsToCreate = Array.from({ length: room.bulkExecutionsCount }).map((_, index) => ({
+		simulationRoomId: room.id,
+		startDate: addTimeUnits(room.startDate, room.bulkExecutionsIntervalUnits, room.bulkExecutionsIntervalAmount * index),
+		aiPrompt: room.aiPrompt,
+	}));
+
+	const executions = await db.insert(simulationExecution).values(executionsToCreate).returning();
+	await Promise.all(
+		executions.map((execution) =>
+			env.SIMULATION_ROOM_EXECUTION_WORKFLOW.create({
+				params: {
+					simulationRoomExecutionId: execution.id,
+				} satisfies SimulationRoomExecutionWorkflowParams,
+			}),
+		),
+	);
+}
 
 export const simulationRoomRouter = {
 	create: protectedProcedure.input(simulationRoomSchema).mutation(async ({ input }) => {
@@ -94,22 +129,7 @@ export const simulationRoomRouter = {
 			});
 		}
 
-		const executionsToCreate = Array.from({ length: roomResult.bulkExecutionsCount }).map((_, index) => ({
-			simulationRoomId: roomResult.id,
-			startDate: addTimeUnits(input.startDate, roomResult.bulkExecutionsIntervalUnits, roomResult.bulkExecutionsIntervalAmount * index),
-			aiPrompt: roomResult.aiPrompt,
-		}));
-
-		const executions = await db.insert(simulationExecution).values(executionsToCreate).returning();
-		await Promise.all(
-			executions.map((execution) =>
-				env.SIMULATION_ROOM_EXECUTION_WORKFLOW.create({
-					params: {
-						simulationRoomExecutionId: execution.id,
-					} satisfies SimulationRoomExecutionWorkflowParams,
-				}),
-			),
-		);
+		await triggerRoomExecution(roomResult.id);
 
 		return roomResult;
 	}),
@@ -270,6 +290,8 @@ export const simulationRoomRouter = {
 						.select({
 							id: simulationRoom.id,
 							createdAt: simulationRoom.createdAt,
+							startDate: simulationRoom.startDate,
+							status: simulationRoom.status,
 							name: simulationRoom.name,
 							description: simulationRoom.description,
 							authorId: simulationRoom.authorId,
@@ -287,6 +309,28 @@ export const simulationRoomRouter = {
 				},
 			});
 		}),
+
+	triggerExecution: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
+		await triggerRoomExecution(input.id);
+
+		return {
+			success: true,
+		};
+	}),
+
+	stopExecution: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
+		const db = getDatabase();
+		await db
+			.update(simulationRoom)
+			.set({
+				status: SimulationExecutionStatus.Canceled,
+			})
+			.where(eq(simulationRoom.id, input.id));
+
+		return {
+			success: true,
+		};
+	}),
 
 	delete: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
 		const db = getDatabase();

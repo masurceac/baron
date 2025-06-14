@@ -24,6 +24,7 @@ import {
   DialogTrigger,
 } from '@baron/ui/components/dialog';
 import { Suspense } from 'react';
+import { ItemActions } from './item-actions';
 
 function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
   const [data] = trpc.simulationRoom.get.useSuspenseQuery({
@@ -42,11 +43,12 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
         </CardTitle>
         <CardDescription>
           {data.description || 'No description provided.'}
-          <ExecutionStatus status={data.status} />
         </CardDescription>
       </CardHeader>
       <CardContent className="grid md:grid-cols-2 gap-2 lg:flex space-x-4">
         <TradingPairSelect value={data.pair} onChange={() => null} disabled />
+        <ExecutionStatus status={data.status} />
+        <ItemActions item={{ id: data.id, name: data.name }} />
       </CardContent>
       <CardContent className="grid md:grid-cols-2 gap-2 lg:flex space-x-4">
         <DetailedTextDialog

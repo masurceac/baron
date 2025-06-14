@@ -46,6 +46,16 @@ function ListData() {
         ),
       },
       {
+        accessorKey: 'lastDate',
+        enableSorting: false,
+        header: 'Last Date',
+        cell: ({ row: { original } }) => (
+          <div>
+            <FormatDate date={original.lastDate} utc />
+          </div>
+        ),
+      },
+      {
         id: 'details',
         enableSorting: false,
         header: 'Edit',

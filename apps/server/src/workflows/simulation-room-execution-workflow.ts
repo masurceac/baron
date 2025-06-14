@@ -101,16 +101,19 @@ export class SimulationRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Sim
 					})
 					.where(eq(simulationExecution.id, execution.id));
 
-				const [roomPendingExecutions] = await db
+				const [roomOtherExecutions] = await db
 					.select({ count: count(simulationExecution.id) })
 					.from(simulationExecution)
 					.where(
 						and(
 							eq(simulationExecution.simulationRoomId, execution.simulationRoom.id),
-							eq(simulationExecution.status, SimulationExecutionStatus.Pending),
+							or(
+								eq(simulationExecution.status, SimulationExecutionStatus.Pending),
+								eq(simulationExecution.status, SimulationExecutionStatus.Running),
+							),
 						),
 					);
-				if (roomPendingExecutions?.count === 0) {
+				if (roomOtherExecutions?.count === 0) {
 					await db
 						.update(simulationRoom)
 						.set({
@@ -382,11 +385,12 @@ export class SimulationRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Sim
 						eq(simulationExecution.status, SimulationExecutionStatus.Pending),
 						eq(simulationExecution.status, SimulationExecutionStatus.Running),
 					),
+					eq(simulationRoom.status, SimulationExecutionStatus.Running),
 				),
 			);
 
 		if (!execution) {
-			throw new NonRetryableError('Simulation execution not found');
+			throw new NonRetryableError('Conditions not met');
 		}
 
 		if (execution.status === SimulationExecutionStatus.Running) {

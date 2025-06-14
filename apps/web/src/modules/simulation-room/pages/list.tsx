@@ -2,6 +2,7 @@ import { getAppRoute } from '@/core/route';
 import { trpc } from '@/core/trpc';
 import { DataTable, PageLayout, useCurrentPagination } from '@/modules/shared';
 import { SpaPagination } from '@/modules/shared/components/pagination';
+import { ExecutionStatus } from '@/modules/simulation-execution/components/execution-status';
 import { RouterOutput } from '@baron/server';
 import { Button } from '@baron/ui/components/button';
 import { FormatDate } from '@baron/ui/components/format-date';
@@ -34,21 +35,20 @@ function ListData() {
             <p className="text-xs text-muted-foreground">
               {original.description}
             </p>
+            <p className="text-xs text-muted-foreground">
+              <FormatDate date={original.createdAt} format="long" />
+            </p>
           </div>
         ),
       },
       {
-        accessorKey: 'createdAt',
+        accessorKey: 'startDate',
         enableSorting: false,
-        header: 'Created At',
+        header: 'Start Date',
         cell: ({ row: { original } }) => (
-          <div>
-            <FormatDate date={original.createdAt} format="long" />
-            <p className="text-xs text-muted-foreground">{original.id}</p>
-          </div>
+          <FormatDate date={original.startDate} utc />
         ),
       },
-
       {
         accessorKey: 'authorName',
         enableSorting: false,
@@ -60,7 +60,15 @@ function ListData() {
         ),
       },
       {
-        accessorKey: 'description',
+        accessorKey: 'status',
+        enableSorting: false,
+        header: 'Status',
+        cell: ({ row: { original } }) => (
+          <ExecutionStatus status={original.status} />
+        ),
+      },
+      {
+        id: 'simulations',
         enableSorting: false,
         header: 'Simulations',
         cell: ({ row: { original } }) => (
@@ -71,7 +79,7 @@ function ListData() {
                   roomId: original.id,
                 })}
               >
-                View Simulations <ArrowRightIcon className="w-4" />
+                Executions <ArrowRightIcon className="w-4" />
               </Link>
             </Button>
           </div>
