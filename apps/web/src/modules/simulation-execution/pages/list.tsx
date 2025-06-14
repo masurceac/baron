@@ -40,17 +40,12 @@ function ListData() {
       {
         accessorKey: 'startDate',
         enableSorting: false,
-        header: 'Symbol / Start Date',
+        header: 'Start Date / Status',
         cell: ({ row: { original } }) => (
-          <FormatDate date={original.startDate} utc />
-        ),
-      },
-      {
-        accessorKey: 'status',
-        enableSorting: false,
-        header: 'Status',
-        cell: ({ row: { original } }) => (
-          <ExecutionStatus status={original.status} />
+          <div className="flex flex-col space-y-1">
+            <FormatDate date={original.startDate} utc />
+            <ExecutionStatus status={original.status} />
+          </div>
         ),
       },
       {

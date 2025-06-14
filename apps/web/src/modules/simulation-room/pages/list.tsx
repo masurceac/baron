@@ -72,6 +72,17 @@ function ListData() {
         ),
       },
       {
+        id: 'trades',
+        enableSorting: false,
+        header: 'Trades',
+        cell: ({ row: { original } }) => (
+          <div className="flex space-x-2">
+            <TradeMoneyResult trades={original.trades ?? []} />
+            <TradeCountResult trades={original.trades ?? []} />
+          </div>
+        ),
+      },
+      {
         id: 'simulations',
         enableSorting: false,
         header: 'Simulations',
@@ -86,17 +97,6 @@ function ListData() {
                 Executions <ArrowRightIcon className="w-4" />
               </Link>
             </Button>
-          </div>
-        ),
-      },
-      {
-        id: 'trades',
-        enableSorting: false,
-        header: 'Trades',
-        cell: ({ row: { original } }) => (
-          <div className="flex space-x-2">
-            <TradeMoneyResult trades={original.trades ?? []} />
-            <TradeCountResult trades={original.trades ?? []} />
           </div>
         ),
       },
