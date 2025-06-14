@@ -42,7 +42,7 @@ export function SimulationRoomEditPage() {
         <CardContent>
           <ItemForm
             defaultValues={{
-              ...data,
+              ...data.simulationRoom,
               infoBarIds: data.infoBarIds?.map((b) => b.id) ?? [],
             }}
             onSubmit={(d) =>

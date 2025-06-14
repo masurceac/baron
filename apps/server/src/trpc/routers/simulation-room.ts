@@ -215,16 +215,7 @@ export const simulationRoomRouter = {
 		const db = getDatabase();
 		const [room] = await db
 			.select({
-				id: simulationRoom.id,
-				name: simulationRoom.name,
-				description: simulationRoom.description,
-				createdAt: simulationRoom.createdAt,
-				authorId: simulationRoom.authorId,
-				authorName: simulationRoom.authorName,
-				aiPrompt: simulationRoom.aiPrompt,
-				pair: simulationRoom.pair,
-				status: simulationRoom.status,
-				startDate: simulationRoom.startDate,
+				simulationRoom: simulationRoom,
 				trades: queryJoin(
 					db,
 					{

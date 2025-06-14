@@ -39,21 +39,21 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
             Simulation Room
           </Badge>
           <br />
-          {data.name}
+          {data.simulationRoom.name}
         </CardTitle>
         <CardDescription>
-          {data.description || 'No description provided.'}
+          {data.simulationRoom.description || 'No description provided.'}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid md:grid-cols-2 gap-2 lg:flex space-x-4">
-        <TradingPairSelect value={data.pair} onChange={() => null} disabled />
-        <ExecutionStatus status={data.status} />
-        <ItemActions item={{ id: data.id, name: data.name }} />
+        <TradingPairSelect value={data.simulationRoom.pair} onChange={() => null} disabled />
+        <ExecutionStatus status={data.simulationRoom.status} />
+        <ItemActions item={{ id: data.simulationRoom.id, name: data.simulationRoom.name }} />
       </CardContent>
       <CardContent className="grid md:grid-cols-2 gap-2 lg:flex space-x-4">
         <DetailedTextDialog
           title="This is the default AI prompt "
-          content={data.aiPrompt}
+          content={data.simulationRoom.aiPrompt}
           label="AI Prompt"
         />
 
