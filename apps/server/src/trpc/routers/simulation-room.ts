@@ -14,7 +14,7 @@ import { protectedProcedure } from '@baron/trpc-server';
 import { getAuth, getClerkClient } from '@baron/trpc-server/async-storage/getters';
 import { TRPCError } from '@trpc/server';
 import { env } from 'cloudflare:workers';
-import { and, count, desc, eq, ilike, inArray, SQL } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, inArray, or, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 
 async function triggerRoomExecution(roomId: string) {
@@ -323,7 +323,15 @@ export const simulationRoomRouter = {
 			.set({
 				status: SimulationExecutionStatus.Canceled,
 			})
-			.where(eq(simulationExecution.simulationRoomId, input.id));
+			.where(
+				and(
+					eq(simulationExecution.simulationRoomId, input.id),
+					or(
+						eq(simulationExecution.status, SimulationExecutionStatus.Pending),
+						eq(simulationExecution.status, SimulationExecutionStatus.Running),
+					),
+				),
+			);
 		return {
 			success: true,
 		};
