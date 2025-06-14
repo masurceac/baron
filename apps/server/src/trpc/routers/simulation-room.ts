@@ -291,6 +291,18 @@ export const simulationRoomRouter = {
 							aiModels: simulationRoom.aiModels,
 							aiModelStrategy: simulationRoom.aiModelStrategy,
 							aiModelPriceStrategy: simulationRoom.aiModelPriceStrategy,
+							trades: queryJoin(
+								db,
+								{
+									id: simulationExecutionTrade.id,
+									balanceResult: simulationExecutionTrade.balanceResult,
+								},
+								(query) =>
+									query
+										.from(simulationExecutionTrade)
+										.innerJoin(simulationExecution, eq(simulationExecutionTrade.simulationExecutionId, simulationExecution.id))
+										.where(eq(simulationExecution.simulationRoomId, simulationRoom.id)),
+							),
 						})
 						.from(simulationRoom)
 						.where(and(...where))

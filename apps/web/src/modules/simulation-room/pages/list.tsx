@@ -11,6 +11,10 @@ import { ArrowRightIcon, PlusCircleIcon } from 'lucide-react';
 import { Suspense, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ItemActions } from '../components/item-actions';
+import {
+  TradeCountResult,
+  TradeMoneyResult,
+} from '@/modules/simulation-execution/components/trade-result';
 
 type TableItem = RouterOutput['simulationRoom']['list']['data'][number];
 
@@ -85,7 +89,17 @@ function ListData() {
           </div>
         ),
       },
-
+      {
+        id: 'trades',
+        enableSorting: false,
+        header: 'Trades',
+        cell: ({ row: { original } }) => (
+          <div className="flex space-x-2">
+            <TradeMoneyResult trades={original.trades ?? []} />
+            <TradeCountResult trades={original.trades ?? []} />
+          </div>
+        ),
+      },
       {
         accessorKey: 'id',
         header: () => (
