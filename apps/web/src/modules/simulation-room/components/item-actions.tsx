@@ -31,6 +31,9 @@ export function ItemActions(props: { item: Pick<ItemType, 'id' | 'name'> }) {
       utils.simulationRoom.get.invalidate({
         id: props.item.id,
       });
+      utils.simulationExecution.list.invalidate({
+        simulationRoomId: props.item.id,
+      });
     },
     onError: () => {
       toast.error('Failed to trigger simulation room');

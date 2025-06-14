@@ -22,7 +22,11 @@ export function SimulationRoomEditPage() {
   const editItem = trpc.simulationRoom.edit.useMutation({
     onSuccess: () => {
       toast(`Item created`);
-      history(getAppRoute('/app/simulation/list'));
+      history(
+        getAppRoute('/app/simulation/room/:roomId/list', {
+          roomId: params.roomId ?? '',
+        }),
+      );
     },
     onError() {
       toast.error('Failed to create Item');
