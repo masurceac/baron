@@ -17,7 +17,7 @@ import { AiModelEnum, AiModelPriceStrategyEnum, AiModelStrategyEnum } from '@bar
 import { WorkflowEntrypoint, WorkflowEvent, WorkflowStep } from 'cloudflare:workers';
 import { NonRetryableError } from 'cloudflare:workflows';
 import { addMinutes, isAfter, isBefore, sub } from 'date-fns';
-import { and, count, desc, eq } from 'drizzle-orm';
+import { and, count, desc, eq, or } from 'drizzle-orm';
 import { SimulationRoomExecutionWorkflowParams } from './types';
 
 export class SimulationRoomExecutionWorkflow extends WorkflowEntrypoint<Env, SimulationRoomExecutionWorkflowParams> {
@@ -356,6 +356,7 @@ export class SimulationRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Sim
 				startDate: simulationExecution.startDate,
 				simulationRoom: simulationRoom,
 				predefinedFrvp: predefinedFrvp,
+				status: simulationExecution.status,
 				infoBars: queryJoin(
 					db,
 					{
@@ -374,11 +375,30 @@ export class SimulationRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Sim
 			.from(simulationExecution)
 			.innerJoin(simulationRoom, eq(simulationExecution.simulationRoomId, simulationRoom.id))
 			.innerJoin(predefinedFrvp, eq(predefinedFrvp.id, simulationRoom.predefinedFrvpId))
-			.where(eq(simulationExecution.id, id));
+			.where(
+				and(
+					eq(simulationExecution.id, id),
+					or(
+						eq(simulationExecution.status, SimulationExecutionStatus.Pending),
+						eq(simulationExecution.status, SimulationExecutionStatus.Running),
+					),
+				),
+			);
 
 		if (!execution) {
 			throw new NonRetryableError('Simulation execution not found');
 		}
+
+		if (execution.status === SimulationExecutionStatus.Running) {
+			return execution;
+		}
+
+		await db
+			.update(simulationExecution)
+			.set({
+				status: SimulationExecutionStatus.Running,
+			})
+			.where(eq(simulationExecution.id, id));
 
 		return execution;
 	}
