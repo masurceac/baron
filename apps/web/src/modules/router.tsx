@@ -3,6 +3,7 @@ import { RouteObject } from 'react-router-dom';
 import { AuthGuard } from './app-root/components/auth-guard';
 import { MainPage } from './app-root/pages/main-page';
 import { infoBarsRouter } from './info-bars';
+import { liveTradingRoomRouter } from './live-trading-room';
 import { frvpRouter } from './predefined-frvp';
 import { simulationRoomsRouter } from './simulation-room';
 
@@ -19,6 +20,10 @@ export const appRouter = defineModuleRouting([
       {
         path: 'frvp',
         children: frvpRouter,
+      },
+      {
+        path: 'live-trading',
+        children: liveTradingRoomRouter,
       },
     ],
   },

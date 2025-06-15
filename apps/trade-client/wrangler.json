@@ -1,0 +1,22 @@
+{
+  "name": "trade-client",
+  "compatibility_date": "2024-12-30",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "main": "./worker.ts",
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "pfm-website"
+    }
+  ],
+  "vars": {
+    "NODE_VERSION": "22.11.0"
+  }
+}

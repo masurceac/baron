@@ -48,6 +48,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: getAppRoute('/app/simulation'),
         icon: FolderIcon,
       },
+      {
+        title: 'Live Trading',
+        url: getAppRoute('/app/live-trading/list'),
+        end: true,
+        icon: ChartCandlestickIcon,
+      },
     ],
     [],
   );

@@ -2,21 +2,45 @@ import { asyncLocalStorage, createAsyncStorageContext, createTrpcContext } from 
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import { eventBus } from './events';
 import { appRouter } from './trpc';
+import { LiveTradeRoomExecutionWorkflow } from './workflows/live-trade-room-execution';
 import { SimulationRoomExecutionWorkflow } from './workflows/simulation-room-execution-workflow';
+
+function checkForUpgrade(request: Request): Response | null {
+	const upgradeHeader = request.headers.get('Upgrade');
+	if (!upgradeHeader || upgradeHeader !== 'websocket') {
+		return new Response('Durable Object expected Upgrade: websocket', {
+			status: 426,
+		});
+	}
+	return null;
+}
 
 const worker = {
 	async fetch(request, env): Promise<Response> {
 		if (request.method === 'OPTIONS') {
 			return handleCORSPreflight();
 		}
+		const url = new URL(request.url);
+		const pathname = url.pathname;
+		const roomId = url.searchParams.get('roomId');
 
-		if (env.ENV === 'local') {
-			if (request.url.endsWith('trigger-start-serghei')) {
-				return Response.json({
-					message: '✅🚀 Rocket',
+		if (pathname.endsWith('/websocket')) {
+			const upgradeRs = checkForUpgrade(request);
+			if (upgradeRs) {
+				return upgradeRs;
+			}
+			if (!roomId) {
+				return new Response('Room ID is required', {
+					status: 400,
 				});
 			}
+
+			const id = env.TRADE_ROOM_DO.idFromName(roomId);
+			const stub = env.TRADE_ROOM_DO.get(id);
+
+			return stub.fetch(request);
 		}
+
 		return asyncLocalStorage.run(
 			await createAsyncStorageContext(
 				{
@@ -61,6 +85,8 @@ const handleCORSPreflight = () => {
 	return addCORSHeaders(rs);
 };
 
-export { SimulationRoomExecutionWorkflow };
+export { SimulationRoomExecutionWorkflow, LiveTradeRoomExecutionWorkflow };
+
+export { TradeRoomDurableObject } from './durable-objects/trade-room';
 
 export default worker;

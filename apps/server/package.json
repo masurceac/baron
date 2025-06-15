@@ -21,6 +21,7 @@
 		"@baron/order-api": "workspace:",
 		"@baron/schema": "workspace:",
 		"@baron/trpc-server": "workspace:*",
+		"@baron/ws": "workspace:*",
 		"@paralleldrive/cuid2": "catalog:",
 		"@trpc/server": "catalog:",
 		"@types/node": "^24.0.1",

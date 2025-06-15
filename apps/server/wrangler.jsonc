@@ -20,17 +20,26 @@
 			"binding": "SIMULATION_ROOM_EXECUTION_WORKFLOW",
 			"class_name": "SimulationRoomExecutionWorkflow",
 		},
-		// {
-		// 	"name": "order-placement-workflow",
-		// 	"binding": "ORDER_PLACEMENT_WORKFLOW",
-		// 	"class_name": "OrderPlacementWorkflow",
-		// },
-		// {
-		// 	"name": "order-placement-trigger",
-		// 	"binding": "ORDER_PLACEMENT_TRIGGER",
-		// 	"class_name": "OrderPlacementTriggerWorkflow",
-		// },
+		{
+			"name": "live-trade-room-execution-workflow",
+			"binding": "LIVE_TRADE_ROOM_EXECUTION_WORKFLOW",
+			"class_name": "LiveTradeRoomExecutionWorkflow",
+		},
 	],
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_classes": ["TradeRoomDurableObject"],
+		},
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "TRADE_ROOM_DO",
+				"class_name": "TradeRoomDurableObject",
+			},
+		],
+	},
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

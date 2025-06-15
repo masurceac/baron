@@ -1,0 +1,28 @@
+{
+  "name": "@baron/ws",
+  "version": "1.0.0",
+  "description": "",
+  "exports": {
+    "./client": "./src/client/index.ts",
+    "./server": "./src/server/index.ts",
+    "./core": "./src/core/index.ts",
+    "./trade-client-ws": "./src/trade-client-ws/index.ts"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@baron/ai": "workspace:*",
+    "@baron/common": "workspace:*",
+    "@baron/db": "workspace:*",
+    "react": "catalog:",
+    "@types/react": "catalog:",
+    "zod": "catalog:"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^24.0.1"
+  }
+}

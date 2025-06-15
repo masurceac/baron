@@ -1,0 +1,44 @@
+{
+  "name": "@baron/trade-client",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
+    "gen-types": "npx wrangler types --env-interface CloudflareEnv env.d.ts",
+    "pages:build": "opennextjs-cloudflare build",
+    "lint:fix": "next lint --fix"
+  },
+  "devDependencies": {
+    "wrangler": "catalog:"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "catalog:",
+    "@baron/ui": "workspace:*",
+    "@baron/bars-api": "workspace:*",
+    "@baron/order-api": "workspace:*",
+    "@baron/common": "workspace:*",
+    "@baron/ws": "workspace:*",
+    "@opennextjs/cloudflare": "^1.0.2",
+    "@tailwindcss/postcss": "^4.1.10",
+    "client-only": "^0.0.1",
+    "sonner": "catalog:",
+    "date-fns": "catalog:",
+    "zod": "catalog:",
+    "esbuild": "^0.24.2",
+    "next": "^15.3.2",
+    "postcss": "^8.5.5",
+    "server-only": "^0.0.1",
+    "react-hook-form": "catalog:",
+    "tailwindcss": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:"
+  }
+}

@@ -6,8 +6,6 @@ import {
   TradeLogDirection,
   TradeResult,
   TradingPair,
-  TradingPlatform,
-  TradingStrategyStatus,
 } from '@baron/common';
 import {
   AiModel,
@@ -24,6 +22,7 @@ import {
   text,
   timestamp,
 } from 'drizzle-orm/pg-core';
+import { type OpenOrderAiResponse } from '@baron/ai/order-suggestion';
 
 export const predefinedFrvp = pgTable('predefined_frvp', {
   id: text('id')
@@ -295,42 +294,110 @@ export const simulationExecutionLog = pgTable('simulation_execution_log', {
   holdUntilPriceBreaksDown: real('hold_until_price_breaks_down'),
 });
 
-type BinancePlatformSetup = {
-  type: 'binance';
-  settings: {
-    apiKey: string;
-    apiSecret: string;
-  };
-};
-
-export const orderSetup = pgTable('order_setup', {
+export const liveTradingRoom = pgTable('live_trading_room', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => createId()),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(
-    () => new Date(),
-  ),
+
   name: text('name').notNull(),
+
   pair: text('pair', {
-    enum: [TradingPair.BTCUSDT, TradingPair.ETHUSDT],
+    enum: [...(Object.keys(TradingPair) as [TradingPair, ...TradingPair[]])],
   }).notNull(),
-  platform: text('platform', {
-    enum: [TradingPlatform.Binance],
-  }).notNull(),
-  settings: jsonb('settings').notNull().$type<BinancePlatformSetup>(),
+  aiPrompt: text('ai_prompt').notNull(),
+
   status: text('status', {
     enum: [
-      TradingStrategyStatus.Pending,
-      TradingStrategyStatus.Running,
-      TradingStrategyStatus.Stopped,
+      ...(Object.keys(SimulationExecutionStatus) as [
+        SimulationExecutionStatus,
+        ...SimulationExecutionStatus[],
+      ]),
     ],
   })
     .notNull()
-    .default(TradingStrategyStatus.Pending),
-  leverage: integer('leverage').notNull().default(2),
-  positionSizeUsd: integer('position_size_usd').notNull().default(10),
-  aiPrompt: text('ai_prompt').notNull(),
+    .default(SimulationExecutionStatus.Pending),
+  predefinedFrvpId: text('predefined_frvp_id')
+    .notNull()
+    .references(() => predefinedFrvp.id, {
+      onDelete: 'cascade',
+      onUpdate: 'cascade',
+    }),
+
+  aiModels: jsonb('ai_models').notNull().$type<AiModel[]>(),
+  aiModelStrategy: text('ai_model_strategy', {
+    enum: [AiModelStrategyEnum.And, AiModelStrategyEnum.Or],
+  })
+    .notNull()
+    .default(AiModelStrategyEnum.And),
+  aiModelPriceStrategy: text('ai_model_price_strategy', {
+    enum: [
+      AiModelPriceStrategyEnum.Max,
+      AiModelPriceStrategyEnum.Min,
+      AiModelPriceStrategyEnum.Average,
+    ],
+  })
+    .notNull()
+    .default(AiModelPriceStrategyEnum.Max),
+});
+
+export const liveTradingRoomToInformativeBarConfig = pgTable(
+  'live_trading_room_to_informative_bar_config',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+
+    liveTradingRoomId: text('live_trading_room_id')
+      .notNull()
+      .references(() => liveTradingRoom.id, {
+        onDelete: 'cascade',
+        onUpdate: 'cascade',
+      }),
+
+    informativeBarConfigId: text('informative_bar_config_id')
+      .notNull()
+      .references(() => informativeBarConfig.id, {
+        onDelete: 'cascade',
+        onUpdate: 'cascade',
+      }),
+  },
+);
+
+export const liveTradingRoomSignal = pgTable('live_trading_room_signal', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+
+  liveTradingRoomId: text('live_trading_room_id')
+    .notNull()
+    .references(() => liveTradingRoom.id, {
+      onDelete: 'cascade',
+      onUpdate: 'cascade',
+    }),
+
+  suggestions: jsonb('suggestions').notNull().$type<OpenOrderAiResponse[]>(),
+});
+
+export const liveTradingRoomLog = pgTable('live_trading_room_log', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+
+  liveTradingRoomId: text('live_trading_room_id')
+    .notNull()
+    .references(() => liveTradingRoom.id, {
+      onDelete: 'cascade',
+      onUpdate: 'cascade',
+    }),
+
+  suggestions: jsonb('suggestions').notNull().$type<OpenOrderAiResponse[]>(),
 });

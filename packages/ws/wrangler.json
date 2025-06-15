@@ -1,0 +1,11 @@
+{
+  "name": "propfirm-ws-lib",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-12-12",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "logs": {
+      "enabled": true
+    }
+  }
+}
