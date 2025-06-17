@@ -37,6 +37,7 @@ export const simulationRoomExecutionRouter = {
 						createdAt: simulationExecution.createdAt,
 						startDate: simulationExecution.startDate,
 						status: simulationExecution.status,
+						groupIdentifier: simulationExecution.groupIdentifier,
 						simulationRoomId: simulationExecution.simulationRoomId,
 						trades: queryJoin(
 							db,

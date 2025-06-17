@@ -25,6 +25,7 @@ import { SubmitHandler, useForm, UseFormReturn } from 'react-hook-form';
 import { z } from 'zod';
 import { TimeUnit } from '@baron/common';
 import { AiModelStrategyEnum, AiModelPriceStrategyEnum } from '@baron/schema';
+import { Switch } from '@baron/ui/components/switch';
 
 type FormSchema = z.infer<typeof simulationRoomSchema>;
 
@@ -87,6 +88,17 @@ export function ItemForm(props: {
                 value={field.value}
                 onChange={field.onChange}
                 placeholder="Enter max trades"
+              />
+            )}
+          />
+          <FormFieldWrapper
+            control={form.control}
+            name="trailingStopLoss"
+            label="Trailing Stop Loss"
+            render={({ field }) => (
+              <Switch
+                checked={field.value}
+                onCheckedChange={field.onChange}
               />
             )}
           />

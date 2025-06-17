@@ -15,6 +15,7 @@ import {
 } from '@baron/schema';
 import { createId } from '@paralleldrive/cuid2';
 import {
+  boolean,
   integer,
   jsonb,
   pgTable,
@@ -80,6 +81,9 @@ export const simulationRoom = pgTable('simulation_room', {
   description: text('description'),
 
   startDate: timestamp('start_date', { withTimezone: true }).notNull(),
+
+  groupIdentifier: text('group_identifier').notNull(),
+
   maxTradesToExecute: integer('max_trades_to_execute').notNull().default(10),
   pair: text('pair', {
     enum: [...(Object.keys(TradingPair) as [TradingPair, ...TradingPair[]])],
@@ -95,6 +99,7 @@ export const simulationRoom = pgTable('simulation_room', {
       onDelete: 'cascade',
       onUpdate: 'cascade',
     }),
+  trailingStopLoss: boolean('trailing_stop_loss').notNull().default(false),
 
   aiModels: jsonb('ai_models').notNull().$type<AiModel[]>(),
   aiModelStrategy: text('ai_model_strategy', {
@@ -169,6 +174,9 @@ export const simulationExecution = pgTable('simulation_execution', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(
     () => new Date(),
   ),
+
+  groupIdentifier: text('group_identifier').notNull(),
+  trailingStopLoss: boolean('trailing_stop_loss'),
 
   aiPrompt: text('ai_prompt').notNull(),
   startDate: timestamp('start_date', { withTimezone: true }).notNull(),

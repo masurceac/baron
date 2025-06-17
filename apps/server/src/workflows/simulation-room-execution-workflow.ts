@@ -308,6 +308,7 @@ export class SimulationRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Sim
 					pair: execution.simulationRoom.pair,
 					entryTimestamp: executionTime.toISOString(),
 					entryPrice: currentPrice,
+					trailingStop: execution.trailingStopLoss ?? false,
 				});
 				const [trade] = await db
 					.insert(simulationExecutionTrade)
@@ -360,6 +361,7 @@ export class SimulationRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Sim
 				simulationRoom: simulationRoom,
 				predefinedFrvp: predefinedFrvp,
 				status: simulationExecution.status,
+				trailingStopLoss: simulationExecution.trailingStopLoss,
 				infoBars: queryJoin(
 					db,
 					{

@@ -71,12 +71,12 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
           </CardDescription>
         </div>
       </CardHeader>
-      <CardContent className="flex justify-start space-x-4">
+      <CardContent className="lg:flex justify-start space-y-4 lg:space-y-0 space-x-4">
         <div className="flex space-x-4 items-center">
           <TradeMoneyResult trades={data.trades ?? []} />
           <TradeCountResult trades={data.trades ?? []} />
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="lg:flex items-center space-y-4 lg:space-y-0 space-x-4">
           <TradingPairSelect
             value={data.simulationRoom.pair}
             onChange={() => null}
@@ -115,23 +115,25 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
       <Separator className="my-2" />
 
       <CardContent>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-6">
           <div className="bg-muted/40 rounded-lg p-4 border">
             <h3 className="text-base font-semibold mb-3">
               Trading Configuration
             </h3>
             <div className="space-y-1">
-              <div className="flex items-center">
-                <span className="font-medium w-32">Max Trades:</span>
-                <span>{data.simulationRoom.maxTradesToExecute}</span>
+              <div>
+                <p className="text-sm text-muted-foreground">Max Trades:</p>
+                <p className="font-medium">
+                  {data.simulationRoom.maxTradesToExecute}
+                </p>
               </div>
-              <div className="flex items-center">
-                <span className="font-medium w-32">Start Date:</span>
-                <span>
+              <div>
+                <p className="text-sm text-muted-foreground">Start Date:</p>
+                <p className="font-medium">
                   {data.simulationRoom.startDate && (
                     <FormatDate date={data.simulationRoom.startDate} utc />
                   )}
-                </span>
+                </p>
               </div>
             </div>
           </div>
@@ -139,21 +141,25 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
           <div className="bg-muted/40 rounded-lg p-4 border">
             <h3 className="text-base font-semibold mb-3">AI Configuration</h3>
             <div className="space-y-1">
-              <div className="flex items-center">
-                <span className="font-medium w-32">AI Models:</span>
-                <span>
+              <div>
+                <p className="text-sm text-muted-foreground">AI Models:</p>
+                <p className="font-medium">
                   {data.simulationRoom.aiModels
                     ?.map((model) => getModelLabel(model.type, model.model))
                     .join(', ')}
-                </span>
+                </p>
               </div>
-              <div className="flex items-center">
-                <span className="font-medium w-32">Model Strategy:</span>
-                <span>{data.simulationRoom.aiModelStrategy}</span>
+              <div>
+                <p className="text-sm text-muted-foreground">Model Strategy:</p>
+                <p className="font-medium">
+                  {data.simulationRoom.aiModelStrategy}
+                </p>
               </div>
-              <div className="flex items-center">
-                <span className="font-medium w-32">Price Strategy:</span>
-                <span>{data.simulationRoom.aiModelPriceStrategy}</span>
+              <div>
+                <p className="text-sm text-muted-foreground">Price Strategy:</p>
+                <p className="font-medium">
+                  {data.simulationRoom.aiModelPriceStrategy}
+                </p>
               </div>
             </div>
           </div>
@@ -163,16 +169,20 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
               Bulk Execution Configuration
             </h3>
             <div className="space-y-1">
-              <div className="flex items-center">
-                <span className="font-medium w-32">Number of Executions:</span>
-                <span>{data.simulationRoom.bulkExecutionsCount}</span>
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  Number of Executions:
+                </p>
+                <p className="font-medium">
+                  {data.simulationRoom.bulkExecutionsCount}
+                </p>
               </div>
-              <div className="flex items-center">
-                <span className="font-medium w-32">Interval:</span>
-                <span>
+              <div>
+                <p className="text-sm text-muted-foreground">Interval:</p>
+                <p className="font-medium">
                   {data.simulationRoom.bulkExecutionsIntervalAmount}{' '}
                   {data.simulationRoom.bulkExecutionsIntervalUnits}
-                </span>
+                </p>
               </div>
             </div>
           </div>

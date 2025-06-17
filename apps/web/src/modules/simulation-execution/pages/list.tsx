@@ -13,6 +13,7 @@ import { Suspense, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { TradeCountResult, TradeMoneyResult } from '../components/trade-result';
 import { ExecutionStatus } from '../components/execution-status';
+import { Badge } from '@baron/ui/components/badge';
 
 type TableItem = RouterOutput['simulationExecution']['list']['data'][number];
 
@@ -66,6 +67,14 @@ function ListData() {
         ),
       },
       {
+        accessorKey: 'groupIdentifier',
+        enableSorting: false,
+        header: 'Group Identifier',
+        cell: ({ row: { original } }) => (
+          <Badge variant="outline">{original.groupIdentifier}</Badge>
+        ),
+      },
+      {
         id: 'actions',
         enableSorting: false,
         header: () => null,
@@ -80,7 +89,7 @@ function ListData() {
                 },
               )}
             >
-              Show Details <ArrowRightIcon className="w-4" />
+              Details <ArrowRightIcon className="w-4" />
             </Link>
           </Button>
         ),

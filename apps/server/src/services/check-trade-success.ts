@@ -48,7 +48,17 @@ export async function checkTradeSuccess(order: TradeType): Promise<{
 
 		// Check for success conditions based on order direction
 		if (order.aiOrder.type === 'buy') {
-			if (bar.High >= order.aiOrder.takeProfitPrice) {
+			if (bar.Low <= (order.trailingStop ? trailingStop : order.aiOrder.stopLossPrice)) {
+				const stopPrice = order.trailingStop ? trailingStop : order.aiOrder.stopLossPrice;
+				const balance = stopPrice - order.entryPrice;
+				return {
+					order: order,
+					type: balance > 0 ? TradeResult.Success : TradeResult.Failure,
+					timestamp: bar.Timestamp,
+					exitPrice: stopPrice,
+					resultBalance: balance,
+				};
+			} else if (bar.High >= order.aiOrder.takeProfitPrice) {
 				return {
 					order: order,
 					type: TradeResult.Success,
@@ -56,20 +66,10 @@ export async function checkTradeSuccess(order: TradeType): Promise<{
 					exitPrice: order.aiOrder.takeProfitPrice,
 					resultBalance: order.aiOrder.takeProfitPrice - order.entryPrice,
 				};
-			} else if (bar.Low <= order.aiOrder.stopLossPrice) {
-				const balance = order.aiOrder.stopLossPrice - order.entryPrice;
-				return {
-					order: order,
-					type: balance > 0 ? TradeResult.Success : TradeResult.Failure,
-					timestamp: bar.Timestamp,
-					exitPrice: order.aiOrder.stopLossPrice,
-					resultBalance: balance,
-				};
 			}
 			if (order.trailingStop) {
 				if (bar.High > trailingStop - trailingStep) {
 					trailingStop = bar.High - trailingStep;
-					order.aiOrder.stopLossPrice = trailingStop;
 				}
 			}
 		} else if (order.aiOrder.type === 'sell') {
@@ -81,20 +81,20 @@ export async function checkTradeSuccess(order: TradeType): Promise<{
 					exitPrice: order.aiOrder.takeProfitPrice,
 					resultBalance: order.entryPrice - order.aiOrder.takeProfitPrice,
 				};
-			} else if (bar.High >= order.aiOrder.stopLossPrice) {
-				const balance = order.entryPrice - order.aiOrder.stopLossPrice;
+			} else if (bar.High >= (order.trailingStop ? trailingStop : order.aiOrder.stopLossPrice)) {
+				const stopPrice = order.trailingStop ? trailingStop : order.aiOrder.stopLossPrice;
+				const balance = order.entryPrice - stopPrice;
 				return {
 					order: order,
 					type: balance > 0 ? TradeResult.Success : TradeResult.Failure,
 					timestamp: bar.Timestamp,
-					exitPrice: order.aiOrder.stopLossPrice,
+					exitPrice: stopPrice,
 					resultBalance: balance,
 				};
 			}
 			if (order.trailingStop) {
-				if (bar.Low < trailingStop) {
+				if (bar.Low < trailingStop + trailingStep) {
 					trailingStop = bar.Low + trailingStep;
-					order.aiOrder.stopLossPrice = trailingStop;
 				}
 			}
 		}

@@ -9,6 +9,7 @@ import {
 	simulationRoom,
 	simulationRoomToInformativeBar,
 } from '@baron/db/schema';
+import { createId } from '@paralleldrive/cuid2';
 import { simulationRoomSchema } from '@baron/schema';
 import { protectedProcedure } from '@baron/trpc-server';
 import { getAuth, getClerkClient } from '@baron/trpc-server/async-storage/getters';
@@ -38,6 +39,8 @@ async function triggerRoomExecution(roomId: string) {
 		simulationRoomId: room.id,
 		startDate: addTimeUnits(room.startDate, room.bulkExecutionsIntervalUnits, room.bulkExecutionsIntervalAmount * index),
 		aiPrompt: room.aiPrompt,
+		groupIdentifier: room.groupIdentifier,
+		trailingStopLoss: room.trailingStopLoss,
 	}));
 
 	const executions = await db.insert(simulationExecution).values(executionsToCreate).returning();
@@ -83,7 +86,9 @@ export const simulationRoomRouter = {
 					aiPrompt: input.aiPrompt.trim(),
 					pair: input.pair,
 					startDate: input.startDate,
+					groupIdentifier: createId(),
 					maxTradesToExecute: input.maxTradesToExecute,
+					trailingStopLoss: input.trailingStopLoss,
 					aiModels: input.aiModels,
 					predefinedFrvpId: input.predefinedFrvpId,
 					aiModelStrategy: input.aiModelStrategy,
@@ -166,7 +171,9 @@ export const simulationRoomRouter = {
 						aiPrompt: input.data.aiPrompt.trim(),
 						pair: input.data.pair,
 						startDate: input.data.startDate,
+						groupIdentifier: createId(),
 						maxTradesToExecute: input.data.maxTradesToExecute,
+						trailingStopLoss: input.data.trailingStopLoss,
 						aiModels: input.data.aiModels,
 						predefinedFrvpId: input.data.predefinedFrvpId,
 						aiModelStrategy: input.data.aiModelStrategy,
