@@ -1,7 +1,9 @@
-import { getEmitters } from '@baron/ws/core';
+import { bindMessageListeners, getEmitters } from '@baron/ws/core';
 import { TradeClientServerWebsocketEvents, tradeClientWebsockets } from '@baron/ws/trade-client-ws';
 import { createWebSocketServer } from '@baron/ws/server';
-import { DurableObject } from 'cloudflare:workers';
+import { DurableObject, env } from 'cloudflare:workers';
+import { getDrizzleClient } from '@baron/db/client';
+import { liveTradingRoom } from '@baron/db/schema';
 
 const serverWs = createWebSocketServer(tradeClientWebsockets);
 
@@ -52,5 +54,19 @@ export class TradeRoomDurableObject extends DurableObject {
 		ws.close(code, 'Durable Object is closing WebSocket');
 		console.log('Closed. Connections left: ' + this.currentlyConnectedWebSockets);
 		this.connections.delete(ws);
+	}
+
+	override async webSocketMessage(_: WebSocket, message: string): Promise<void> {
+		const listeners = bindMessageListeners(tradeClientWebsockets.client, message);
+
+		listeners({
+			requestStatusChange: async (data) => {
+				const db = getDrizzleClient(env.DATABASE_CONNECTION_STRING);
+				await db.update(liveTradingRoom).set({
+					status: data.status,
+				});
+			},
+			heartbeat: () => {},
+		});
 	}
 }

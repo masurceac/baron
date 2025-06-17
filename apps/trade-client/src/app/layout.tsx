@@ -30,7 +30,7 @@ export default async function LocaleLayout(props: {
     <html>
       <body
         className={cn(
-          'min-h-screen bg-background font-sans antialiased',
+          'min-h-screen bg-background font-sans antialiased dark',
           fontSans.variable,
           fontSerif.variable,
         )}

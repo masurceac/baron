@@ -1,12 +1,22 @@
 'use client';
 
 import { TradeDirection } from '@baron/common';
+import { Badge } from '@baron/ui/components/badge';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@baron/ui/components/card';
+import { DataTable } from '@baron/ui/components/data-table';
 import { Switch } from '@baron/ui/components/switch';
+import { cn } from '@baron/ui/lib/utils';
 import { useWebsocketClient } from '@baron/ws/client';
 import {
   TradeClientServerWebsocketEvents,
   tradeClientWebsockets,
 } from '@baron/ws/trade-client-ws';
+import { ColumnDef } from '@tanstack/react-table';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { enterTrade } from '../actions/enter-trade';
@@ -89,13 +99,63 @@ export function TradeFormConnect(props: {
     });
   }, [setupListeners, loading]);
 
+  const columns: ColumnDef<TradeEvent>[] = [
+    {
+      accessorKey: 'timestamp',
+      header: 'Timestamp',
+      cell: ({ row }) => new Date(row.original.timestamp).toLocaleString(),
+    },
+    {
+      accessorKey: 'data.trade.type',
+      header: 'Type',
+      cell: ({ row }) => (
+        <Badge
+          variant={
+            row.original.data.trade.type === TradeDirection.Buy
+              ? 'green'
+              : 'destructive'
+          }
+        >
+          {row.original.data.trade.type}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: 'data.trade.pair',
+      header: 'Pair',
+      cell: ({ row }) => row.original.data.trade.pair,
+    },
+    {
+      accessorKey: 'data.trade.stopLossPrice',
+      header: 'Stop Loss',
+      cell: ({ row }) => row.original.data.trade.stopLossPrice.toFixed(2),
+    },
+    {
+      accessorKey: 'data.trade.takeProfitPrice',
+      header: 'Take Profit',
+      cell: ({ row }) => row.original.data.trade.takeProfitPrice.toFixed(2),
+    },
+    {
+      accessorKey: 'success',
+      header: 'Status',
+      cell: ({ row }) => (
+        <Badge variant={row.original.success ? 'green' : 'secondary'}>
+          {row.original.success ? 'Opened' : 'No Action'}
+        </Badge>
+      ),
+    },
+  ];
+
   return (
     <div className="p-4 space-y-4">
       <style>{pulseAnimation}</style>
       <div className="flex items-center gap-2">
         <div className="relative">
           <div
-            className={`w-2 h-2 mt-0.5 ml-0.5 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}
+            className={cn(
+              'w-2 h-2 mt-0.5 ml-0.5 rounded-full',
+              connected ? 'bg-green-500' : 'bg-red-500',
+            )}
           />
           {connected && (
             <div
@@ -111,29 +171,29 @@ export function TradeFormConnect(props: {
         </span>
       </div>
 
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="font-medium mb-2">Room Information</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-gray-500">Room ID</p>
-            <p className="font-medium">{props.roomData.tradeRoomId}</p>
+      <Card>
+        <CardHeader>
+          <CardTitle>Room Information</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Room ID</p>
+              <p className="font-medium">{props.roomData.tradeRoomId}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Leverage</p>
+              <p className="font-medium">{props.roomData.leverage}x</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Position Size</p>
+              <p className="font-medium">
+                ${props.roomData.positionSizeUsd.toLocaleString()}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm text-gray-500">Platform</p>
-            <p className="font-medium capitalize">{props.roomData.platform}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Leverage</p>
-            <p className="font-medium">{props.roomData.leverage}x</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Position Size</p>
-            <p className="font-medium">
-              ${props.roomData.positionSizeUsd.toLocaleString()}
-            </p>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <div>
         <h3 className="font-medium mb-2">Trade Events</h3>
@@ -150,75 +210,12 @@ export function TradeFormConnect(props: {
             Show only trades with positions
           </label>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Timestamp
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Pair
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Stop Loss
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Take Profit
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {[...tradeEvents]
-                .filter((event) => !showOnlySuccessful || event.success)
-                .reverse()
-                .map((event, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(event.timestamp).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          event.data.trade.type === TradeDirection.Buy
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {event.data.trade.type}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {event.data.trade.pair}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {event.data.trade.stopLossPrice.toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {event.data.trade.takeProfitPrice.toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          event.success
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-muted text-muted-foreground'
-                        }`}
-                      >
-                        {event.success ? 'Opened' : 'No Action'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={columns}
+          data={[...tradeEvents]
+            .filter((event) => !showOnlySuccessful || event.success)
+            .reverse()}
+        />
       </div>
     </div>
   );

@@ -14,7 +14,7 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { add, sub } from 'date-fns';
 import { TradeRoomFormSchema } from '../schema';
 
-async function getActiveOrder(props: {
+export async function hasActiveOrder(props: {
   pair: TradingPair;
   apiKey: string;
   apiSecret: string;
@@ -79,7 +79,7 @@ export async function enterTrade(
   setup: TradeRoomFormSchema,
 ): Promise<boolean> {
   const ctx = getCloudflareContext();
-  const orderActive = await getActiveOrder({
+  const orderActive = await hasActiveOrder({
     pair: data.trade.pair,
     apiKey: ctx.env.BINANCE_API_KEY,
     apiSecret: ctx.env.BINANCE_API_SECRET,

@@ -1,5 +1,6 @@
 import { trpc } from '@/core/trpc';
-import { DataTable, RedGreenHighlight } from '@/modules/shared';
+import { DataTable } from '@baron/ui/components/data-table';
+import { RedGreenHighlight } from '@/modules/shared';
 import { DetailedTextDialog } from '@/modules/shared/components/detailed-text-dialog';
 import { TradeLogDirection } from '@baron/common';
 import { RouterOutput } from '@baron/server';

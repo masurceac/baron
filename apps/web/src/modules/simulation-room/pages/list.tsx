@@ -1,11 +1,12 @@
 import { getAppRoute } from '@/core/route';
 import { trpc } from '@/core/trpc';
-import { DataTable, PageLayout, useCurrentPagination } from '@/modules/shared';
+import { PageLayout, useCurrentPagination } from '@/modules/shared';
 import { SpaPagination } from '@/modules/shared/components/pagination';
 import { ExecutionStatus } from '@/modules/simulation-execution/components/execution-status';
 import { RouterOutput } from '@baron/server';
 import { Button } from '@baron/ui/components/button';
 import { FormatDate } from '@baron/ui/components/format-date';
+import { DataTable } from '@baron/ui/components/data-table';
 import { ColumnDef } from '@tanstack/react-table';
 import { ArrowRightIcon, PlusCircleIcon } from 'lucide-react';
 import { Suspense, useMemo } from 'react';

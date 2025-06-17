@@ -1,6 +1,7 @@
 import { getAppRoute } from '@/core/route';
 import { trpc } from '@/core/trpc';
-import { DataTable, PageLayout, useCurrentPagination } from '@/modules/shared';
+import { DataTable } from '@baron/ui/components/data-table';
+import { PageLayout, useCurrentPagination } from '@/modules/shared';
 import { SpaPagination } from '@/modules/shared/components/pagination';
 import { RouterOutput } from '@baron/server';
 import { Button } from '@baron/ui/components/button';
