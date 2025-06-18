@@ -1,13 +1,13 @@
 'use client';
 import { useState } from 'react';
-import { TradeRoomFormSchema } from '../schema';
+import { BinanceTradeRoomFormSchema } from '../schema';
 import { TradeFormConnect } from './trade-form-connect';
 import { TradeRoomForm } from './trade-room-form';
 import { Button } from '@baron/ui/components/button';
 import { XIcon } from 'lucide-react';
 
 export function TradeRoom(props: { wsUrl: string }) {
-  const [data, setData] = useState<TradeRoomFormSchema | null>(null);
+  const [data, setData] = useState<BinanceTradeRoomFormSchema | null>(null);
 
   const handleReset = () => {
     setData(null);

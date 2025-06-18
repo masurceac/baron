@@ -64,7 +64,11 @@ export function ItemForm(props: {
             name="description"
             label="Description"
             render={({ field }) => (
-              <Textarea value={field.value ?? ''} onChange={field.onChange} placeholder="Enter description" />
+              <Textarea
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                placeholder="Enter description"
+              />
             )}
           />
           <FormFieldWrapper
@@ -96,10 +100,15 @@ export function ItemForm(props: {
             name="trailingStopLoss"
             label="Trailing Stop Loss"
             render={({ field }) => (
-              <Switch
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
+              <Switch checked={field.value} onCheckedChange={field.onChange} />
+            )}
+          />
+          <FormFieldWrapper
+            control={form.control}
+            name="crazyMode"
+            label="Crazy Mode"
+            render={({ field }) => (
+              <Switch checked={field.value} onCheckedChange={field.onChange} />
             )}
           />
           <FormFieldWrapper
@@ -180,9 +189,15 @@ export function ItemForm(props: {
                   <SelectValue placeholder="Choose Price Strategy" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={AiModelPriceStrategyEnum.Max}>Max</SelectItem>
-                  <SelectItem value={AiModelPriceStrategyEnum.Min}>Min</SelectItem>
-                  <SelectItem value={AiModelPriceStrategyEnum.Average}>Average</SelectItem>
+                  <SelectItem value={AiModelPriceStrategyEnum.Max}>
+                    Max
+                  </SelectItem>
+                  <SelectItem value={AiModelPriceStrategyEnum.Min}>
+                    Min
+                  </SelectItem>
+                  <SelectItem value={AiModelPriceStrategyEnum.Average}>
+                    Average
+                  </SelectItem>
                 </SelectContent>
               </Select>
             )}

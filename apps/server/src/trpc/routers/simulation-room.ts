@@ -4,6 +4,7 @@ import { addTimeUnits, paginate, paginatedSchema, SimulationExecutionStatus, Tim
 import { queryJoin } from '@baron/db/client';
 import {
 	informativeBarConfig,
+	predefinedFrvp,
 	simulationExecution,
 	simulationExecutionTrade,
 	simulationRoom,
@@ -15,7 +16,7 @@ import { protectedProcedure } from '@baron/trpc-server';
 import { getAuth, getClerkClient } from '@baron/trpc-server/async-storage/getters';
 import { TRPCError } from '@trpc/server';
 import { env } from 'cloudflare:workers';
-import { and, count, desc, eq, ilike, inArray, or, SQL } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, inArray, or, SQL, sum } from 'drizzle-orm';
 import { z } from 'zod';
 
 async function triggerRoomExecution(roomId: string) {
@@ -41,6 +42,8 @@ async function triggerRoomExecution(roomId: string) {
 		aiPrompt: room.aiPrompt,
 		groupIdentifier: room.groupIdentifier,
 		trailingStopLoss: room.trailingStopLoss,
+		crazyMode: room.crazyMode,
+		name: room.name,
 	}));
 
 	const executions = await db.insert(simulationExecution).values(executionsToCreate).returning();
@@ -89,6 +92,7 @@ export const simulationRoomRouter = {
 					groupIdentifier: createId(),
 					maxTradesToExecute: input.maxTradesToExecute,
 					trailingStopLoss: input.trailingStopLoss,
+					crazyMode: input.crazyMode,
 					aiModels: input.aiModels,
 					predefinedFrvpId: input.predefinedFrvpId,
 					aiModelStrategy: input.aiModelStrategy,
@@ -174,6 +178,7 @@ export const simulationRoomRouter = {
 						groupIdentifier: createId(),
 						maxTradesToExecute: input.data.maxTradesToExecute,
 						trailingStopLoss: input.data.trailingStopLoss,
+						crazyMode: input.data.crazyMode,
 						aiModels: input.data.aiModels,
 						predefinedFrvpId: input.data.predefinedFrvpId,
 						aiModelStrategy: input.data.aiModelStrategy,
@@ -223,6 +228,7 @@ export const simulationRoomRouter = {
 		const [room] = await db
 			.select({
 				simulationRoom: simulationRoom,
+				predefinedFrvp: predefinedFrvp,
 				trades: queryJoin(
 					db,
 					{
@@ -241,8 +247,23 @@ export const simulationRoomRouter = {
 						.innerJoin(informativeBarConfig, eq(simulationRoomToInformativeBar.informativeBarConfigId, informativeBarConfig.id))
 						.where(eq(simulationRoomToInformativeBar.simulationRoomId, simulationRoom.id)),
 				),
+				groupedTrades: queryJoin(
+					db,
+					{
+						groupIdentifier: simulationExecution.groupIdentifier,
+						totalBalance: sum(simulationExecutionTrade.balanceResult),
+						name: simulationExecution.name,
+					},
+					(query) =>
+						query
+							.from(simulationExecutionTrade)
+							.innerJoin(simulationExecution, eq(simulationExecutionTrade.simulationExecutionId, simulationExecution.id))
+							.where(eq(simulationExecution.simulationRoomId, simulationRoom.id))
+							.groupBy(simulationExecution.groupIdentifier, simulationExecution.name),
+				),
 			})
 			.from(simulationRoom)
+			.innerJoin(predefinedFrvp, eq(simulationRoom.predefinedFrvpId, predefinedFrvp.id))
 			.where(eq(simulationRoom.id, input.id))
 			.limit(1);
 

@@ -64,6 +64,20 @@
       "when": 1750183261407,
       "tag": "0008_daily_james_howlett",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1750277867483,
+      "tag": "0009_misty_madame_hydra",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1750278608332,
+      "tag": "0010_dazzling_stellaris",
+      "breakpoints": true
     }
   ]
 }

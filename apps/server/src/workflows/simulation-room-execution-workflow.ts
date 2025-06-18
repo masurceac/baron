@@ -302,9 +302,22 @@ export class SimulationRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Sim
 				});
 			});
 		} else {
-			await step.do('create trade log', async () => {
+			await step.do(`create trade log (${execution.crazyMode ? 'crazy' : 'normal'})`, async () => {
+				const direction = execution.crazyMode
+					? getPositionToOpen.type === TradeLogDirection.Buy
+						? TradeDirection.Sell
+						: TradeDirection.Buy
+					: getPositionToOpen.type;
+
+				const stopLossPrice = execution.crazyMode ? getPositionToOpen.takeProfitPrice : getPositionToOpen.stopLossPrice;
+				const takeProfitPrice = execution.crazyMode ? getPositionToOpen.stopLossPrice : getPositionToOpen.takeProfitPrice;
 				const tradeCheckResult = await checkTradeSuccess({
-					aiOrder: getPositionToOpen,
+					aiOrder: {
+						...getPositionToOpen,
+						takeProfitPrice,
+						stopLossPrice,
+						type: direction,
+					},
 					pair: execution.simulationRoom.pair,
 					entryTimestamp: executionTime.toISOString(),
 					entryPrice: currentPrice,
@@ -362,6 +375,7 @@ export class SimulationRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Sim
 				predefinedFrvp: predefinedFrvp,
 				status: simulationExecution.status,
 				trailingStopLoss: simulationExecution.trailingStopLoss,
+				crazyMode: simulationExecution.crazyMode,
 				infoBars: queryJoin(
 					db,
 					{

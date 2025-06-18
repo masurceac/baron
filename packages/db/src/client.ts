@@ -85,18 +85,23 @@ export function queryJoin<TSelection extends SelectedFields>(
   columns: TSelection,
   cb: (query: ReturnType<typeof db.select>) => SQLChunk,
 ) {
-  const columnsMap = Object.entries(columns).map(([key, value]) =>
-    sql.raw(`'${key}',`).append(sql`${value}`),
-  );
+  const columnsMap = Object.entries(columns).map(([key, value]) => {
+    if ('name' in value) return sql.raw(`'${key}',`).append(sql`${value}`); // when a column is a PgColumn
+    return sql`${value}`.append(sql.raw(`as "${key}"`)); // when a column is subselect (another queryJoin(One))
+  });
 
   type Result = QueryReturnType<TSelection>;
 
-  const subselectMap = (Object.entries(columns) as Array<[string, PgColumn]>)
-    .filter(([, tableColumn]) => tableColumn.name)
-    .map(([key, tableColumn]) =>
-      // key should be '' as string value
-      sql.raw(`'${key}',"subquery"."${tableColumn.name}"`),
-    );
+  const subselectMap = (
+    Object.entries(columns) as Array<
+      [string, PgColumn | ReturnType<typeof queryJoinOne>]
+    >
+  ).map(([key, tableColumn]) =>
+    // key should be '' as string value
+    sql.raw(
+      `'${key}',"subquery"."${'name' in tableColumn ? tableColumn.name : key}"`,
+    ),
+  );
 
   const sqlSelect = columnsMap.reduce(
     (chunk, item, index) =>

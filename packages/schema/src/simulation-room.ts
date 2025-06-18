@@ -14,6 +14,7 @@ export const simulationRoomSchema = z.object({
   startDate: z.date(),
   maxTradesToExecute: z.number().int().optional(),
   trailingStopLoss: z.boolean().optional(),
+  crazyMode: z.boolean().optional(),
 
   aiModels: z.array(aiModelSchema).min(1),
   aiModelStrategy: z.nativeEnum(AiModelStrategyEnum).optional(),

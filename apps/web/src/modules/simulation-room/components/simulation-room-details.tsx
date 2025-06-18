@@ -31,6 +31,14 @@ import {
 } from '@baron/ui/components/dialog';
 import { FormatDate } from '@baron/ui/components/format-date';
 import { Separator } from '@baron/ui/components/separator';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@baron/ui/components/table';
 import { Suspense } from 'react';
 import { ItemActions } from './item-actions';
 
@@ -66,7 +74,7 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
             <br />
             {data.simulationRoom.name}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="whitespace-pre-line">
             {data.simulationRoom.description || 'No description provided.'}
           </CardDescription>
         </div>
@@ -120,13 +128,25 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
             <h3 className="text-base font-semibold mb-3">
               Trading Configuration
             </h3>
-            <div className="space-y-1">
+            <div className="space-y-1 flex items-center justify-between space-x-2">
               <div>
                 <p className="text-sm text-muted-foreground">Max Trades:</p>
                 <p className="font-medium">
                   {data.simulationRoom.maxTradesToExecute}
                 </p>
               </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Crazy Mode:</p>
+                <p className="font-medium">
+                  {data.simulationRoom.crazyMode ? 'Yes' : 'No'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">FRVP:</p>
+                <p className="font-medium">{data.predefinedFrvp.name}</p>
+              </div>
+            </div>
+            <div>
               <div>
                 <p className="text-sm text-muted-foreground">Start Date:</p>
                 <p className="font-medium">
@@ -135,6 +155,12 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
                   )}
                 </p>
               </div>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Group ID:</p>
+              <p className="font-medium">
+                {data.simulationRoom.groupIdentifier}
+              </p>
             </div>
           </div>
 
@@ -186,6 +212,106 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
               </div>
             </div>
           </div>
+        </div>
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold mb-4">Grouped Trade Results</h3>
+          {data.groupedTrades && data.groupedTrades.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-muted/40 rounded-lg p-4 border">
+                  <p className="text-sm text-muted-foreground">Total Groups</p>
+                  <p className="text-2xl font-bold">
+                    {data.groupedTrades.length}
+                  </p>
+                </div>
+                <div className="bg-muted/40 rounded-lg p-4 border">
+                  <p className="text-sm text-muted-foreground">Total Balance</p>
+                  <p
+                    className={`text-2xl font-bold ${
+                      data.groupedTrades.reduce(
+                        (sum, group) => sum + Number(group.totalBalance ?? 0),
+                        0,
+                      ) >= 0
+                        ? 'text-green-600'
+                        : 'text-red-600'
+                    }`}
+                  >
+                    $
+                    {data.groupedTrades
+                      .reduce(
+                        (sum, group) => sum + Number(group.totalBalance ?? 0),
+                        0,
+                      )
+                      .toFixed(2)}
+                  </p>
+                </div>
+                <div className="bg-muted/40 rounded-lg p-4 border">
+                  <p className="text-sm text-muted-foreground">
+                    Average per Group
+                  </p>
+                  <p
+                    className={`text-2xl font-bold ${
+                      data.groupedTrades.reduce(
+                        (sum, group) => sum + Number(group.totalBalance ?? 0),
+                        0,
+                      ) /
+                        data.groupedTrades.length >=
+                      0
+                        ? 'text-green-600'
+                        : 'text-red-600'
+                    }`}
+                  >
+                    $
+                    {(
+                      data.groupedTrades.reduce(
+                        (sum, group) => sum + Number(group.totalBalance ?? 0),
+                        0,
+                      ) / data.groupedTrades.length
+                    ).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Group Identifier</TableHead>
+                      <TableHead className="text-right">
+                        Total Balance
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.groupedTrades.map((group, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-mono text-sm">
+                          {group.name}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {group.groupIdentifier}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span
+                            className={`font-semibold ${
+                              Number(group.totalBalance ?? 0) >= 0
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                            }`}
+                          >
+                            ${Number(group.totalBalance ?? 0).toFixed(2)}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>No grouped trade results available yet.</p>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

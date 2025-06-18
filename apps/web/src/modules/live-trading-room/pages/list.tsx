@@ -1,20 +1,21 @@
 import { getAppRoute } from '@/core/route';
 import { trpc } from '@/core/trpc';
-import { DataTable } from '@baron/ui/components/data-table';
 import { PageLayout, useCurrentPagination } from '@/modules/shared';
 import { SpaPagination } from '@/modules/shared/components/pagination';
+import { ExecutionStatus } from '@/modules/simulation-execution/components/execution-status';
 import { RouterOutput } from '@baron/server';
 import { Button } from '@baron/ui/components/button';
+import { DataTable } from '@baron/ui/components/data-table';
 import { FormatDate } from '@baron/ui/components/format-date';
-import { ColumnDef } from '@tanstack/react-table';
-import { ArrowRightIcon, PlusCircleIcon } from 'lucide-react';
-import { Suspense, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@baron/ui/components/tooltip';
+import { ColumnDef } from '@tanstack/react-table';
+import { ArrowRightIcon, PlusCircleIcon } from 'lucide-react';
+import { Suspense, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 
 type TableItem = RouterOutput['liveTradingRoom']['list']['data'][number];
 
@@ -32,9 +33,9 @@ function ListData() {
       {
         accessorKey: 'name',
         enableSorting: false,
-        header: 'Name',
+        header: 'Name / Created At',
         cell: ({ row: { original } }) => (
-          <div>
+          <div className="flex flex-col space-y-1">
             <Tooltip>
               <TooltipTrigger asChild>
                 <p className="max-w-80 truncate">{original.name}</p>
@@ -43,7 +44,9 @@ function ListData() {
                 {original.name}
               </TooltipContent>
             </Tooltip>
+
             <p className="text-xs text-muted-foreground">
+              {original.id} |{' '}
               <FormatDate date={original.createdAt} format="long" />
             </p>
           </div>
@@ -65,7 +68,7 @@ function ListData() {
         header: 'Status',
         cell: ({ row: { original } }) => (
           <div>
-            <p>{original.status}</p>
+            <ExecutionStatus status={original.status} />
           </div>
         ),
       },

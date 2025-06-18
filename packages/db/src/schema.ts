@@ -100,6 +100,7 @@ export const simulationRoom = pgTable('simulation_room', {
       onUpdate: 'cascade',
     }),
   trailingStopLoss: boolean('trailing_stop_loss').notNull().default(false),
+  crazyMode: boolean('crazy_mode').notNull().default(false),
 
   aiModels: jsonb('ai_models').notNull().$type<AiModel[]>(),
   aiModelStrategy: text('ai_model_strategy', {
@@ -174,9 +175,11 @@ export const simulationExecution = pgTable('simulation_execution', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(
     () => new Date(),
   ),
+  name: text('name').notNull().default('n/a'),
 
   groupIdentifier: text('group_identifier').notNull(),
   trailingStopLoss: boolean('trailing_stop_loss'),
+  crazyMode: boolean('crazy_mode').notNull().default(false),
 
   aiPrompt: text('ai_prompt').notNull(),
   startDate: timestamp('start_date', { withTimezone: true }).notNull(),

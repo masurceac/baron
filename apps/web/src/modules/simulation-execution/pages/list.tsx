@@ -42,11 +42,11 @@ function ListData() {
       {
         accessorKey: 'startDate',
         enableSorting: false,
-        header: 'Start Date / Status',
+        header: 'Name / Start Date',
         cell: ({ row: { original } }) => (
           <div className="flex flex-col space-y-1">
+            <p className="font-medium">{original.name}</p>
             <FormatDate date={original.startDate} utc />
-            <ExecutionStatus status={original.status} />
           </div>
         ),
       },
@@ -72,6 +72,14 @@ function ListData() {
         header: 'Group Identifier',
         cell: ({ row: { original } }) => (
           <Badge variant="outline">{original.groupIdentifier}</Badge>
+        ),
+      },
+      {
+        accessorKey: 'status',
+        enableSorting: false,
+        header: 'Status',
+        cell: ({ row: { original } }) => (
+          <ExecutionStatus status={original.status} />
         ),
       },
       {

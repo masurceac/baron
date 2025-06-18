@@ -51,19 +51,6 @@ export function ItemActions(props: { item: Pick<ItemType, 'id' | 'name'> }) {
             onClick={() =>
               trigger.mutate({
                 id: props.item.id,
-                status: SimulationExecutionStatus.Completed,
-              })
-            }
-          >
-            Stop
-            <DropdownMenuShortcut>
-              <PlayIcon className="w-4" />
-            </DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() =>
-              trigger.mutate({
-                id: props.item.id,
                 status: SimulationExecutionStatus.Running,
               })
             }
@@ -71,6 +58,19 @@ export function ItemActions(props: { item: Pick<ItemType, 'id' | 'name'> }) {
             Run
             <DropdownMenuShortcut>
               <StopCircleIcon className="w-4" />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() =>
+              trigger.mutate({
+                id: props.item.id,
+                status: SimulationExecutionStatus.Completed,
+              })
+            }
+          >
+            Stop
+            <DropdownMenuShortcut>
+              <PlayIcon className="w-4" />
             </DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>

@@ -17,21 +17,29 @@ import {
 } from '@baron/ui/components/form';
 import { Input } from '@baron/ui/components/input';
 import { NumericInput } from '@baron/ui/components/numeric-input';
+import { Switch } from '@baron/ui/components/switch';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { TradeRoomFormSchema, tradeRoomFormSchema } from '../schema';
+import {
+  BinanceTradeRoomFormSchema,
+  binanceTradeRoomFormSchema,
+} from '../schema';
 
 interface TradeRoomFormProps {
-  onSubmit: (data: TradeRoomFormSchema) => void;
+  onSubmit: (data: BinanceTradeRoomFormSchema) => void;
 }
 
 export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
-  const form = useForm<TradeRoomFormSchema>({
-    resolver: zodResolver(tradeRoomFormSchema),
+  const form = useForm<BinanceTradeRoomFormSchema>({
+    resolver: zodResolver(binanceTradeRoomFormSchema),
     defaultValues: {
+      name: '',
       tradeRoomId: '',
       leverage: 30,
       positionSizeUsd: 100,
+      apiKey: '',
+      apiSecret: '',
+      crazyMode: false,
     },
   });
 
@@ -43,6 +51,19 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="tradeRoomId"
@@ -79,6 +100,52 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
                     <NumericInput min={1} {...field} />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="apiKey"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>API Key</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter API key" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="apiSecret"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>API Secret</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter API secret" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="crazyMode"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Crazy Mode</FormLabel>
+                    <div className="text-sm text-muted-foreground">
+                      Does the opposite of AI suggestion
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
                 </FormItem>
               )}
             />

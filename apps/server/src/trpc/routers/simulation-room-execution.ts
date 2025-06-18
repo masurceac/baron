@@ -35,6 +35,7 @@ export const simulationRoomExecutionRouter = {
 					.select({
 						id: simulationExecution.id,
 						createdAt: simulationExecution.createdAt,
+						name: simulationExecution.name,
 						startDate: simulationExecution.startDate,
 						status: simulationExecution.status,
 						groupIdentifier: simulationExecution.groupIdentifier,

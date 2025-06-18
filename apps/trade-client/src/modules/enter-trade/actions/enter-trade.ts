@@ -1,7 +1,7 @@
 'use server';
 
 import { fetchBars } from '@baron/bars-api';
-import { TimeUnit, TradingPair } from '@baron/common';
+import { TimeUnit, TradeDirection, TradingPair } from '@baron/common';
 import {
   cancelOrder,
   getFuturesOpenOrder,
@@ -10,9 +10,8 @@ import {
   setLeverage,
 } from '@baron/order-api';
 import { TradeClientServerWebsocketEvents } from '@baron/ws/trade-client-ws';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { add, sub } from 'date-fns';
-import { TradeRoomFormSchema } from '../schema';
+import { BinanceTradeRoomFormSchema } from '../schema';
 
 export async function hasActiveOrder(props: {
   pair: TradingPair;
@@ -76,13 +75,12 @@ async function getCurrentPrice(props: { pair: TradingPair }) {
 
 export async function enterTrade(
   data: TradeClientServerWebsocketEvents['enterTrade'],
-  setup: TradeRoomFormSchema,
+  setup: BinanceTradeRoomFormSchema,
 ): Promise<boolean> {
-  const ctx = getCloudflareContext();
   const orderActive = await hasActiveOrder({
     pair: data.trade.pair,
-    apiKey: ctx.env.BINANCE_API_KEY,
-    apiSecret: ctx.env.BINANCE_API_SECRET,
+    apiKey: setup.apiKey,
+    apiSecret: setup.apiSecret,
   });
 
   if (orderActive) {
@@ -93,13 +91,26 @@ export async function enterTrade(
     pair: data.trade.pair,
   });
 
+  const direction = setup.crazyMode
+    ? data.trade.type === TradeDirection.Buy
+      ? TradeDirection.Sell
+      : TradeDirection.Buy
+    : data.trade.type;
+
+  const stopLossPrice = setup.crazyMode
+    ? data.trade.takeProfitPrice
+    : data.trade.stopLossPrice;
+  const takeProfitPrice = setup.crazyMode
+    ? data.trade.stopLossPrice
+    : data.trade.takeProfitPrice;
+
   try {
     await setLeverage({
       pair: data.trade.pair,
       leverage: setup.leverage,
       keys: {
-        apiKey: ctx.env.BINANCE_API_KEY,
-        apiSecret: ctx.env.BINANCE_API_SECRET,
+        apiKey: setup.apiKey,
+        apiSecret: setup.apiSecret,
       },
     });
     const quantity =
@@ -109,12 +120,12 @@ export async function enterTrade(
     const order = await openMarketFuturesOrderWithTPSL({
       pair: data.trade.pair,
       quantity: quantity,
-      direction: data.trade.type,
-      stopLossPrice: data.trade.stopLossPrice,
-      takeProfitPrice: data.trade.takeProfitPrice,
+      direction,
+      stopLossPrice,
+      takeProfitPrice,
       keys: {
-        apiKey: ctx.env.BINANCE_API_KEY,
-        apiSecret: ctx.env.BINANCE_API_SECRET,
+        apiKey: setup.apiKey,
+        apiSecret: setup.apiSecret,
       },
     });
     console.log('order');

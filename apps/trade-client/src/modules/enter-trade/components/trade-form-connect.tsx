@@ -8,6 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@baron/ui/components/card';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@baron/ui/components/alert';
 import { DataTable } from '@baron/ui/components/data-table';
 import { Switch } from '@baron/ui/components/switch';
 import { cn } from '@baron/ui/lib/utils';
@@ -20,7 +25,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { enterTrade } from '../actions/enter-trade';
-import { TradeRoomFormSchema } from '../schema';
+import { BinanceTradeRoomFormSchema } from '../schema';
 
 interface TradeEvent {
   timestamp: string;
@@ -46,7 +51,7 @@ const pulseAnimation = `
 `;
 
 export function TradeFormConnect(props: {
-  roomData: TradeRoomFormSchema;
+  roomData: BinanceTradeRoomFormSchema;
   wsUrl: string;
 }) {
   const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval>>(null);
@@ -171,9 +176,18 @@ export function TradeFormConnect(props: {
         </span>
       </div>
 
+      {props.roomData.crazyMode && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTitle>Crazy Mode Enabled</AlertTitle>
+          <AlertDescription>
+            The orders will be the opposite of what the AI suggests.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardHeader>
-          <CardTitle>Room Information</CardTitle>
+          <CardTitle>{props.roomData.name}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="gap-4">

@@ -18,12 +18,13 @@ export async function checkTradeSuccess(order: TradeType): Promise<{
 	exitPrice: number;
 	resultBalance: number;
 }> {
-	if (order.aiOrder.type === 'hold' || !order.aiOrder.takeProfitPrice || !order.aiOrder.stopLossPrice) {
+	let stopLossPrice: number = order.aiOrder.stopLossPrice ?? 0;
+	let takeProfitPrice: number = order.aiOrder.takeProfitPrice ?? 0;
+
+	if (order.aiOrder.type === 'hold' || !takeProfitPrice || !stopLossPrice) {
 		throw 'Order is not valid for success check';
 	}
-
-	let trailingStop = order.aiOrder.stopLossPrice;
-	let trailingStep = Math.abs(order.entryPrice - order.aiOrder.stopLossPrice) * (order.aiOrder.type === 'buy' ? 1 : -1);
+	let referencePrice = order.entryPrice;
 
 	const trailingEnd = add(new Date(order.entryTimestamp), { hours: 3 });
 
@@ -48,53 +49,59 @@ export async function checkTradeSuccess(order: TradeType): Promise<{
 
 		// Check for success conditions based on order direction
 		if (order.aiOrder.type === 'buy') {
-			if (bar.Low <= (order.trailingStop ? trailingStop : order.aiOrder.stopLossPrice)) {
-				const stopPrice = order.trailingStop ? trailingStop : order.aiOrder.stopLossPrice;
-				const balance = stopPrice - order.entryPrice;
+			if (bar.Low <= stopLossPrice) {
+				const balance = stopLossPrice - referencePrice;
 				return {
 					order: order,
 					type: balance > 0 ? TradeResult.Success : TradeResult.Failure,
 					timestamp: bar.Timestamp,
-					exitPrice: stopPrice,
+					exitPrice: stopLossPrice,
 					resultBalance: balance,
 				};
-			} else if (bar.High >= order.aiOrder.takeProfitPrice) {
+			} else if (bar.High >= takeProfitPrice) {
 				return {
 					order: order,
 					type: TradeResult.Success,
 					timestamp: bar.Timestamp,
-					exitPrice: order.aiOrder.takeProfitPrice,
-					resultBalance: order.aiOrder.takeProfitPrice - order.entryPrice,
+					exitPrice: takeProfitPrice,
+					resultBalance: takeProfitPrice - referencePrice,
 				};
 			}
 			if (order.trailingStop) {
-				if (bar.High > trailingStop - trailingStep) {
-					trailingStop = bar.High - trailingStep;
+				const priceMovingInRightDirection = bar.High > referencePrice;
+				if (priceMovingInRightDirection) {
+					const highDelta = Math.abs(bar.High - referencePrice);
+					referencePrice = bar.High;
+					takeProfitPrice += highDelta;
+					stopLossPrice += highDelta;
 				}
 			}
 		} else if (order.aiOrder.type === 'sell') {
-			if (bar.Low <= order.aiOrder.takeProfitPrice) {
-				return {
-					order: order,
-					type: TradeResult.Success,
-					timestamp: bar.Timestamp,
-					exitPrice: order.aiOrder.takeProfitPrice,
-					resultBalance: order.entryPrice - order.aiOrder.takeProfitPrice,
-				};
-			} else if (bar.High >= (order.trailingStop ? trailingStop : order.aiOrder.stopLossPrice)) {
-				const stopPrice = order.trailingStop ? trailingStop : order.aiOrder.stopLossPrice;
-				const balance = order.entryPrice - stopPrice;
+			if (bar.High >= stopLossPrice) {
+				const balance = referencePrice - stopLossPrice;
 				return {
 					order: order,
 					type: balance > 0 ? TradeResult.Success : TradeResult.Failure,
 					timestamp: bar.Timestamp,
-					exitPrice: stopPrice,
+					exitPrice: stopLossPrice,
 					resultBalance: balance,
+				};
+			} else if (bar.Low <= takeProfitPrice) {
+				return {
+					order: order,
+					type: TradeResult.Success,
+					timestamp: bar.Timestamp,
+					exitPrice: takeProfitPrice,
+					resultBalance: referencePrice - takeProfitPrice,
 				};
 			}
 			if (order.trailingStop) {
-				if (bar.Low < trailingStop + trailingStep) {
-					trailingStop = bar.Low + trailingStep;
+				const priceMovingInRightDirection = bar.Low < referencePrice;
+				if (priceMovingInRightDirection) {
+					const lowDelta = Math.abs(bar.Low - referencePrice);
+					referencePrice = bar.Low;
+					takeProfitPrice -= lowDelta;
+					stopLossPrice -= lowDelta;
 				}
 			}
 		}
@@ -112,6 +119,12 @@ export async function checkTradeSuccess(order: TradeType): Promise<{
 
 	const nestedResult = await checkTradeSuccess({
 		...order,
+		aiOrder: {
+			...order.aiOrder,
+			stopLossPrice,
+			takeProfitPrice,
+		},
+		entryPrice: referencePrice,
 		loopNumber: (order.loopNumber || 0) + 1,
 		entryTimestamp: trailingEnd.toISOString(),
 	});

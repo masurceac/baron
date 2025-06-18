@@ -1,0 +1,1 @@
+ALTER TABLE "simulation_execution" ADD COLUMN "name" text DEFAULT 'n/a' NOT NULL;
