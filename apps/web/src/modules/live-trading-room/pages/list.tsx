@@ -16,6 +16,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { ArrowRightIcon, PlusCircleIcon } from 'lucide-react';
 import { Suspense, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { ItemActions } from '../components/item-actions';
 
 type TableItem = RouterOutput['liveTradingRoom']['list']['data'][number];
 
@@ -92,6 +93,11 @@ function ListData() {
             </Link>
           </Button>
         ),
+      },
+      {
+        id: 'actions',
+        header: 'Actions',
+        cell: ({ row: { original } }) => <ItemActions item={original} />,
       },
     ],
     [],
