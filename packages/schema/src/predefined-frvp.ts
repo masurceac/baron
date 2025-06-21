@@ -5,8 +5,8 @@ export const predefinedFrvpValueSchema = z.object({
   volumeAreaHigh: z.number(),
   volumeAreaLow: z.number(),
   pointOfControl: z.number(),
-  zoneStartAt: z.date(),
-  zoneEndAt: z.date(),
+  zoneStartAt: z.date().optional().nullable(),
+  zoneEndAt: z.date().optional().nullable(),
 });
 
 export type PredefinedFrvpValue = z.infer<typeof predefinedFrvpValueSchema>;

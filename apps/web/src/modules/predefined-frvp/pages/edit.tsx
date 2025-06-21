@@ -49,8 +49,12 @@ export function FRVPEditPage() {
                   volumeAreaHigh: zone.volumeAreaHigh,
                   volumeAreaLow: zone.volumeAreaLow,
                   pointOfControl: zone.pointOfControl,
-                  zoneStartAt: new Date(zone.zoneStartAt),
-                  zoneEndAt: new Date(zone.zoneEndAt),
+                  ...(zone.zoneStartAt && zone.zoneEndAt
+                    ? {
+                        zoneStartAt: new Date(zone.zoneStartAt),
+                        zoneEndAt: new Date(zone.zoneEndAt),
+                      }
+                    : {}),
                 })),
               })),
             }}
