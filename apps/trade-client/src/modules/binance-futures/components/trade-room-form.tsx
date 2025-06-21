@@ -141,7 +141,7 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
                     <NumericInput 
                       min={1} 
                       value={field.value}
-                      onValueChange={field.onChange}
+                      onChange={field.onChange}
                     />
                   </FormControl>
                   <FormMessage />

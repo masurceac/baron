@@ -33,7 +33,7 @@ interface TradeRoomFormProps {
 
 export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
   const isLoadingRef = useRef(false);
-  
+
   const form = useForm<PushoverTradeRoomFormSchema>({
     resolver: zodResolver(pushoverTradeRoomFormSchema),
     defaultValues: {
@@ -55,7 +55,9 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
 
   const handleNameChange = (name: string) => {
     if (name && !isLoadingRef.current) {
-      const savedData = loadFromLocalStorage<PushoverTradeRoomFormSchema>(`pushover-${name}`);
+      const savedData = loadFromLocalStorage<PushoverTradeRoomFormSchema>(
+        `pushover-${name}`,
+      );
       if (savedData) {
         isLoadingRef.current = true;
         form.reset({
@@ -83,7 +85,10 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-6"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -117,11 +122,11 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
                 <FormItem>
                   <FormLabel>Signals Count</FormLabel>
                   <FormControl>
-                    <NumericInput 
-                      min={1} 
-                      max={10} 
-                      value={field.value}
-                      onValueChange={field.onChange}
+                    <NumericInput
+                      min={1}
+                      max={10}
+                      value={field.value ?? ''}
+                      onChange={field.onChange}
                     />
                   </FormControl>
                   <FormMessage />
@@ -182,4 +187,4 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
       </CardContent>
     </Card>
   );
-} 
+}
