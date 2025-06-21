@@ -16,41 +16,72 @@ import {
   FormMessage,
 } from '@baron/ui/components/form';
 import { Input } from '@baron/ui/components/input';
-import { NumericInput } from '@baron/ui/components/numeric-input';
 import { Switch } from '@baron/ui/components/switch';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
+import { loadFromLocalStorage, saveToLocalStorage } from '@/lib/local-storage';
 import {
-  BinanceTradeRoomFormSchema,
-  binanceTradeRoomFormSchema,
+  PushoverTradeRoomFormSchema,
+  pushoverTradeRoomFormSchema,
 } from '../schema';
 
 interface TradeRoomFormProps {
-  onSubmit: (data: BinanceTradeRoomFormSchema) => void;
+  onSubmit: (data: PushoverTradeRoomFormSchema) => void;
 }
 
 export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
-  const form = useForm<BinanceTradeRoomFormSchema>({
-    resolver: zodResolver(binanceTradeRoomFormSchema),
+  const isLoadingRef = useRef(false);
+  
+  const form = useForm<PushoverTradeRoomFormSchema>({
+    resolver: zodResolver(pushoverTradeRoomFormSchema),
     defaultValues: {
       name: '',
       tradeRoomId: '',
-      leverage: 30,
-      positionSizeUsd: 100,
-      apiKey: '',
-      apiSecret: '',
-      crazyMode: false,
+      user: '',
+      token: '',
+      rememberMe: false,
     },
   });
 
+  const handleSubmit = (data: PushoverTradeRoomFormSchema) => {
+    if (data.rememberMe) {
+      saveToLocalStorage(`pushover-${data.name}`, data);
+    }
+    onSubmit(data);
+  };
+
+  const handleNameChange = (name: string) => {
+    if (name && !isLoadingRef.current) {
+      const savedData = loadFromLocalStorage<PushoverTradeRoomFormSchema>(`pushover-${name}`);
+      if (savedData) {
+        isLoadingRef.current = true;
+        form.reset({
+          ...savedData,
+          rememberMe: true,
+        });
+        isLoadingRef.current = false;
+      }
+    }
+  };
+
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'name' && value.name && !isLoadingRef.current) {
+        handleNameChange(value.name);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full max-w-lg mx-auto">
       <CardHeader>
-        <CardTitle>New Trade Room Session</CardTitle>
+        <CardTitle>New Pushover Notification Session</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="name"
@@ -79,12 +110,12 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
             />
             <FormField
               control={form.control}
-              name="leverage"
+              name="user"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Leverage</FormLabel>
+                  <FormLabel>Pushover User Key</FormLabel>
                   <FormControl>
-                    <NumericInput min={1} max={125} {...field} />
+                    <Input placeholder="Enter Pushover user key" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -92,12 +123,12 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
             />
             <FormField
               control={form.control}
-              name="positionSizeUsd"
+              name="token"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Position Size (USD)</FormLabel>
+                  <FormLabel>Pushover App Token</FormLabel>
                   <FormControl>
-                    <NumericInput min={1} {...field} />
+                    <Input placeholder="Enter Pushover app token" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -105,39 +136,13 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
             />
             <FormField
               control={form.control}
-              name="apiKey"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>API Key</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter API key" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="apiSecret"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>API Secret</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter API secret" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="crazyMode"
+              name="rememberMe"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-base">Crazy Mode</FormLabel>
+                    <FormLabel className="text-base">Remember Me</FormLabel>
                     <div className="text-sm text-muted-foreground">
-                      Does the opposite of AI suggestion
+                      Save form data for next time
                     </div>
                   </div>
                   <FormControl>
@@ -150,11 +155,11 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
               )}
             />
             <Button type="submit" className="w-full">
-              Enter Trade Room
+              Start Notifications
             </Button>
           </form>
         </Form>
       </CardContent>
     </Card>
   );
-}
+} 

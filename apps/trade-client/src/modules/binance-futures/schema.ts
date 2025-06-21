@@ -8,6 +8,7 @@ export const binanceTradeRoomFormSchema = z.object({
   apiSecret: z.string().min(1),
   apiKey: z.string().min(1),
   crazyMode: z.boolean().default(false),
+  rememberMe: z.boolean().default(false),
 });
 
 export type BinanceTradeRoomFormSchema = z.infer<
