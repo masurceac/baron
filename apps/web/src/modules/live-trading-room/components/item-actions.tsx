@@ -57,7 +57,7 @@ export function ItemActions(props: { item: Pick<ItemType, 'id' | 'name'> }) {
           >
             Run
             <DropdownMenuShortcut>
-              <StopCircleIcon className="w-4" />
+              <PlayIcon className="w-4" />
             </DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -70,7 +70,7 @@ export function ItemActions(props: { item: Pick<ItemType, 'id' | 'name'> }) {
           >
             Stop
             <DropdownMenuShortcut>
-              <PlayIcon className="w-4" />
+              <StopCircleIcon className="w-4" />
             </DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
