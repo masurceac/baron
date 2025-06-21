@@ -45,6 +45,7 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
       apiSecret: '',
       crazyMode: false,
       rememberMe: false,
+      signalsCount: 1,
     },
   });
 
@@ -119,7 +120,12 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
                 <FormItem>
                   <FormLabel>Leverage</FormLabel>
                   <FormControl>
-                    <NumericInput min={1} max={125} {...field} />
+                    <NumericInput 
+                      min={1} 
+                      max={125} 
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -132,7 +138,29 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
                 <FormItem>
                   <FormLabel>Position Size (USD)</FormLabel>
                   <FormControl>
-                    <NumericInput min={1} {...field} />
+                    <NumericInput 
+                      min={1} 
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="signalsCount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Signals Count</FormLabel>
+                  <FormControl>
+                    <NumericInput 
+                      min={1} 
+                      max={10} 
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

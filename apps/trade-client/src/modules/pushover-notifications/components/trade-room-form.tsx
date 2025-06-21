@@ -16,6 +16,7 @@ import {
   FormMessage,
 } from '@baron/ui/components/form';
 import { Input } from '@baron/ui/components/input';
+import { NumericInput } from '@baron/ui/components/numeric-input';
 import { Switch } from '@baron/ui/components/switch';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useRef } from 'react';
@@ -41,6 +42,7 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
       user: '',
       token: '',
       rememberMe: false,
+      signalsCount: 1,
     },
   });
 
@@ -103,6 +105,24 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
                   <FormLabel>Trade Room ID</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter trade room ID" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="signalsCount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Signals Count</FormLabel>
+                  <FormControl>
+                    <NumericInput 
+                      min={1} 
+                      max={10} 
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

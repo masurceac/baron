@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from '@baron/ui/components/card';
 import { DataTable } from '@baron/ui/components/data-table';
+import { Switch } from '@baron/ui/components/switch';
 import { cn } from '@baron/ui/lib/utils';
 import { useWebsocketClient } from '@baron/ws/client';
 import {
@@ -25,6 +26,7 @@ interface NotificationEvent {
   timestamp: string;
   data: TradeClientServerWebsocketEvents['enterTrade'];
   success: boolean;
+  sent: boolean;
 }
 
 const pulseAnimation = `
@@ -50,7 +52,16 @@ export function TradeFormConnect(props: {
 }) {
   const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval>>(null);
   const [connected, setConnected] = useState(false);
-  const [notificationEvents, setNotificationEvents] = useState<NotificationEvent[]>([]);
+  const [notificationEvents, setNotificationEvents] = useState<
+    NotificationEvent[]
+  >([]);
+  const [showOnlySent, setShowOnlySent] = useState(false);
+  
+  // Signals counting ref
+  const consecutiveSignalsRef = useRef<{
+    direction: TradeDirection | null;
+    count: number;
+  }>({ direction: null, count: 0 });
 
   const { setupListeners, loading } = useWebsocketClient(
     tradeClientWebsockets,
@@ -83,7 +94,24 @@ export function TradeFormConnect(props: {
 
     setupListeners({
       async enterTrade(data) {
-        const success = await sendNotification(data, props.roomData);
+        const currentDirection = data.trade.type;
+        const currentCount = consecutiveSignalsRef.current.count;
+        const currentDirectionState = consecutiveSignalsRef.current.direction;
+        
+        const isSameDirection = currentDirectionState === currentDirection;
+        const newCount = isSameDirection ? currentCount + 1 : 1;
+        const shouldSend = isSameDirection && newCount >= props.roomData.signalsCount;
+        
+        consecutiveSignalsRef.current = {
+          direction: currentDirection,
+          count: newCount,
+        };
+        
+        const success = shouldSend ? await sendNotification(data, props.roomData) : false;
+        
+        if (shouldSend) {
+          consecutiveSignalsRef.current = { direction: null, count: 0 };
+        }
 
         setNotificationEvents((prev) => [
           ...prev,
@@ -91,11 +119,12 @@ export function TradeFormConnect(props: {
             timestamp: new Date().toISOString(),
             data,
             success,
+            sent: shouldSend,
           },
         ]);
       },
     });
-  }, [setupListeners, loading]);
+  }, [setupListeners, loading, props.roomData]);
 
   const columns: ColumnDef<NotificationEvent>[] = [
     {
@@ -113,6 +142,7 @@ export function TradeFormConnect(props: {
               ? 'green'
               : 'destructive'
           }
+          className="capitalize"
         >
           {row.original.data.trade.type}
         </Badge>
@@ -134,18 +164,29 @@ export function TradeFormConnect(props: {
       cell: ({ row }) => row.original.data.trade.takeProfitPrice.toFixed(2),
     },
     {
+      accessorKey: 'sent',
+      header: 'Sent',
+      cell: ({ row }) => (
+        <Badge variant={row.original.sent ? 'green' : 'secondary'}>
+          {row.original.sent ? 'Yes' : 'No'}
+        </Badge>
+      ),
+    },
+    {
       accessorKey: 'success',
       header: 'Status',
       cell: ({ row }) => (
         <Badge variant={row.original.success ? 'green' : 'secondary'}>
-          {row.original.success ? 'Sent' : 'Failed'}
+          {row.original.success ? 'Sent' : 'No action'}
         </Badge>
       ),
     },
   ];
 
+  const sortedEvents = [...notificationEvents].reverse();
+
   return (
-    <div className="p-4 space-y-4 max-w-md mx-auto">
+    <div className="p-4 space-y-4 max-w-screen-md mx-auto">
       <style>{pulseAnimation}</style>
       <div className="flex items-center gap-2">
         <div className="relative">
@@ -183,6 +224,26 @@ export function TradeFormConnect(props: {
               <p className="text-sm text-muted-foreground">User Key</p>
               <p className="font-medium">{props.roomData.user}</p>
             </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Signals Count</p>
+              <p className="font-medium">{props.roomData.signalsCount}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">
+                Consecutive Signals
+              </p>
+              <p className="font-medium">
+                {consecutiveSignalsRef.current.direction ? (
+                  <>
+                    {consecutiveSignalsRef.current.direction} (
+                    {consecutiveSignalsRef.current.count}/
+                    {props.roomData.signalsCount})
+                  </>
+                ) : (
+                  'None'
+                )}
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -192,9 +253,22 @@ export function TradeFormConnect(props: {
           <CardTitle>Notification History</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable columns={columns} data={notificationEvents} />
+          <div className="flex items-center space-x-2 mb-4">
+            <Switch checked={showOnlySent} onCheckedChange={setShowOnlySent} />
+            <label className="text-sm font-medium">
+              Show only sent notifications
+            </label>
+          </div>
+          <DataTable
+            columns={columns}
+            data={
+              showOnlySent
+                ? sortedEvents.filter((event) => event.sent)
+                : sortedEvents
+            }
+          />
         </CardContent>
       </Card>
     </div>
   );
-} 
+}

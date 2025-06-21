@@ -9,6 +9,7 @@ export const binanceTradeRoomFormSchema = z.object({
   apiKey: z.string().min(1),
   crazyMode: z.boolean().default(false),
   rememberMe: z.boolean().default(false),
+  signalsCount: z.number().min(1).max(10),
 });
 
 export type BinanceTradeRoomFormSchema = z.infer<

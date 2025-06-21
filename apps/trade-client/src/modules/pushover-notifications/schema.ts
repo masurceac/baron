@@ -6,6 +6,7 @@ export const pushoverTradeRoomFormSchema = z.object({
   user: z.string().min(1),
   token: z.string().min(1),
   rememberMe: z.boolean().default(false),
+  signalsCount: z.number().min(1).max(10),
 });
 
 export type PushoverTradeRoomFormSchema = z.infer<

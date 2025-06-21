@@ -31,6 +31,7 @@ interface TradeEvent {
   timestamp: string;
   data: TradeClientServerWebsocketEvents['enterTrade'];
   success: boolean;
+  executed: boolean;
 }
 
 const pulseAnimation = `
@@ -58,6 +59,12 @@ export function TradeFormConnect(props: {
   const [connected, setConnected] = useState(false);
   const [tradeEvents, setTradeEvents] = useState<TradeEvent[]>([]);
   const [showOnlySuccessful, setShowOnlySuccessful] = useState(false);
+  
+  // Signals counting ref
+  const consecutiveSignalsRef = useRef<{
+    direction: TradeDirection | null;
+    count: number;
+  }>({ direction: null, count: 0 });
 
   const { setupListeners, loading } = useWebsocketClient(
     tradeClientWebsockets,
@@ -90,7 +97,24 @@ export function TradeFormConnect(props: {
 
     setupListeners({
       async enterTrade(data) {
-        const success = await enterTrade(data, props.roomData);
+        const currentDirection = data.trade.type;
+        const currentCount = consecutiveSignalsRef.current.count;
+        const currentDirectionState = consecutiveSignalsRef.current.direction;
+        
+        const isSameDirection = currentDirectionState === currentDirection;
+        const newCount = isSameDirection ? currentCount + 1 : 1;
+        const shouldExecute = isSameDirection && newCount >= props.roomData.signalsCount;
+        
+        consecutiveSignalsRef.current = {
+          direction: currentDirection,
+          count: newCount,
+        };
+        
+        const success = shouldExecute ? await enterTrade(data, props.roomData) : false;
+        
+        if (shouldExecute) {
+          consecutiveSignalsRef.current = { direction: null, count: 0 };
+        }
 
         setTradeEvents((prev) => [
           ...prev,
@@ -98,11 +122,12 @@ export function TradeFormConnect(props: {
             timestamp: new Date().toISOString(),
             data,
             success,
+            executed: shouldExecute,
           },
         ]);
       },
     });
-  }, [setupListeners, loading]);
+  }, [setupListeners, loading, props.roomData]);
 
   const columns: ColumnDef<TradeEvent>[] = [
     {
@@ -139,6 +164,15 @@ export function TradeFormConnect(props: {
       accessorKey: 'data.trade.takeProfitPrice',
       header: 'Take Profit',
       cell: ({ row }) => row.original.data.trade.takeProfitPrice.toFixed(2),
+    },
+    {
+      accessorKey: 'executed',
+      header: 'Executed',
+      cell: ({ row }) => (
+        <Badge variant={row.original.executed ? 'green' : 'secondary'}>
+          {row.original.executed ? 'Yes' : 'No'}
+        </Badge>
+      ),
     },
     {
       accessorKey: 'success',
@@ -201,36 +235,46 @@ export function TradeFormConnect(props: {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Position Size</p>
+              <p className="font-medium">${props.roomData.positionSizeUsd}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Signals Count</p>
+              <p className="font-medium">{props.roomData.signalsCount}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Consecutive Signals</p>
               <p className="font-medium">
-                ${props.roomData.positionSizeUsd.toLocaleString()}
+                {consecutiveSignalsRef.current.direction ? (
+                  <>
+                    {consecutiveSignalsRef.current.direction} ({consecutiveSignalsRef.current.count}/{props.roomData.signalsCount})
+                  </>
+                ) : (
+                  'None'
+                )}
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <div>
-        <h3 className="font-medium mb-2">Trade Events</h3>
-        <div className="flex items-center gap-2 mb-4">
-          <Switch
-            id="show-only-successful"
-            checked={showOnlySuccessful}
-            onCheckedChange={setShowOnlySuccessful}
+      <Card>
+        <CardHeader>
+          <CardTitle>Trade History</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center space-x-2 mb-4">
+            <Switch
+              checked={showOnlySuccessful}
+              onCheckedChange={setShowOnlySuccessful}
+            />
+            <label className="text-sm font-medium">Show only executed trades</label>
+          </div>
+          <DataTable 
+            columns={columns} 
+            data={showOnlySuccessful ? tradeEvents.filter(event => event.executed) : tradeEvents} 
           />
-          <label
-            htmlFor="show-only-successful"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Show only trades with positions
-          </label>
-        </div>
-        <DataTable
-          columns={columns}
-          data={[...tradeEvents]
-            .filter((event) => !showOnlySuccessful || event.success)
-            .reverse()}
-        />
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
