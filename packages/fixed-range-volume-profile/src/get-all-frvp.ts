@@ -88,6 +88,10 @@ export async function getFrvpProfiles(
     timeframeAmount: input.timeframeAmount,
     timeframeUnit: input.timeframeUnit,
     pair: input.pair,
+    alpaca: {
+      keyId: '',
+      secretKey: '',
+    },
   });
   log();
 

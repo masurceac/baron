@@ -12,7 +12,7 @@ import {
 	predefinedFrvp,
 } from '@baron/db/schema';
 import { AiModelEnum, AiModelPriceStrategyEnum, AiModelStrategyEnum } from '@baron/schema';
-import { WorkflowEntrypoint, WorkflowEvent, WorkflowStep } from 'cloudflare:workers';
+import { env, WorkflowEntrypoint, WorkflowEvent, WorkflowStep } from 'cloudflare:workers';
 import { NonRetryableError } from 'cloudflare:workflows';
 import { add, sub } from 'date-fns';
 import { and, eq } from 'drizzle-orm';
@@ -43,6 +43,10 @@ export class LiveTradeRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Live
 						timeframeAmount: infoBar.timeframeAmount,
 						timeframeUnit: infoBar.timeframeUnit,
 						pair: roomDetails.tradingRoom.pair,
+						alpaca: {
+							keyId: env.ALPACA_KEY_ID!,
+							secretKey: env.ALPACA_SECRET_KEY!,
+						},
 					});
 
 					return {
@@ -61,6 +65,10 @@ export class LiveTradeRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Live
 				timeframeAmount: 1,
 				timeframeUnit: TimeUnit.Min,
 				pair: roomDetails.tradingRoom.pair,
+				alpaca: {
+					keyId: env.ALPACA_KEY_ID!,
+					secretKey: env.ALPACA_SECRET_KEY!,
+				},
 			});
 
 			if (!result?.length) {

@@ -105,6 +105,10 @@ export async function getFrvpForBuffer(input: {
           timeframeAmount: childSettings.childIntervalAmount,
           timeframeUnit: childSettings.childIntervalUnit,
           pair: input.tradingPair,
+          alpaca: {
+            keyId: '',
+            secretKey: '',
+          },
         });
         bars.push(barTicks);
       }),

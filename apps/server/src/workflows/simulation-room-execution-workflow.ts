@@ -14,7 +14,7 @@ import {
 	simulationRoomToInformativeBar,
 } from '@baron/db/schema';
 import { AiModelEnum, AiModelPriceStrategyEnum, AiModelStrategyEnum } from '@baron/schema';
-import { WorkflowEntrypoint, WorkflowEvent, WorkflowStep } from 'cloudflare:workers';
+import { env, WorkflowEntrypoint, WorkflowEvent, WorkflowStep } from 'cloudflare:workers';
 import { NonRetryableError } from 'cloudflare:workflows';
 import { addMinutes, isAfter, isBefore, sub } from 'date-fns';
 import { and, count, desc, eq, or } from 'drizzle-orm';
@@ -140,6 +140,10 @@ export class SimulationRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Sim
 						timeframeAmount: infoBar.timeframeAmount,
 						timeframeUnit: infoBar.timeframeUnit,
 						pair: execution.simulationRoom.pair,
+						alpaca: {
+							keyId: env.ALPACA_KEY_ID!,
+							secretKey: env.ALPACA_SECRET_KEY!,
+						},
 					});
 
 					return {
@@ -158,6 +162,10 @@ export class SimulationRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Sim
 				timeframeAmount: 1,
 				timeframeUnit: TimeUnit.Min,
 				pair: execution.simulationRoom.pair,
+				alpaca: {
+					keyId: env.ALPACA_KEY_ID!,
+					secretKey: env.ALPACA_SECRET_KEY!,
+				},
 			});
 
 			if (!result?.length) {

@@ -7,5 +7,9 @@ export type FetchBarsFunction = {
     timeframeAmount: number;
     timeframeUnit: TimeUnit;
     pair: TradingPair;
+    alpaca: {
+      keyId: string;
+      secretKey: string;
+    };
   }): Promise<ChartBar[]>;
 };

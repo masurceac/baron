@@ -1,6 +1,7 @@
 import { OpenOrderAiResponse } from '@baron/ai/order-suggestion';
 import { fetchBars } from '@baron/bars-api';
 import { TimeUnit, TradeResult, TradingPair } from '@baron/common';
+import { env } from 'cloudflare:workers';
 import { add } from 'date-fns';
 
 type TradeType = {
@@ -37,6 +38,10 @@ export async function checkTradeSuccess(order: TradeType): Promise<{
 		timeframeAmount: 1,
 		timeframeUnit: TimeUnit.Min,
 		pair: order.pair,
+		alpaca: {
+			keyId: env.ALPACA_KEY_ID!,
+			secretKey: env.ALPACA_SECRET_KEY!,
+		},
 	});
 	for (const bar of bars) {
 		const barTimestamp = new Date(bar.Timestamp).getTime();

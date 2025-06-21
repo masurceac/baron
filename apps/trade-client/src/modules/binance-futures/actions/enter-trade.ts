@@ -61,6 +61,10 @@ async function getCurrentPrice(props: { pair: TradingPair }) {
     timeframeAmount: 1,
     timeframeUnit: TimeUnit.Min,
     pair: props.pair,
+    alpaca: {
+      keyId: process.env.ALPACA_KEY_ID!,
+      secretKey: process.env.ALPACA_SECRET_KEY!,
+    },
   });
 
   if (!result?.length) {
