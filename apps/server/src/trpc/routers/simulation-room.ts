@@ -26,6 +26,7 @@ async function triggerRoomExecution(roomId: string) {
 		.update(simulationRoom)
 		.set({
 			status: SimulationExecutionStatus.Running,
+			groupIdentifier: createId(),
 		})
 		.where(eq(simulationRoom.id, roomId))
 		.returning();
@@ -175,7 +176,6 @@ export const simulationRoomRouter = {
 						aiPrompt: input.data.aiPrompt.trim(),
 						pair: input.data.pair,
 						startDate: input.data.startDate,
-						groupIdentifier: createId(),
 						maxTradesToExecute: input.data.maxTradesToExecute,
 						trailingStopLoss: input.data.trailingStopLoss,
 						crazyMode: input.data.crazyMode,
