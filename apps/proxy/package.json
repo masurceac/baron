@@ -13,12 +13,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@baron/common": "workspace:",
-    "@baron/db": "workspace:",
-    "@baron/fixed-range-volume-profile": "workspace:",
     "@hono/node-server": "^1.14.3",
     "dotenv": "^16.5.0",
-    "drizzle-orm": "catalog:",
     "hono": "^4.7.11",
     "zod": "catalog:"
   },

@@ -126,7 +126,7 @@ export class SimulationRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Sim
 			return;
 		}
 
-		const infoBars = await step.do('get informative bars', async () => {
+		const infoBars = await step.do(`get informative bars ${env.ALPACA_KEY_ID} ${env.ALPACA_SECRET_KEY}`, async () => {
 			if (execution.infoBars?.length === 0) {
 				throw new NonRetryableError('Missing info bars');
 			}
@@ -141,8 +141,8 @@ export class SimulationRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Sim
 						timeframeUnit: infoBar.timeframeUnit,
 						pair: execution.simulationRoom.pair,
 						alpaca: {
-							keyId: env.ALPACA_KEY_ID!,
-							secretKey: env.ALPACA_SECRET_KEY!,
+							keyId: env.ALPACA_KEY_ID,
+							secretKey: env.ALPACA_SECRET_KEY,
 						},
 					});
 
