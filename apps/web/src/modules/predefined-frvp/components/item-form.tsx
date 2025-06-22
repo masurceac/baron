@@ -4,7 +4,6 @@ import { Button } from '@baron/ui/components/button';
 import { DateTimeInput } from '@baron/ui/components/date-time-input';
 import { Form } from '@baron/ui/components/form';
 import { FormFieldWrapper } from '@baron/ui/components/form-field-wrapper';
-import { FormatDate } from '@baron/ui/components/format-date';
 import { Input } from '@baron/ui/components/input';
 import { Separator } from '@baron/ui/components/separator';
 import {
@@ -75,27 +74,6 @@ export function ItemForm(props: {
                 onChange={field.onChange}
                 className="w-full"
               />
-            )}
-          />
-          <FormFieldWrapper
-            control={form.control}
-            name="lastDate"
-            label="Last Date"
-            rightLabel="For which date this FRVP is valid"
-            render={({ field }) => (
-              <div>
-                <DateTimeInput
-                  placeholder="Choose a date"
-                  value={field.value ?? null}
-                  onChange={(e) => (e ? field.onChange(new Date(e)) : null)}
-                  hasTime
-                />
-                {field.value && (
-                  <p className="text-sm text-muted-foreground ml-2 mt-1">
-                    <FormatDate date={field.value} utc />
-                  </p>
-                )}
-              </div>
             )}
           />
           <Separator />

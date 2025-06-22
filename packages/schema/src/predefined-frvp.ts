@@ -22,5 +22,4 @@ export const createPredefinedFrvpSchema = z.object({
   profiles: z.array(predefinedFrvpProfileSchema),
   name: z.string(),
   pair: z.nativeEnum(TradingPair),
-  lastDate: z.date(),
 });

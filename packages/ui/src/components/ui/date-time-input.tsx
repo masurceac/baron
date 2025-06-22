@@ -53,10 +53,37 @@ export function DateTimeInput({
       return;
     }
 
-    const initialDate = new Date(value);
-    date?.setMinutes(initialDate.getMinutes());
-    date?.setHours(initialDate.getHours());
-    onChange(date.toISOString());
+    const currentDate = new Date(value);
+    const newDate = new Date(date);
+    
+    newDate.setHours(currentDate.getHours());
+    newDate.setMinutes(currentDate.getMinutes());
+    newDate.setSeconds(currentDate.getSeconds());
+    newDate.setMilliseconds(currentDate.getMilliseconds());
+    
+    onChange(newDate.toISOString());
+  };
+
+  const handleMonthChange = (date: Date | undefined) => {
+    if (!date || !value) {
+      return;
+    }
+
+    const currentDate = new Date(value);
+    const newMonth = new Date(date);
+    
+    const currentDay = currentDate.getDate();
+    const daysInNewMonth = new Date(newMonth.getFullYear(), newMonth.getMonth() + 1, 0).getDate();
+    
+    const targetDay = Math.min(currentDay, daysInNewMonth);
+    
+    const adjustedDate = new Date(newMonth.getFullYear(), newMonth.getMonth(), targetDay);
+    adjustedDate.setHours(currentDate.getHours());
+    adjustedDate.setMinutes(currentDate.getMinutes());
+    adjustedDate.setSeconds(currentDate.getSeconds());
+    adjustedDate.setMilliseconds(currentDate.getMilliseconds());
+    
+    onChange(adjustedDate.toISOString());
   };
 
   return (
@@ -89,7 +116,7 @@ export function DateTimeInput({
           mode="single"
           defaultMonth={value ? new Date(value) : undefined}
           selected={value ? new Date(value) : undefined}
-          onMonthChange={(e) => handleSelect(e)}
+          onMonthChange={(e) => handleMonthChange(e)}
           onSelect={(e) => handleSelect(e)}
           initialFocus
           captionLayout="dropdown"

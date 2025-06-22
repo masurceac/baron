@@ -4,6 +4,7 @@ import { predefinedFrvp } from '@baron/db/schema';
 import { createPredefinedFrvpSchema } from '@baron/schema';
 import { protectedProcedure } from '@baron/trpc-server';
 import { TRPCError } from '@trpc/server';
+import { isAfter } from 'date-fns';
 import { and, count, desc, eq, ilike, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -23,12 +24,20 @@ export const frvpRouter = {
 			});
 		}
 
+		const lastDate = input.profiles.reduce((acc, profile) => {
+			const lastZone = profile.zones.reduce((acc, zone) => {
+				return zone.zoneEndAt && isAfter(zone.zoneEndAt, acc) ? zone.zoneEndAt : acc;
+			}, new Date('2000-01-01'));
+
+			return isAfter(lastZone, acc) ? lastZone : acc;
+		}, new Date('2000-01-01'));
+
 		const [frvp] = await db
 			.insert(predefinedFrvp)
 			.values({
 				name: input.name,
 				pair: input.pair,
-				lastDate: input.lastDate,
+				lastDate: lastDate,
 				profiles: input.profiles,
 			})
 			.returning();
@@ -53,12 +62,20 @@ export const frvpRouter = {
 			const db = getDatabase();
 			const { id, data } = input;
 
+			const lastDate = data.profiles.reduce((acc, profile) => {
+				const lastZone = profile.zones.reduce((acc, zone) => {
+					return zone.zoneEndAt && isAfter(zone.zoneEndAt, acc) ? zone.zoneEndAt : acc;
+				}, new Date('2000-01-01'));
+
+				return isAfter(lastZone, acc) ? lastZone : acc;
+			}, new Date('2000-01-01'));
+
 			const [frvp] = await db
 				.update(predefinedFrvp)
 				.set({
 					name: data.name,
 					pair: data.pair,
-					lastDate: data.lastDate,
+					lastDate: lastDate,
 					profiles: data.profiles,
 				})
 				.where(eq(predefinedFrvp.id, id))
