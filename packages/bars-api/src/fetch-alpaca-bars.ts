@@ -25,7 +25,7 @@ export const fetchAlpacaBars: FetchBarsFunction = async (
     paper: true,
   });
 
-  const r = await alpaca.getCryptoBars([input.pair], {
+  const r = await alpaca.getMultiBarsV2([input.pair], {
     start: input.start,
     end: input.end,
     timeframe: alpaca.newTimeframe(
@@ -39,5 +39,14 @@ export const fetchAlpacaBars: FetchBarsFunction = async (
   if (!bars) {
     throw new Error(`No bars found for pair ${input.pair}`);
   }
-  return bars;
+  return bars.map((bar) => ({
+    VWAP: bar.VWAP,
+    TradeCount: bar.TradeCount,
+    Open: bar.OpenPrice,
+    High: bar.HighPrice,
+    Low: bar.LowPrice,
+    Close: bar.ClosePrice,
+    Volume: bar.Volume,
+    Timestamp: bar.Timestamp,
+  }));
 };
