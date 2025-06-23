@@ -146,6 +146,13 @@ export function ModelsMultiSelect(props: {
               >
                 Gemini 2.5 Pro Preview 06-05
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  handleSelect(AiModelEnum.Gemini, GeminiModelEnum.Gemini25Pro)
+                }
+              >
+                Gemini 2.5 Pro
+              </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
         </DropdownMenuContent>
