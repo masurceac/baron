@@ -159,7 +159,7 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
                       min={1} 
                       max={10} 
                       value={field.value}
-                      onValueChange={field.onChange}
+                      onChange={field.onChange}
                     />
                   </FormControl>
                   <FormMessage />
