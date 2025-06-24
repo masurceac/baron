@@ -59,7 +59,7 @@ export function TradeFormConnect(props: {
   const [connected, setConnected] = useState(false);
   const [tradeEvents, setTradeEvents] = useState<TradeEvent[]>([]);
   const [showOnlySuccessful, setShowOnlySuccessful] = useState(false);
-  
+
   // Signals counting ref
   const consecutiveSignalsRef = useRef<{
     direction: TradeDirection | null;
@@ -100,30 +100,33 @@ export function TradeFormConnect(props: {
         const currentDirection = data.trade.type;
         const currentCount = consecutiveSignalsRef.current.count;
         const currentDirectionState = consecutiveSignalsRef.current.direction;
-        
+
         const isSameDirection = currentDirectionState === currentDirection;
         const newCount = isSameDirection ? currentCount + 1 : 1;
-        const shouldExecute = isSameDirection && newCount >= props.roomData.signalsCount;
-        
+        const shouldExecute =
+          isSameDirection && newCount >= props.roomData.signalsCount;
+
         consecutiveSignalsRef.current = {
           direction: currentDirection,
           count: newCount,
         };
-        
-        const success = shouldExecute ? await enterTrade(data, props.roomData) : false;
-        
+
+        const success = shouldExecute
+          ? await enterTrade(data, props.roomData)
+          : false;
+
         if (shouldExecute) {
           consecutiveSignalsRef.current = { direction: null, count: 0 };
         }
 
         setTradeEvents((prev) => [
-          ...prev,
           {
             timestamp: new Date().toISOString(),
             data,
             success,
             executed: shouldExecute,
           },
+          ...prev,
         ]);
       },
     });
@@ -186,7 +189,7 @@ export function TradeFormConnect(props: {
   ];
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 max-w-screen-md mx-auto">
       <style>{pulseAnimation}</style>
       <div className="flex items-center gap-2">
         <div className="relative">
@@ -242,11 +245,15 @@ export function TradeFormConnect(props: {
               <p className="font-medium">{props.roomData.signalsCount}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Consecutive Signals</p>
+              <p className="text-sm text-muted-foreground">
+                Consecutive Signals
+              </p>
               <p className="font-medium">
                 {consecutiveSignalsRef.current.direction ? (
                   <>
-                    {consecutiveSignalsRef.current.direction} ({consecutiveSignalsRef.current.count}/{props.roomData.signalsCount})
+                    {consecutiveSignalsRef.current.direction} (
+                    {consecutiveSignalsRef.current.count}/
+                    {props.roomData.signalsCount})
                   </>
                 ) : (
                   'None'
@@ -267,11 +274,17 @@ export function TradeFormConnect(props: {
               checked={showOnlySuccessful}
               onCheckedChange={setShowOnlySuccessful}
             />
-            <label className="text-sm font-medium">Show only executed trades</label>
+            <label className="text-sm font-medium">
+              Show only executed trades
+            </label>
           </div>
-          <DataTable 
-            columns={columns} 
-            data={showOnlySuccessful ? tradeEvents.filter(event => event.executed) : tradeEvents} 
+          <DataTable
+            columns={columns}
+            data={
+              showOnlySuccessful
+                ? tradeEvents.filter((event) => event.executed)
+                : tradeEvents
+            }
           />
         </CardContent>
       </Card>
