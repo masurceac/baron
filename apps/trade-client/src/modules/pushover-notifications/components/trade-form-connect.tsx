@@ -21,6 +21,14 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { sendNotification } from '../actions/send-notification';
 import { PushoverTradeRoomFormSchema } from '../schema';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@baron/ui/components/dialog';
+import { Button } from '@baron/ui/components/button';
 
 interface NotificationEvent {
   timestamp: string;
@@ -56,7 +64,7 @@ export function TradeFormConnect(props: {
     NotificationEvent[]
   >([]);
   const [showOnlySent, setShowOnlySent] = useState(false);
-  
+
   // Signals counting ref
   const consecutiveSignalsRef = useRef<{
     direction: TradeDirection | null;
@@ -97,18 +105,21 @@ export function TradeFormConnect(props: {
         const currentDirection = data.trade.type;
         const currentCount = consecutiveSignalsRef.current.count;
         const currentDirectionState = consecutiveSignalsRef.current.direction;
-        
+
         const isSameDirection = currentDirectionState === currentDirection;
         const newCount = isSameDirection ? currentCount + 1 : 1;
-        const shouldSend = isSameDirection && newCount >= props.roomData.signalsCount;
-        
+        const shouldSend =
+          isSameDirection && newCount >= props.roomData.signalsCount;
+
         consecutiveSignalsRef.current = {
           direction: currentDirection,
           count: newCount,
         };
-        
-        const success = shouldSend ? await sendNotification(data, props.roomData) : false;
-        
+
+        const success = shouldSend
+          ? await sendNotification(data, props.roomData)
+          : false;
+
         if (shouldSend) {
           consecutiveSignalsRef.current = { direction: null, count: 0 };
         }
@@ -181,12 +192,29 @@ export function TradeFormConnect(props: {
         </Badge>
       ),
     },
+    {
+      id: 'reason',
+      header: 'Reason',
+      cell: ({ row: { original } }) => (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline">View</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Reason</DialogTitle>
+            </DialogHeader>
+            <div className="whitespace-pre">{original.data.trade.reason}</div>
+          </DialogContent>
+        </Dialog>
+      ),
+    },
   ];
 
   const sortedEvents = [...notificationEvents].reverse();
 
   return (
-    <div className="p-4 space-y-4 max-w-screen-md mx-auto">
+    <div className="p-4 space-y-4 max-w-screen-lg mx-auto">
       <style>{pulseAnimation}</style>
       <div className="flex items-center gap-2">
         <div className="relative">

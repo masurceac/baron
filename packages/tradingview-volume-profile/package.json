@@ -1,0 +1,23 @@
+{
+  "name": "@baron/tradingview-volume-profile",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "dev": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "@baron/bars-api": "workspace:*",
+    "@baron/common": "workspace:*",
+    "@baron/volume-profile": "workspace:*",
+    "@types/node": "catalog:",
+    "date-fns": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.4"
+  }
+}

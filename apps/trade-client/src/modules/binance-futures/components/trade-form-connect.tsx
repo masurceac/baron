@@ -3,6 +3,14 @@
 import { TradeDirection } from '@baron/common';
 import { Badge } from '@baron/ui/components/badge';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@baron/ui/components/dialog';
+import { Button } from '@baron/ui/components/button';
+import {
   Card,
   CardContent,
   CardHeader,
@@ -186,10 +194,27 @@ export function TradeFormConnect(props: {
         </Badge>
       ),
     },
+    {
+      id: 'reason',
+      header: 'Reason',
+      cell: ({ row: { original } }) => (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline">View</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Reason</DialogTitle>
+            </DialogHeader>
+            <div className="whitespace-pre">{original.data.trade.reason}</div>
+          </DialogContent>
+        </Dialog>
+      ),
+    },
   ];
 
   return (
-    <div className="p-4 space-y-4 max-w-screen-md mx-auto">
+    <div className="p-4 space-y-4 max-w-screen-lg mx-auto">
       <style>{pulseAnimation}</style>
       <div className="flex items-center gap-2">
         <div className="relative">

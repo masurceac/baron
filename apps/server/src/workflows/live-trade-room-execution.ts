@@ -227,6 +227,7 @@ export class LiveTradeRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Live
 					trade: {
 						...getPositionToOpen,
 						pair: roomDetails.tradingRoom.pair,
+						reason: aiPromptResult.map((p) => p.reason).join('\nEND REASON\n'),
 					},
 				});
 			});

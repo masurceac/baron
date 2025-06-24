@@ -12,8 +12,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@baron/ui/components/accordion';
+import { Textarea } from '@baron/ui/components/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@baron/ui/components/dialog';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ForwardedRef, useImperativeHandle } from 'react';
+import { ForwardedRef, useImperativeHandle, useState } from 'react';
 import {
   SubmitHandler,
   useFieldArray,
@@ -21,10 +29,24 @@ import {
   UseFormReturn,
 } from 'react-hook-form';
 import { z } from 'zod';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Upload } from 'lucide-react';
 import { NumericInput } from '@baron/ui/components/numeric-input';
+import { toast } from 'sonner';
 
 type FormSchema = z.infer<typeof createPredefinedFrvpSchema>;
+
+type FrvpResultProfile = {
+  startDate: string;
+  endDate: string;
+  VAL: number;
+  VAH: number;
+  POC: number;
+};
+
+type FrvpResult = {
+  label: string;
+  profiles: FrvpResultProfile[];
+};
 
 export type VPCFormRef = {
   form: UseFormReturn<FormSchema>;
@@ -35,6 +57,9 @@ export function ItemForm(props: {
   ref?: ForwardedRef<VPCFormRef>;
   onSubmit: SubmitHandler<FormSchema>;
 }) {
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [jsonInput, setJsonInput] = useState('');
+
   const form = useForm<FormSchema>({
     defaultValues: props.defaultValues,
     resolver: zodResolver(createPredefinedFrvpSchema),
@@ -51,6 +76,35 @@ export function ItemForm(props: {
   useImperativeHandle(props.ref, () => ({
     form,
   }));
+
+  const parseAndImportJson = () => {
+    try {
+      const data: FrvpResult = JSON.parse(jsonInput);
+      
+      if (!data.label || !Array.isArray(data.profiles)) {
+        throw new Error('Invalid JSON format: missing label or profiles array');
+      }
+
+      const newProfile = {
+        label: data.label,
+        zones: data.profiles.map((profile) => ({
+          zoneStartAt: new Date(profile.startDate),
+          zoneEndAt: new Date(profile.endDate),
+          volumeAreaLow: profile.VAL,
+          volumeAreaHigh: profile.VAH,
+          pointOfControl: profile.POC,
+        })),
+      };
+
+      profiles.append(newProfile);
+      setJsonInput('');
+      setIsImportDialogOpen(false);
+      toast.success(`Profile "${data.label}" imported successfully with ${data.profiles.length} zones`);
+    } catch (error) {
+      console.error('Failed to parse JSON:', error);
+      toast.error('Invalid JSON format. Please check your input.');
+    }
+  };
 
   return (
     <Form {...form}>
@@ -81,20 +135,62 @@ export function ItemForm(props: {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium">Profiles</h3>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  profiles.append({
-                    label: '',
-                    zones: [],
-                  })
-                }
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Profile
-              </Button>
+              <div className="flex gap-2">
+                <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button type="button" variant="outline" size="sm">
+                      <Upload className="w-4 h-4 mr-2" />
+                      Import JSON
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Import Profile from JSON</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <Textarea
+                        placeholder="Paste your frvp-result JSON here..."
+                        value={jsonInput}
+                        onChange={(e) => setJsonInput(e.target.value)}
+                        className="min-h-[200px]"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setJsonInput('');
+                            setIsImportDialogOpen(false);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={parseAndImportJson}
+                          disabled={!jsonInput.trim()}
+                        >
+                          Import
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    profiles.append({
+                      label: '',
+                      zones: [],
+                    })
+                  }
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Profile
+                </Button>
+              </div>
             </div>
 
             {profiles.fields.map((profile, profileIndex) => (

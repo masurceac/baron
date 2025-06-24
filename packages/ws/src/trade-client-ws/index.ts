@@ -15,6 +15,7 @@ export const tradeClientWebsockets = createWebSocketAPI({
           stopLossPrice: z.number(),
           takeProfitPrice: z.number(),
           pair: z.nativeEnum(TradingPair),
+          reason: z.string(),
         }),
       }),
     },
