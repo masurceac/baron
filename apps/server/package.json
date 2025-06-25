@@ -20,6 +20,7 @@
 		"@baron/fixed-range-volume-profile": "workspace:",
 		"@baron/order-api": "workspace:",
 		"@baron/schema": "workspace:",
+		"@baron/tradingview-volume-profile": "workspace:*",
 		"@baron/trpc-server": "workspace:*",
 		"@baron/ws": "workspace:*",
 		"@paralleldrive/cuid2": "catalog:",

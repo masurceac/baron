@@ -1,18 +1,14 @@
+import { trpc } from '@/core/trpc';
 import { TradingPairSelect } from '@/modules/inputs/trading-pair-select';
 import { createPredefinedFrvpSchema, PredefinedFrvpValue } from '@baron/schema';
-import { Button } from '@baron/ui/components/button';
-import { DateTimeInput } from '@baron/ui/components/date-time-input';
-import { Form } from '@baron/ui/components/form';
-import { FormFieldWrapper } from '@baron/ui/components/form-field-wrapper';
-import { Input } from '@baron/ui/components/input';
-import { Separator } from '@baron/ui/components/separator';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@baron/ui/components/accordion';
-import { Textarea } from '@baron/ui/components/textarea';
+import { Button } from '@baron/ui/components/button';
+import { DateTimeInput } from '@baron/ui/components/date-time-input';
 import {
   Dialog,
   DialogContent,
@@ -20,7 +16,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@baron/ui/components/dialog';
+import { Form } from '@baron/ui/components/form';
+import { FormFieldWrapper } from '@baron/ui/components/form-field-wrapper';
+import { Input } from '@baron/ui/components/input';
+import { NumericInput } from '@baron/ui/components/numeric-input';
+import { Separator } from '@baron/ui/components/separator';
+import { Textarea } from '@baron/ui/components/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Globe, Plus, Trash2, Upload } from 'lucide-react';
 import { ForwardedRef, useImperativeHandle, useState } from 'react';
 import {
   SubmitHandler,
@@ -28,10 +31,8 @@ import {
   useForm,
   UseFormReturn,
 } from 'react-hook-form';
-import { z } from 'zod';
-import { Plus, Trash2, Upload } from 'lucide-react';
-import { NumericInput } from '@baron/ui/components/numeric-input';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
 type FormSchema = z.infer<typeof createPredefinedFrvpSchema>;
 
@@ -58,7 +59,9 @@ export function ItemForm(props: {
   onSubmit: SubmitHandler<FormSchema>;
 }) {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isFetchDialogOpen, setIsFetchDialogOpen] = useState(false);
   const [jsonInput, setJsonInput] = useState('');
+  const [fetchCodeInput, setFetchCodeInput] = useState('');
 
   const form = useForm<FormSchema>({
     defaultValues: props.defaultValues,
@@ -73,6 +76,31 @@ export function ItemForm(props: {
     },
   });
 
+  const fetchFromCode = trpc.frvp.fetchFromCode.useMutation({
+    onSuccess: (data: any) => {
+      const newProfile = {
+        label: data.label,
+        zones: data.profiles.map((profile: any) => ({
+          zoneStartAt: new Date(profile.startDate),
+          zoneEndAt: new Date(profile.endDate),
+          volumeAreaLow: profile.VAL,
+          volumeAreaHigh: profile.VAH,
+          pointOfControl: profile.POC,
+        })),
+      };
+
+      profiles.append(newProfile);
+      setFetchCodeInput('');
+      setIsFetchDialogOpen(false);
+      toast.success(
+        `Profile "${data.label}" fetched successfully with ${data.profiles.length} zones`,
+      );
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to execute fetch code');
+    },
+  });
+
   useImperativeHandle(props.ref, () => ({
     form,
   }));
@@ -80,7 +108,7 @@ export function ItemForm(props: {
   const parseAndImportJson = () => {
     try {
       const data: FrvpResult = JSON.parse(jsonInput);
-      
+
       if (!data.label || !Array.isArray(data.profiles)) {
         throw new Error('Invalid JSON format: missing label or profiles array');
       }
@@ -99,11 +127,21 @@ export function ItemForm(props: {
       profiles.append(newProfile);
       setJsonInput('');
       setIsImportDialogOpen(false);
-      toast.success(`Profile "${data.label}" imported successfully with ${data.profiles.length} zones`);
+      toast.success(
+        `Profile "${data.label}" imported successfully with ${data.profiles.length} zones`,
+      );
     } catch (error) {
       console.error('Failed to parse JSON:', error);
       toast.error('Invalid JSON format. Please check your input.');
     }
+  };
+
+  const handleFetchFromCode = () => {
+    if (!fetchCodeInput.trim()) {
+      toast.error('Please enter fetch code');
+      return;
+    }
+    fetchFromCode.mutate({ fetchCode: fetchCodeInput.trim() });
   };
 
   return (
@@ -136,7 +174,10 @@ export function ItemForm(props: {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium">Profiles</h3>
               <div className="flex gap-2">
-                <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+                <Dialog
+                  open={isImportDialogOpen}
+                  onOpenChange={setIsImportDialogOpen}
+                >
                   <DialogTrigger asChild>
                     <Button type="button" variant="outline" size="sm">
                       <Upload className="w-4 h-4 mr-2" />
@@ -171,6 +212,51 @@ export function ItemForm(props: {
                           disabled={!jsonInput.trim()}
                         >
                           Import
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <Dialog
+                  open={isFetchDialogOpen}
+                  onOpenChange={setIsFetchDialogOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button type="button" variant="outline" size="sm">
+                      <Globe className="w-4 h-4 mr-2" />
+                      Import from Fetch
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Execute Fetch Code</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <Textarea
+                        placeholder="fetch('https://api.example.com/data', { headers: { 'Authorization': 'Bearer token' } }))"
+                        value={fetchCodeInput}
+                        onChange={(e) => setFetchCodeInput(e.target.value)}
+                        className="min-h-[200px] max-w-full break-all"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setFetchCodeInput('');
+                            setIsFetchDialogOpen(false);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={handleFetchFromCode}
+                          disabled={
+                            !fetchCodeInput.trim() || fetchFromCode.isPending
+                          }
+                        >
+                          {fetchFromCode.isPending ? 'Executing...' : 'Import'}
                         </Button>
                       </div>
                     </div>

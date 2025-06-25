@@ -3,7 +3,6 @@ import { TimeUnit, TradingPair } from '@baron/common';
 import { calculateVolumeProfile } from '@baron/volume-profile';
 import { isBefore } from 'date-fns';
 import { z } from 'zod';
-import { writeFileSync } from 'fs';
 
 const tradingViewFRVPPluginPointSchema = z.object({
   time_t: z.number(),
@@ -148,11 +147,10 @@ export async function getDataFromTradingView(
       .parse(data);
 
     const frvpResult = await getFrvpProfilesFromData(parsed.payload.sources);
-
-    writeFileSync('frvp-result.json', JSON.stringify(frvpResult, null, 2));
-    console.log('FRVP result written to frvp-result.json');
+    return frvpResult;
   } catch (parseError) {
     console.error('Failed to parse response:', parseError);
     console.error('Raw data:', data);
+    throw parseError;
   }
 }
