@@ -7,6 +7,7 @@ import {
 	informativeBarConfig,
 	liveTradingRoom,
 	liveTradingRoomLog,
+	liveTradingRoomPushoverNotification,
 	liveTradingRoomSignal,
 	liveTradingRoomToInformativeBarConfig,
 	predefinedFrvp,
@@ -17,6 +18,7 @@ import { NonRetryableError } from 'cloudflare:workflows';
 import { add, sub } from 'date-fns';
 import { and, eq } from 'drizzle-orm';
 import { LiveTradeRoomExecutionWorkflowParams } from './types';
+import { TradeClientServerWebsocketEvents } from '@baron/ws/trade-client-ws';
 
 export class LiveTradeRoomExecutionWorkflow extends WorkflowEntrypoint<Env, LiveTradeRoomExecutionWorkflowParams> {
 	override async run(event: WorkflowEvent<LiveTradeRoomExecutionWorkflowParams>, step: WorkflowStep) {
@@ -223,13 +225,15 @@ export class LiveTradeRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Live
 			await step.do('send signal', async () => {
 				const durableObject = await this.env.TRADE_ROOM_DO.idFromName(roomDetails.tradingRoom.id);
 				const stub = await this.env.TRADE_ROOM_DO.get(durableObject);
-				stub.emitEnterTradeEvent({
+				const event: TradeClientServerWebsocketEvents['enterTrade'] = {
 					trade: {
 						...getPositionToOpen,
 						pair: roomDetails.tradingRoom.pair,
 						reason: aiPromptResult.map((p) => p.reason).join('\nEND REASON\n'),
 					},
-				});
+				};
+				stub.emitEnterTradeEvent(event);
+				await this.sendNotification(roomDetails.tradingRoom.id, event);
 			});
 		}
 
@@ -274,5 +278,49 @@ export class LiveTradeRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Live
 		}
 
 		return tradeRoom;
+	}
+	private async sendNotification(roomId: string, data: TradeClientServerWebsocketEvents['enterTrade']): Promise<void> {
+		const db = getDrizzleClient(this.env.DATABASE_CONNECTION_STRING);
+		const subscribedNotifications = await db
+			.select()
+			.from(liveTradingRoomPushoverNotification)
+			.where(eq(liveTradingRoomPushoverNotification.liveTradingRoomId, roomId));
+
+		await Promise.all(
+			subscribedNotifications.map(async (setup) => {
+				try {
+					const message = `Trade Signal: ${data.trade.type} ${data.trade.pair}
+Stop Loss: ${data.trade.stopLossPrice.toFixed(2)}
+Take Profit: ${data.trade.takeProfitPrice.toFixed(2)}
+Room: ${setup.name}`;
+
+					const response = await fetch('https://api.pushover.net/1/messages.json', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({
+							token: setup.pushoverAppToken,
+							user: setup.pushoverUserKey,
+							message: message,
+							title: `Trade Signal - ${data.trade.pair}`,
+							priority: 1,
+							sound: 'cosmic',
+						}),
+					});
+
+					if (!response.ok) {
+						console.error('Failed to send pushover notification:', response.statusText);
+						return false;
+					}
+
+					console.log('Pushover notification sent successfully');
+					return true;
+				} catch (error) {
+					console.error('Error sending pushover notification:', error);
+					return false;
+				}
+			}),
+		);
 	}
 }

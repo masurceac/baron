@@ -412,3 +412,25 @@ export const liveTradingRoomLog = pgTable('live_trading_room_log', {
 
   suggestions: jsonb('suggestions').notNull().$type<OpenOrderAiResponse[]>(),
 });
+
+export const liveTradingRoomPushoverNotification = pgTable(
+  'live_trading_room_pushover_notification',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    name: text('name').notNull(),
+    liveTradingRoomId: text('live_trading_room_id')
+      .notNull()
+      .references(() => liveTradingRoom.id, {
+        onDelete: 'cascade',
+        onUpdate: 'cascade',
+      }),
+    signalsCount: integer('signals_count').notNull().default(1),
+    pushoverUserKey: text('pushover_user_key').notNull(),
+    pushoverAppToken: text('pushover_app_token').notNull(),
+  },
+);
