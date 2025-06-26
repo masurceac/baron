@@ -47,7 +47,9 @@ export function ModelsMultiSelect(props: {
       case AiModelEnum.Gemini:
         return model === GeminiModelEnum.Gemini25FlashPreview0520
           ? 'Gemini 2.5 Flash Preview 05-20'
-          : 'Gemini 2.5 Pro Preview 06-05';
+          : model === GeminiModelEnum.Gemini25ProPreview0605
+            ? 'Gemini 2.5 Pro Preview 06-05'
+            : 'Gemini 2.5 Pro';
     }
   };
 

@@ -9,6 +9,10 @@ import { TRPCError } from '@trpc/server';
 import { env } from 'cloudflare:workers';
 import { and, count, desc, eq, ilike, inArray, SQL } from 'drizzle-orm';
 import { z } from 'zod';
+import { checkTradeSuccess } from '@/services/check-trade-success';
+import { fetchBars } from '@baron/bars-api';
+import { TimeUnit } from '@baron/common';
+import { sub } from 'date-fns';
 
 export const liveTradingRoomRouter = {
 	create: protectedProcedure.input(liveTradingRoomSchema).mutation(async ({ input }) => {
@@ -314,6 +318,8 @@ export const liveTradingRoomRouter = {
 							id: liveTradingRoomSignal.id,
 							createdAt: liveTradingRoomSignal.createdAt,
 							suggestions: liveTradingRoomSignal.suggestions,
+							exitDate: liveTradingRoomSignal.exitDate,
+							exitBalance: liveTradingRoomSignal.exitBalance,
 						})
 						.from(liveTradingRoomSignal)
 						.where(and(...where))
@@ -322,5 +328,114 @@ export const liveTradingRoomRouter = {
 						.offset(skip);
 				},
 			});
+		}),
+
+	checkSignalTradeSuccess: protectedProcedure
+		.input(
+			z.object({
+				signalId: z.string(),
+				suggestionIndex: z.number().int().min(0),
+			}),
+		)
+		.mutation(async ({ input }) => {
+			const db = getDatabase();
+
+			// Get the signal with the live trading room info
+			const [signal] = await db
+				.select({
+					id: liveTradingRoomSignal.id,
+					createdAt: liveTradingRoomSignal.createdAt,
+					suggestions: liveTradingRoomSignal.suggestions,
+					liveTradingRoom: liveTradingRoom,
+				})
+				.from(liveTradingRoomSignal)
+				.innerJoin(liveTradingRoom, eq(liveTradingRoomSignal.liveTradingRoomId, liveTradingRoom.id))
+				.where(eq(liveTradingRoomSignal.id, input.signalId))
+				.limit(1);
+
+			if (!signal) {
+				throw new TRPCError({
+					code: 'NOT_FOUND',
+					message: 'Signal not found',
+				});
+			}
+
+			const suggestion = signal.suggestions[input.suggestionIndex];
+			if (!suggestion) {
+				throw new TRPCError({
+					code: 'BAD_REQUEST',
+					message: 'Suggestion index out of bounds',
+				});
+			}
+
+			if (suggestion.type === 'hold') {
+				throw new TRPCError({
+					code: 'BAD_REQUEST',
+					message: 'Cannot check trade success for hold signals',
+				});
+			}
+
+			if (!suggestion.stopLossPrice || !suggestion.takeProfitPrice) {
+				throw new TRPCError({
+					code: 'BAD_REQUEST',
+					message: 'Signal missing stop loss or take profit prices',
+				});
+			}
+
+			// Get current price at signal creation time
+			const result = await fetchBars({
+				start: sub(signal.createdAt, {
+					minutes: 5,
+				}),
+				end: signal.createdAt,
+				timeframeAmount: 1,
+				timeframeUnit: TimeUnit.Min,
+				pair: signal.liveTradingRoom.pair,
+				alpaca: {
+					keyId: env.ALPACA_KEY_ID!,
+					secretKey: env.ALPACA_SECRET_KEY!,
+				},
+			});
+
+			if (!result?.length) {
+				throw new TRPCError({
+					code: 'INTERNAL_SERVER_ERROR',
+					message: `No bars found for ${signal.liveTradingRoom.pair} at ${signal.createdAt.toISOString()}`,
+				});
+			}
+
+			// Calculate current price as average of high and low
+			const lastBar = result[result.length - 1];
+			if (!lastBar) {
+				throw new TRPCError({
+					code: 'INTERNAL_SERVER_ERROR',
+					message: 'No valid bar data found',
+				});
+			}
+			const currentPrice = (lastBar.High + lastBar.Low) / 2;
+
+			// Call checkTradeSuccess
+			const tradeResult = await checkTradeSuccess({
+				aiOrder: {
+					type: suggestion.type,
+					stopLossPrice: suggestion.stopLossPrice,
+					takeProfitPrice: suggestion.takeProfitPrice,
+				},
+				entryPrice: currentPrice,
+				entryTimestamp: signal.createdAt.toISOString(),
+				pair: signal.liveTradingRoom.pair,
+				trailingStop: false,
+			});
+
+			// Update the signal with exit date and balance
+			await db
+				.update(liveTradingRoomSignal)
+				.set({
+					exitDate: new Date(tradeResult.timestamp),
+					exitBalance: tradeResult.resultBalance,
+				})
+				.where(eq(liveTradingRoomSignal.id, input.signalId));
+
+			return tradeResult;
 		}),
 };

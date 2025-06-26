@@ -393,6 +393,9 @@ export const liveTradingRoomSignal = pgTable('live_trading_room_signal', {
     }),
 
   suggestions: jsonb('suggestions').notNull().$type<OpenOrderAiResponse[]>(),
+  
+  exitDate: timestamp('exit_date', { withTimezone: true }),
+  exitBalance: real('exit_balance'),
 });
 
 export const liveTradingRoomLog = pgTable('live_trading_room_log', {
