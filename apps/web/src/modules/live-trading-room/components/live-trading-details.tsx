@@ -18,6 +18,7 @@ import { FormatDate } from '@baron/ui/components/format-date';
 import { Suspense } from 'react';
 import { ItemActions } from './item-actions';
 import { DetailedTextDialog } from '@/modules/shared/components/detailed-text-dialog';
+import { SignalsTable } from './signals-table';
 
 function getModelLabel(type: AiModelEnum, model: string) {
   switch (type) {
@@ -121,6 +122,18 @@ function LiveTradingDetailsContent(props: { liveTradingRoomId: string }) {
               {infoBarIds?.length ?? 0} bars configured
             </p>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Signals</CardTitle>
+          <CardDescription>
+            AI-generated trading signals for this room
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SignalsTable liveTradingRoomId={props.liveTradingRoomId} />
         </CardContent>
       </Card>
     </div>

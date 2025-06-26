@@ -2,7 +2,7 @@ import { getDatabase } from '@/database';
 import { LiveTradeRoomExecutionWorkflowParams } from '@/workflows/types';
 import { paginate, paginatedSchema, SimulationExecutionStatus } from '@baron/common';
 import { queryJoin } from '@baron/db/client';
-import { informativeBarConfig, liveTradingRoom, liveTradingRoomToInformativeBarConfig, predefinedFrvp } from '@baron/db/schema';
+import { informativeBarConfig, liveTradingRoom, liveTradingRoomToInformativeBarConfig, predefinedFrvp, liveTradingRoomSignal } from '@baron/db/schema';
 import { liveTradingRoomSchema } from '@baron/schema';
 import { protectedProcedure } from '@baron/trpc-server';
 import { TRPCError } from '@trpc/server';
@@ -283,4 +283,44 @@ export const liveTradingRoomRouter = {
 
 		return deletedRoom[0];
 	}),
+
+	signals: protectedProcedure
+		.input(
+			z.object({
+				liveTradingRoomId: z.string(),
+			}).merge(paginatedSchema),
+		)
+		.query(async ({ input }) => {
+			const db = getDatabase();
+
+			const where: (SQL | undefined)[] = [eq(liveTradingRoomSignal.liveTradingRoomId, input.liveTradingRoomId)];
+
+			return paginate({
+				skip: input.skip,
+				take: input.take,
+				maxTake: 100,
+				count: async () => {
+					const query = db
+						.select({ count: count(liveTradingRoomSignal.id) })
+						.from(liveTradingRoomSignal)
+						.where(and(...where));
+
+					const result = await query;
+					return result[0]?.count ?? 0;
+				},
+				query: async ({ take, skip }) => {
+					return db
+						.select({
+							id: liveTradingRoomSignal.id,
+							createdAt: liveTradingRoomSignal.createdAt,
+							suggestions: liveTradingRoomSignal.suggestions,
+						})
+						.from(liveTradingRoomSignal)
+						.where(and(...where))
+						.orderBy(desc(liveTradingRoomSignal.createdAt))
+						.limit(take)
+						.offset(skip);
+				},
+			});
+		}),
 };
