@@ -2,7 +2,7 @@ import { getDatabase } from '@/database';
 import { LiveTradeRoomExecutionWorkflowParams } from '@/workflows/types';
 import { paginate, paginatedSchema, SimulationExecutionStatus } from '@baron/common';
 import { queryJoin } from '@baron/db/client';
-import { informativeBarConfig, liveTradingRoom, liveTradingRoomToInformativeBarConfig } from '@baron/db/schema';
+import { informativeBarConfig, liveTradingRoom, liveTradingRoomToInformativeBarConfig, predefinedFrvp } from '@baron/db/schema';
 import { liveTradingRoomSchema } from '@baron/schema';
 import { protectedProcedure } from '@baron/trpc-server';
 import { TRPCError } from '@trpc/server';
@@ -149,8 +149,10 @@ export const liveTradingRoomRouter = {
 						.innerJoin(informativeBarConfig, eq(liveTradingRoomToInformativeBarConfig.informativeBarConfigId, informativeBarConfig.id))
 						.where(eq(liveTradingRoomToInformativeBarConfig.liveTradingRoomId, liveTradingRoom.id)),
 				),
+				predefinedFrvp: predefinedFrvp,
 			})
 			.from(liveTradingRoom)
+			.innerJoin(predefinedFrvp, eq(liveTradingRoom.predefinedFrvpId, predefinedFrvp.id))
 			.where(eq(liveTradingRoom.id, input.id))
 			.limit(1);
 

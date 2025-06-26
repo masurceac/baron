@@ -17,6 +17,7 @@ import {
 import { FormatDate } from '@baron/ui/components/format-date';
 import { Suspense } from 'react';
 import { ItemActions } from './item-actions';
+import { DetailedTextDialog } from '@/modules/shared/components/detailed-text-dialog';
 
 function getModelLabel(type: AiModelEnum, model: string) {
   switch (type) {
@@ -68,10 +69,11 @@ function LiveTradingDetailsContent(props: { liveTradingRoomId: string }) {
           </div>
 
           <div>
-            <h3 className="text-sm font-medium">AI Prompt</h3>
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-              {liveTradingRoom.aiPrompt}
-            </p>
+            <DetailedTextDialog
+              title="AI Prompt Used"
+              content={liveTradingRoom.aiPrompt}
+              label="AI Prompt"
+            />
           </div>
 
           <div>
@@ -107,6 +109,12 @@ function LiveTradingDetailsContent(props: { liveTradingRoomId: string }) {
             </p>
           </div>
 
+          <div>
+            <h3 className="text-sm font-medium">Predefined FRVP</h3>
+            <p className="text-sm text-muted-foreground">
+              {data.predefinedFrvp.name}
+            </p>
+          </div>
           <div>
             <h3 className="text-sm font-medium">Informative Bars</h3>
             <p className="text-sm text-muted-foreground">
