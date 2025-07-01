@@ -1,11 +1,7 @@
 import { trpc } from '@/core/trpc';
+import { DetailedTextDialog } from '@/modules/shared/components/detailed-text-dialog';
 import { ExecutionStatus } from '@/modules/simulation-execution/components/execution-status';
-import {
-  AiModelEnum,
-  DeepSeekModelEnum,
-  GeminiModelEnum,
-  OpenAIModelEnum,
-} from '@baron/schema';
+import { getModelLabel } from '@baron/ai/common';
 import { Badge } from '@baron/ui/components/badge';
 import {
   Card,
@@ -17,23 +13,7 @@ import {
 import { FormatDate } from '@baron/ui/components/format-date';
 import { Suspense } from 'react';
 import { ItemActions } from './item-actions';
-import { DetailedTextDialog } from '@/modules/shared/components/detailed-text-dialog';
 import { SignalsTable } from './signals-table';
-
-function getModelLabel(type: AiModelEnum, model: string) {
-  switch (type) {
-    case AiModelEnum.DeepSeek:
-      return model === DeepSeekModelEnum.Chat
-        ? 'DeepSeek Chat'
-        : 'DeepSeek Reasoner';
-    case AiModelEnum.OpenAI:
-      return model === OpenAIModelEnum.Gpt41 ? 'GPT-4.1' : 'O4 Mini 2025-04-16';
-    case AiModelEnum.Gemini:
-      return model === GeminiModelEnum.Gemini25FlashPreview0520
-        ? 'Gemini 2.5 Flash Preview 05-20'
-        : 'Gemini 2.5 Pro Preview 06-05';
-  }
-}
 
 function LiveTradingDetailsContent(props: { liveTradingRoomId: string }) {
   const [data] = trpc.liveTradingRoom.get.useSuspenseQuery({

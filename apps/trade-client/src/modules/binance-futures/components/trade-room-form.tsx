@@ -46,6 +46,7 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
       crazyMode: false,
       rememberMe: false,
       signalsCount: 1,
+      entryPointDelta: 0,
     },
   });
 
@@ -158,6 +159,23 @@ export function TradeRoomForm({ onSubmit }: TradeRoomFormProps) {
                     <NumericInput 
                       min={1} 
                       max={10} 
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="entryPointDelta"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Entry Point Delta (%)</FormLabel>
+                  <FormControl>
+                    <NumericInput 
+                      min={0} 
                       value={field.value}
                       onChange={field.onChange}
                     />

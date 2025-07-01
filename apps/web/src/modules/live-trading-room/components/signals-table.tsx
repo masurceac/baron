@@ -7,14 +7,18 @@ import { Badge } from '@baron/ui/components/badge';
 import { DataTable } from '@baron/ui/components/data-table';
 import { FormatDate } from '@baron/ui/components/format-date';
 import { ColumnDef } from '@tanstack/react-table';
-import { Suspense, useMemo } from 'react';
+import { Suspense, useMemo, useState } from 'react';
+import { Button } from '@baron/ui/components/button';
+import { BarChart3Icon } from 'lucide-react';
 import { CheckTradeSuccessButton } from './check-trade-success-button';
+import { DailyBalanceSummary } from './daily-balance-summary';
 
 type TableItem = RouterOutput['liveTradingRoom']['signals']['data'][number];
 
 const TAKE = 50;
 
 function SignalsTableContent(props: { liveTradingRoomId: string }) {
+  const [showDailySummary, setShowDailySummary] = useState(false);
   const pagination = useCurrentPagination({ take: TAKE });
   const [list] = trpc.liveTradingRoom.signals.useSuspenseQuery({
     liveTradingRoomId: props.liveTradingRoomId,
@@ -146,7 +150,23 @@ function SignalsTableContent(props: { liveTradingRoomId: string }) {
   );
 
   return (
-    <div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Signals</h3>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowDailySummary(!showDailySummary)}
+        >
+          <BarChart3Icon className="w-4 h-4 mr-2" />
+          {showDailySummary ? 'Hide' : 'Show'} Daily Summary
+        </Button>
+      </div>
+
+      {showDailySummary && (
+        <DailyBalanceSummary liveTradingRoomId={props.liveTradingRoomId} />
+      )}
+
       <DataTable columns={columns} data={list.data} />
 
       {list.count ? (

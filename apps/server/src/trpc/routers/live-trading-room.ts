@@ -7,7 +7,7 @@ import { liveTradingRoomSchema } from '@baron/schema';
 import { protectedProcedure } from '@baron/trpc-server';
 import { TRPCError } from '@trpc/server';
 import { env } from 'cloudflare:workers';
-import { and, count, desc, eq, ilike, inArray, SQL } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, inArray, SQL, sum, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { checkTradeSuccess } from '@/services/check-trade-success';
 import { fetchBars } from '@baron/bars-api';
@@ -437,5 +437,34 @@ export const liveTradingRoomRouter = {
 				.where(eq(liveTradingRoomSignal.id, input.signalId));
 
 			return tradeResult;
+		}),
+
+	signalsDailyBalance: protectedProcedure
+		.input(
+			z.object({
+				liveTradingRoomId: z.string(),
+			}),
+		)
+		.query(async ({ input }) => {
+			const db = getDatabase();
+
+			const dailyBalances = await db
+				.select({
+					date: sql<string>`DATE(${liveTradingRoomSignal.exitDate})`,
+					totalBalance: sum(liveTradingRoomSignal.exitBalance),
+					signalCount: count(liveTradingRoomSignal.id),
+				})
+				.from(liveTradingRoomSignal)
+				.where(
+					and(
+						eq(liveTradingRoomSignal.liveTradingRoomId, input.liveTradingRoomId),
+						sql`${liveTradingRoomSignal.exitDate} IS NOT NULL`,
+						sql`${liveTradingRoomSignal.exitBalance} IS NOT NULL`
+					)
+				)
+				.groupBy(sql`DATE(${liveTradingRoomSignal.exitDate})`)
+				.orderBy(desc(sql`DATE(${liveTradingRoomSignal.exitDate})`));
+
+			return dailyBalances;
 		}),
 };

@@ -6,7 +6,7 @@ import {
   cancelOrder,
   getFuturesOpenOrder,
   getFuturesPosition,
-  openMarketFuturesOrderWithTPSL,
+  openLimitFuturesOrderWithTPSL,
   setLeverage,
 } from '@baron/order-api';
 import { TradeClientServerWebsocketEvents } from '@baron/ws/trade-client-ws';
@@ -37,6 +37,12 @@ export async function hasActiveOrder(props: {
       apiSecret: props.apiSecret,
     },
   });
+  // if (order) {
+  //   console.log('order');
+  //   console.log(order);
+  //   return true;
+  // }
+
   if (order) {
     await cancelOrder({
       pair: props.pair,
@@ -108,6 +114,25 @@ export async function enterTrade(
     ? data.trade.stopLossPrice
     : data.trade.takeProfitPrice;
 
+  // Apply entry point delta
+  let adjustedEntryPrice = currentPrice;
+  let adjustedStopLossPrice = stopLossPrice;
+
+  if (setup.entryPointDelta > 0) {
+    const priceDifference = Math.abs(currentPrice - stopLossPrice);
+    const deltaAmount = (priceDifference * setup.entryPointDelta) / 100;
+
+    if (direction === TradeDirection.Buy) {
+      // For buy trades: move entry down, stop loss down
+      adjustedEntryPrice = currentPrice - deltaAmount;
+      adjustedStopLossPrice = stopLossPrice - deltaAmount;
+    } else {
+      // For sell trades: move entry up, stop loss up
+      adjustedEntryPrice = currentPrice + deltaAmount;
+      adjustedStopLossPrice = stopLossPrice + deltaAmount;
+    }
+  }
+
   try {
     await setLeverage({
       pair: data.trade.pair,
@@ -121,12 +146,13 @@ export async function enterTrade(
       Math.trunc(
         ((setup.positionSizeUsd * setup.leverage) / currentPrice) * 1000,
       ) / 1000;
-    const order = await openMarketFuturesOrderWithTPSL({
+    const order = await openLimitFuturesOrderWithTPSL({
       pair: data.trade.pair,
       quantity: quantity,
+      limitPrice: adjustedEntryPrice,
       direction,
-      stopLossPrice,
-      takeProfitPrice,
+      stopLossPrice: adjustedStopLossPrice,
+      takeProfitPrice: takeProfitPrice,
       keys: {
         apiKey: setup.apiKey,
         apiSecret: setup.apiSecret,

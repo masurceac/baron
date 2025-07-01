@@ -284,7 +284,7 @@ export class LiveTradeRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Live
 		const subscribedNotifications = await db
 			.select()
 			.from(liveTradingRoomPushoverNotification)
-			.where(eq(liveTradingRoomPushoverNotification.liveTradingRoomId, roomId));
+			.where(and(eq(liveTradingRoomPushoverNotification.liveTradingRoomId, roomId), eq(liveTradingRoomPushoverNotification.enabled, true)));
 
 		await Promise.all(
 			subscribedNotifications.map(async (setup) => {

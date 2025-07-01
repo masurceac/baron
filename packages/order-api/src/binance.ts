@@ -1,6 +1,3 @@
-// import { API_KEYS } from '../env';
-// import { TradingPair, TradeDirection } from '../types';
-
 import { TradeDirection, TradingPair } from '@baron/common';
 
 // Utility function to generate HMAC SHA256 signature
@@ -196,30 +193,6 @@ export async function getFuturesPosition(input: {
   }
 }
 
-// export async function openMarketFuturesOrder(input: {
-//   pair: TradingPair;
-//   quantity: number;
-//   direction: TradeDirection;
-//   keys: BinanceKeys;
-// }) {
-//   try {
-//     const result = await makeRequest(
-//       '/fapi/v1/order',
-//       'POST',
-//       {
-//         symbol: input.pair,
-//         side: input.direction === 'buy' ? 'BUY' : 'SELL',
-//         type: 'MARKET',
-//         quantity: input.quantity,
-//       },
-//       input.keys,
-//     );
-//     console.log('Order placed:', result);
-//   } catch (error: any) {
-//     console.error('Error placing order:', error.message);
-//   }
-// }
-
 export async function openMarketFuturesOrderWithTPSL(input: {
   pair: TradingPair;
   quantity: number;
@@ -385,5 +358,89 @@ export async function changeMarginType(input: {
     console.log('Margin type changed:', result);
   } catch (error: any) {
     console.error('Error changing margin type:', error.message);
+  }
+}
+
+export async function openLimitFuturesOrderWithTPSL(input: {
+  pair: TradingPair;
+  quantity: number;
+  limitPrice: number;
+  direction: TradeDirection; // "buy" | "sell"
+  takeProfitPrice?: number; // optional – omit to skip TP
+  stopLossPrice?: number; // optional – omit to skip SL
+  keys: BinanceKeys;
+}): Promise<BinanceOrder> {
+  try {
+    /* ------------------------------------------------- *
+     * 1️⃣  Entry LIMIT order                            *
+     * ------------------------------------------------- */
+    const entrySide = input.direction === 'buy' ? 'BUY' : 'SELL';
+
+    const entryOrder: BinanceOrder = await makeRequest(
+      '/fapi/v1/order',
+      'POST',
+      {
+        symbol: input.pair,
+        side: entrySide,
+        type: 'LIMIT',
+        quantity: input.quantity.toFixed(3),
+        price: input.limitPrice.toFixed(2),
+        timeInForce: 'GTC',
+        // You can add `reduceOnly: 'false'` here, but it is the default.
+      },
+      input.keys,
+    );
+    console.log('LIMIT entry order placed:', entryOrder);
+
+    /* ------------------------------------------------- *
+     * 2️⃣  Take-profit (optional)                       *
+     * ------------------------------------------------- */
+    if (input.takeProfitPrice !== undefined) {
+      const tpSide = entrySide === 'BUY' ? 'SELL' : 'BUY';
+
+      const tpOrder = await makeRequest(
+        '/fapi/v1/order',
+        'POST',
+        {
+          symbol: input.pair,
+          side: tpSide,
+          type: 'TAKE_PROFIT_MARKET',
+          stopPrice: input.takeProfitPrice.toFixed(2),
+          closePosition: 'true',
+          priceProtect: 'true', // reject if trigger price is too far away
+          workingType: 'CONTRACT_PRICE',
+        },
+        input.keys,
+      );
+      console.log('TP order placed:', tpOrder);
+    }
+
+    /* ------------------------------------------------- *
+     * 3️⃣  Stop-loss (optional)                         *
+     * ------------------------------------------------- */
+    if (input.stopLossPrice !== undefined) {
+      const slSide = entrySide === 'BUY' ? 'SELL' : 'BUY';
+
+      const slOrder = await makeRequest(
+        '/fapi/v1/order',
+        'POST',
+        {
+          symbol: input.pair,
+          side: slSide,
+          type: 'STOP_MARKET',
+          stopPrice: input.stopLossPrice.toFixed(2),
+          closePosition: 'true',
+          priceProtect: 'true',
+          workingType: 'CONTRACT_PRICE',
+        },
+        input.keys,
+      );
+      console.log('SL order placed:', slOrder);
+    }
+
+    return entryOrder;
+  } catch (error: any) {
+    console.error('Error opening limit order with TP/SL:', error.message);
+    throw error;
   }
 }

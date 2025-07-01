@@ -1,0 +1,1 @@
+ALTER TABLE "live_trading_room_pushover_notification" ADD COLUMN "enabled" boolean DEFAULT false NOT NULL;
