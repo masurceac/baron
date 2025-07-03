@@ -17,6 +17,7 @@ export enum TradingPair {
   ARBUSDT = 'ARBUSDT',
   QQQ = 'QQQ',
   SPY = 'SPY',
+  XAUUSD = 'XAUUSD',
 }
 
 export enum TradingTimeSetups {

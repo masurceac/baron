@@ -17,6 +17,7 @@ export async function getGeminiAiResponse<T extends z.ZodSchema>(input: {
     config: {
       responseMimeType: 'application/json',
       responseSchema: input.responseSchema,
+      temperature: 0,
     },
   });
 

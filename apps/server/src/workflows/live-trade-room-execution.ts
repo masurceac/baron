@@ -49,6 +49,9 @@ export class LiveTradeRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Live
 							keyId: env.ALPACA_KEY_ID!,
 							secretKey: env.ALPACA_SECRET_KEY!,
 						},
+						polygon: {
+							keyId: '',
+						},
 					});
 
 					return {
@@ -70,6 +73,9 @@ export class LiveTradeRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Live
 				alpaca: {
 					keyId: env.ALPACA_KEY_ID!,
 					secretKey: env.ALPACA_SECRET_KEY!,
+				},
+				polygon: {
+					keyId: '',
 				},
 			});
 

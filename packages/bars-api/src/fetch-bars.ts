@@ -1,6 +1,7 @@
 import { assertNever, TradingPair } from '@baron/common';
 import { fetchAlpacaBars } from './fetch-alpaca-bars';
 import { fetchBinanceBars } from './fetch-binance-bars';
+import { fetchPolygonBars } from './fetch-polygon-bars';
 import { FetchBarsFunction } from './types';
 
 export const fetchBars: FetchBarsFunction = (args) => {
@@ -17,6 +18,8 @@ export const fetchBars: FetchBarsFunction = (args) => {
     case TradingPair.AAVEUSDT:
     case TradingPair.ARBUSDT:
       return fetchBinanceBars(args);
+    case TradingPair.XAUUSD:
+      return fetchPolygonBars(args);
     default:
       assertNever(args.pair);
   }

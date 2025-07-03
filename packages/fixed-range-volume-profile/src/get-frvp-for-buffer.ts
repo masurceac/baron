@@ -109,6 +109,9 @@ export async function getFrvpForBuffer(input: {
             keyId: '',
             secretKey: '',
           },
+          polygon: {
+            keyId: '',
+          },
         });
         bars.push(barTicks);
       }),

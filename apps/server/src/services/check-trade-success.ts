@@ -29,9 +29,6 @@ export async function checkTradeSuccess(order: TradeType): Promise<{
 
 	const trailingEnd = add(new Date(order.entryTimestamp), { hours: 3 });
 
-	console.log('Checking success for order');
-	console.log(order);
-
 	const bars = await fetchBars({
 		start: new Date(order.entryTimestamp),
 		end: trailingEnd,
@@ -41,6 +38,9 @@ export async function checkTradeSuccess(order: TradeType): Promise<{
 		alpaca: {
 			keyId: env.ALPACA_KEY_ID!,
 			secretKey: env.ALPACA_SECRET_KEY!,
+		},
+		polygon: {
+			keyId: '',
 		},
 	});
 	for (const bar of bars) {

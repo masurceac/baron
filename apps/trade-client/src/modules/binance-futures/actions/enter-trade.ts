@@ -71,6 +71,9 @@ async function getCurrentPrice(props: { pair: TradingPair }) {
       keyId: process.env.ALPACA_KEY_ID!,
       secretKey: process.env.ALPACA_SECRET_KEY!,
     },
+    polygon: {
+      keyId: '',
+    },
   });
 
   if (!result?.length) {

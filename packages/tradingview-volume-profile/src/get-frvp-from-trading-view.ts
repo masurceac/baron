@@ -55,6 +55,9 @@ async function calculateFrvpForPoints(
       keyId: '',
       secretKey: '',
     },
+    polygon: {
+      keyId: '',
+    },
   });
 
   const volumeProfile = calculateVolumeProfile(bars, 0.01, 0.7);

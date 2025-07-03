@@ -144,6 +144,9 @@ export class SimulationRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Sim
 							keyId: env.ALPACA_KEY_ID,
 							secretKey: env.ALPACA_SECRET_KEY,
 						},
+						polygon: {
+							keyId: '',
+						},
 					});
 
 					return {
@@ -165,6 +168,9 @@ export class SimulationRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Sim
 				alpaca: {
 					keyId: env.ALPACA_KEY_ID!,
 					secretKey: env.ALPACA_SECRET_KEY!,
+				},
+				polygon: {
+					keyId: '',
 				},
 			});
 

@@ -11,6 +11,7 @@ import { Suspense, useMemo, useState } from 'react';
 import { Button } from '@baron/ui/components/button';
 import { BarChart3Icon } from 'lucide-react';
 import { CheckTradeSuccessButton } from './check-trade-success-button';
+import { CheckAllTradesSuccessButton } from './check-all-trades-success-button';
 import { DailyBalanceSummary } from './daily-balance-summary';
 
 type TableItem = RouterOutput['liveTradingRoom']['signals']['data'][number];
@@ -35,6 +36,7 @@ function SignalsTableContent(props: { liveTradingRoomId: string }) {
       skip: pagination.skip,
       take: TAKE,
     });
+    utils.liveTradingRoom.signalsDailyBalance.invalidate();
   };
 
   const columns = useMemo<ColumnDef<TableItem>[]>(
@@ -55,7 +57,7 @@ function SignalsTableContent(props: { liveTradingRoomId: string }) {
           <div className="space-y-2">
             {original.suggestions.map((suggestion, index) => (
               <div key={index} className="flex items-center space-x-2">
-                <Badge 
+                <Badge
                   variant={
                     suggestion.type === 'buy'
                       ? 'default'
@@ -112,9 +114,13 @@ function SignalsTableContent(props: { liveTradingRoomId: string }) {
                 <div>
                   <FormatDate date={original.exitDate} format="long" />
                 </div>
-                <div className={`font-medium ${
-                  original.exitBalance >= 0 ? 'text-green-600' : 'text-red-600'
-                }`}>
+                <div
+                  className={`font-medium ${
+                    original.exitBalance >= 0
+                      ? 'text-green-600'
+                      : 'text-red-600'
+                  }`}
+                >
                   ${original.exitBalance.toFixed(2)}
                 </div>
               </div>
@@ -153,14 +159,20 @@ function SignalsTableContent(props: { liveTradingRoomId: string }) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Signals</h3>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowDailySummary(!showDailySummary)}
-        >
-          <BarChart3Icon className="w-4 h-4 mr-2" />
-          {showDailySummary ? 'Hide' : 'Show'} Daily Summary
-        </Button>
+        <div className="flex items-center space-x-2">
+          <CheckAllTradesSuccessButton
+            liveTradingRoomId={props.liveTradingRoomId}
+            onSuccess={handleCheckSuccess}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowDailySummary(!showDailySummary)}
+          >
+            <BarChart3Icon className="w-4 h-4 mr-2" />
+            {showDailySummary ? 'Hide' : 'Show'} Daily Summary
+          </Button>
+        </div>
       </div>
 
       {showDailySummary && (

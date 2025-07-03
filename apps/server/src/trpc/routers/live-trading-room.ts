@@ -1,18 +1,33 @@
 import { getDatabase } from '@/database';
+import { checkTradeSuccess } from '@/services/check-trade-success';
 import { LiveTradeRoomExecutionWorkflowParams } from '@/workflows/types';
-import { paginate, paginatedSchema, SimulationExecutionStatus } from '@baron/common';
+import { OpenOrderAiResponse } from '@baron/ai/order-suggestion';
+import { fetchBars } from '@baron/bars-api';
+import { paginate, paginatedSchema, SimulationExecutionStatus, TimeUnit } from '@baron/common';
 import { queryJoin } from '@baron/db/client';
-import { informativeBarConfig, liveTradingRoom, liveTradingRoomToInformativeBarConfig, predefinedFrvp, liveTradingRoomSignal } from '@baron/db/schema';
+import {
+	informativeBarConfig,
+	liveTradingRoom,
+	liveTradingRoomSignal,
+	liveTradingRoomToInformativeBarConfig,
+	predefinedFrvp,
+} from '@baron/db/schema';
 import { liveTradingRoomSchema } from '@baron/schema';
 import { protectedProcedure } from '@baron/trpc-server';
 import { TRPCError } from '@trpc/server';
 import { env } from 'cloudflare:workers';
-import { and, count, desc, eq, ilike, inArray, SQL, sum, sql } from 'drizzle-orm';
-import { z } from 'zod';
-import { checkTradeSuccess } from '@/services/check-trade-success';
-import { fetchBars } from '@baron/bars-api';
-import { TimeUnit } from '@baron/common';
 import { sub } from 'date-fns';
+import { and, count, desc, eq, ilike, inArray, SQL, sql, sum } from 'drizzle-orm';
+import { z } from 'zod';
+
+function getTradeSignal(signal: OpenOrderAiResponse, currentPrice: number) {
+	// const newStopLossSuggestion = firstSuggestion.type === 'buy' ? currentPrice - 50 : currentPrice + 50;
+	// const newStopLoss =
+	// 	firstSuggestion.type === 'buy'
+	// 		? Math.min(newStopLossSuggestion, firstSuggestion.stopLossPrice)
+	// 		: Math.max(newStopLossSuggestion, firstSuggestion.stopLossPrice);
+	return signal;
+}
 
 export const liveTradingRoomRouter = {
 	create: protectedProcedure.input(liveTradingRoomSchema).mutation(async ({ input }) => {
@@ -290,9 +305,11 @@ export const liveTradingRoomRouter = {
 
 	signals: protectedProcedure
 		.input(
-			z.object({
-				liveTradingRoomId: z.string(),
-			}).merge(paginatedSchema),
+			z
+				.object({
+					liveTradingRoomId: z.string(),
+				})
+				.merge(paginatedSchema),
 		)
 		.query(async ({ input }) => {
 			const db = getDatabase();
@@ -395,6 +412,9 @@ export const liveTradingRoomRouter = {
 					keyId: env.ALPACA_KEY_ID!,
 					secretKey: env.ALPACA_SECRET_KEY!,
 				},
+				polygon: {
+					keyId: '',
+				},
 			});
 
 			if (!result?.length) {
@@ -414,13 +434,11 @@ export const liveTradingRoomRouter = {
 			}
 			const currentPrice = (lastBar.High + lastBar.Low) / 2;
 
+			const tradeSignal = getTradeSignal(suggestion, currentPrice);
+
 			// Call checkTradeSuccess
 			const tradeResult = await checkTradeSuccess({
-				aiOrder: {
-					type: suggestion.type,
-					stopLossPrice: suggestion.stopLossPrice,
-					takeProfitPrice: suggestion.takeProfitPrice,
-				},
+				aiOrder: tradeSignal,
 				entryPrice: currentPrice,
 				entryTimestamp: signal.createdAt.toISOString(),
 				pair: signal.liveTradingRoom.pair,
@@ -434,9 +452,120 @@ export const liveTradingRoomRouter = {
 					exitDate: new Date(tradeResult.timestamp),
 					exitBalance: tradeResult.resultBalance,
 				})
-				.where(eq(liveTradingRoomSignal.id, input.signalId));
+				.where(eq(liveTradingRoomSignal.id, signal.id));
 
 			return tradeResult;
+		}),
+
+	checkSignalTradeSuccessForDate: protectedProcedure
+		.input(
+			z.object({
+				roomId: z.string(),
+				date: z.string(),
+			}),
+		)
+		.mutation(async ({ input }) => {
+			const db = getDatabase();
+
+			const signalsForTheDay = await db
+				.select({
+					id: liveTradingRoomSignal.id,
+					createdAt: liveTradingRoomSignal.createdAt,
+					suggestions: liveTradingRoomSignal.suggestions,
+					liveTradingRoom: liveTradingRoom,
+				})
+				.from(liveTradingRoomSignal)
+				.innerJoin(liveTradingRoom, eq(liveTradingRoomSignal.liveTradingRoomId, liveTradingRoom.id))
+				.where(
+					and(
+						eq(liveTradingRoomSignal.liveTradingRoomId, input.roomId),
+						eq(sql`DATE(${liveTradingRoomSignal.createdAt})`, sql`DATE(${input.date})`),
+					),
+				);
+
+			await Promise.allSettled(
+				signalsForTheDay.map(async (signalItem) => {
+					const firstSuggestion = signalItem.suggestions?.[0];
+					if (!firstSuggestion) {
+						throw new TRPCError({
+							code: 'BAD_REQUEST',
+							message: 'Suggestion index out of bounds',
+						});
+					}
+
+					if (firstSuggestion.type === 'hold') {
+						throw new TRPCError({
+							code: 'BAD_REQUEST',
+							message: 'Cannot check trade success for hold signals',
+						});
+					}
+
+					if (!firstSuggestion.stopLossPrice || !firstSuggestion.takeProfitPrice) {
+						throw new TRPCError({
+							code: 'BAD_REQUEST',
+							message: 'Signal missing stop loss or take profit prices',
+						});
+					}
+
+					// Get current price at signal creation time
+					const result = await fetchBars({
+						start: sub(signalItem.createdAt, {
+							minutes: 5,
+						}),
+						end: signalItem.createdAt,
+						timeframeAmount: 1,
+						timeframeUnit: TimeUnit.Min,
+						pair: signalItem.liveTradingRoom.pair,
+						alpaca: {
+							keyId: env.ALPACA_KEY_ID!,
+							secretKey: env.ALPACA_SECRET_KEY!,
+						},
+						polygon: {
+							keyId: '',
+						},
+					});
+
+					if (!result?.length) {
+						throw new TRPCError({
+							code: 'INTERNAL_SERVER_ERROR',
+							message: `No bars found for ${signalItem.liveTradingRoom.pair} at ${signalItem.createdAt.toISOString()}`,
+						});
+					}
+
+					// Calculate current price as average of high and low
+					const lastBar = result[result.length - 1];
+					if (!lastBar) {
+						throw new TRPCError({
+							code: 'INTERNAL_SERVER_ERROR',
+							message: 'No valid bar data found',
+						});
+					}
+					const currentPrice = (lastBar.High + lastBar.Low) / 2;
+
+					const tradeSignal = getTradeSignal(firstSuggestion, currentPrice);
+					// Call checkTradeSuccess
+					const tradeResult = await checkTradeSuccess({
+						aiOrder: tradeSignal,
+						entryPrice: currentPrice,
+						entryTimestamp: signalItem.createdAt.toISOString(),
+						pair: signalItem.liveTradingRoom.pair,
+						trailingStop: false,
+					});
+
+					// Update the signal with exit date and balance
+					await db
+						.update(liveTradingRoomSignal)
+						.set({
+							exitDate: new Date(tradeResult.timestamp),
+							exitBalance: tradeResult.resultBalance,
+						})
+						.where(eq(liveTradingRoomSignal.id, signalItem.id));
+
+					return tradeResult;
+				}),
+			);
+
+			return true;
 		}),
 
 	signalsDailyBalance: protectedProcedure
@@ -450,7 +579,7 @@ export const liveTradingRoomRouter = {
 
 			const dailyBalances = await db
 				.select({
-					date: sql<string>`DATE(${liveTradingRoomSignal.exitDate})`,
+					date: sql<string>`DATE(${liveTradingRoomSignal.createdAt})`,
 					totalBalance: sum(liveTradingRoomSignal.exitBalance),
 					signalCount: count(liveTradingRoomSignal.id),
 				})
@@ -459,11 +588,11 @@ export const liveTradingRoomRouter = {
 					and(
 						eq(liveTradingRoomSignal.liveTradingRoomId, input.liveTradingRoomId),
 						sql`${liveTradingRoomSignal.exitDate} IS NOT NULL`,
-						sql`${liveTradingRoomSignal.exitBalance} IS NOT NULL`
-					)
+						sql`${liveTradingRoomSignal.exitBalance} IS NOT NULL`,
+					),
 				)
-				.groupBy(sql`DATE(${liveTradingRoomSignal.exitDate})`)
-				.orderBy(desc(sql`DATE(${liveTradingRoomSignal.exitDate})`));
+				.groupBy(sql`DATE(${liveTradingRoomSignal.createdAt})`)
+				.orderBy(desc(sql`DATE(${liveTradingRoomSignal.createdAt})`));
 
 			return dailyBalances;
 		}),

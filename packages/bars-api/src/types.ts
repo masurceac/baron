@@ -11,5 +11,8 @@ export type FetchBarsFunction = {
       keyId: string;
       secretKey: string;
     };
+    polygon: {
+      keyId: string;
+    };
   }): Promise<ChartBar[]>;
 };

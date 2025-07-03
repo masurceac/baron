@@ -92,6 +92,9 @@ export async function getFrvpProfiles(
       keyId: '',
       secretKey: '',
     },
+		polygon: {
+			keyId: '',
+		},
   });
   log();
 
