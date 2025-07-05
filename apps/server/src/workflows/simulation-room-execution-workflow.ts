@@ -145,7 +145,7 @@ export class SimulationRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Sim
 							secretKey: env.ALPACA_SECRET_KEY,
 						},
 						polygon: {
-							keyId: '',
+							keyId: env.POLYGON_API_KEY_ID,
 						},
 					});
 
@@ -166,11 +166,11 @@ export class SimulationRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Sim
 				timeframeUnit: TimeUnit.Min,
 				pair: execution.simulationRoom.pair,
 				alpaca: {
-					keyId: env.ALPACA_KEY_ID!,
-					secretKey: env.ALPACA_SECRET_KEY!,
+					keyId: env.ALPACA_KEY_ID,
+					secretKey: env.ALPACA_SECRET_KEY,
 				},
 				polygon: {
-					keyId: '',
+					keyId: env.POLYGON_API_KEY_ID,
 				},
 			});
 

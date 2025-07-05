@@ -46,11 +46,11 @@ export class LiveTradeRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Live
 						timeframeUnit: infoBar.timeframeUnit,
 						pair: roomDetails.tradingRoom.pair,
 						alpaca: {
-							keyId: env.ALPACA_KEY_ID!,
-							secretKey: env.ALPACA_SECRET_KEY!,
+							keyId: env.ALPACA_KEY_ID,
+							secretKey: env.ALPACA_SECRET_KEY,
 						},
 						polygon: {
-							keyId: '',
+							keyId: env.POLYGON_API_KEY_ID,
 						},
 					});
 
@@ -71,11 +71,11 @@ export class LiveTradeRoomExecutionWorkflow extends WorkflowEntrypoint<Env, Live
 				timeframeUnit: TimeUnit.Min,
 				pair: roomDetails.tradingRoom.pair,
 				alpaca: {
-					keyId: env.ALPACA_KEY_ID!,
-					secretKey: env.ALPACA_SECRET_KEY!,
+					keyId: env.ALPACA_KEY_ID,
+					secretKey: env.ALPACA_SECRET_KEY,
 				},
 				polygon: {
-					keyId: '',
+					keyId: env.POLYGON_API_KEY_ID,
 				},
 			});
 

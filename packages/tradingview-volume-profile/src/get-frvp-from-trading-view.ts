@@ -30,8 +30,19 @@ const tradingViewSourceDataSchema = z.record(
 
 type TradingViewSourceData = z.infer<typeof tradingViewSourceDataSchema>;
 
+type Config = {
+  alpaca: {
+    keyId: string;
+    secretKey: string;
+  };
+  polygon: {
+    keyId: string;
+  };
+  pair: TradingPair;
+};
 async function calculateFrvpForPoints(
   point: z.infer<typeof tradingViewFRVPPluginPointSchema>[],
+  config: Config,
 ) {
   if (!Array.isArray(point)) {
     throw new Error('');
@@ -44,20 +55,16 @@ async function calculateFrvpForPoints(
 
   const startDate = new Date(start.time_t * 1000);
   const endDate = new Date(end.time_t * 1000);
+  const { amount, unit } = getChildAmountForFRVP(point[0]?.interval ?? '');
 
   const bars = await fetchBars({
     start: startDate,
     end: endDate,
-    timeframeAmount: 5,
-    timeframeUnit: TimeUnit.Min,
-    pair: TradingPair.ETHUSDT,
-    alpaca: {
-      keyId: '',
-      secretKey: '',
-    },
-    polygon: {
-      keyId: '',
-    },
+    timeframeAmount: amount,
+    timeframeUnit: unit,
+    pair: config.pair,
+    alpaca: config.alpaca,
+    polygon: config.polygon,
   });
 
   const volumeProfile = calculateVolumeProfile(bars, 0.01, 0.7);
@@ -69,8 +76,10 @@ async function calculateFrvpForPoints(
   };
 }
 
+type KnownInterval = '5' | '15' | '30' | '60' | '240' | '1D';
+
 function intervalToTimeLabel(interval: string) {
-  switch (interval) {
+  switch (interval as KnownInterval) {
     case '5':
       return '5 Minutes';
     case '15':
@@ -88,8 +97,47 @@ function intervalToTimeLabel(interval: string) {
   }
 }
 
+function getChildAmountForFRVP(interval: string): {
+  amount: number;
+  unit: TimeUnit;
+} {
+  switch (interval as KnownInterval) {
+    case '5':
+      return {
+        amount: 1,
+        unit: TimeUnit.Min,
+      };
+    case '15':
+      return {
+        amount: 1,
+        unit: TimeUnit.Min,
+      };
+    case '30':
+      return {
+        amount: 5,
+        unit: TimeUnit.Min,
+      };
+    case '60':
+      return {
+        amount: 5,
+        unit: TimeUnit.Min,
+      };
+    case '240':
+      return {
+        amount: 15,
+        unit: TimeUnit.Min,
+      };
+    case '1D':
+      return {
+        amount: 60,
+        unit: TimeUnit.Min,
+      };
+  }
+}
+
 async function getFrvpProfilesFromData<T extends TradingViewSourceData>(
   data: T,
+  config: Config,
 ) {
   const values = Object.values(data);
   const label = intervalToTimeLabel(
@@ -102,7 +150,7 @@ async function getFrvpProfilesFromData<T extends TradingViewSourceData>(
 
   const frvpProfilesResult = await Promise.all(
     frvpProfiles.map(async (v) => {
-      const zone = await calculateFrvpForPoints(v.state.points ?? []);
+      const zone = await calculateFrvpForPoints(v.state.points ?? [], config);
       return {
         startDate: zone.startDate,
         endDate: zone.endDate,
@@ -125,6 +173,7 @@ async function getFrvpProfilesFromData<T extends TradingViewSourceData>(
 
 export async function getDataFromTradingView(
   getData: () => ReturnType<typeof fetch>,
+  config: Config,
 ) {
   const response = await getData();
 
@@ -149,7 +198,11 @@ export async function getDataFromTradingView(
       })
       .parse(data);
 
-    const frvpResult = await getFrvpProfilesFromData(parsed.payload.sources);
+    const frvpResult = await getFrvpProfilesFromData(
+      parsed.payload.sources,
+      config,
+    );
+
     return frvpResult;
   } catch (parseError) {
     console.error('Failed to parse response:', parseError);

@@ -36,11 +36,11 @@ export async function checkTradeSuccess(order: TradeType): Promise<{
 		timeframeUnit: TimeUnit.Min,
 		pair: order.pair,
 		alpaca: {
-			keyId: env.ALPACA_KEY_ID!,
-			secretKey: env.ALPACA_SECRET_KEY!,
+			keyId: env.ALPACA_KEY_ID,
+			secretKey: env.ALPACA_SECRET_KEY,
 		},
 		polygon: {
-			keyId: '',
+			keyId: env.POLYGON_API_KEY_ID,
 		},
 	});
 	for (const bar of bars) {

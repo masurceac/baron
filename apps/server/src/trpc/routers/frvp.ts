@@ -1,10 +1,11 @@
 import { getDatabase } from '@/database';
-import { paginate, paginatedSchema } from '@baron/common';
+import { paginate, paginatedSchema, TradingPair } from '@baron/common';
 import { predefinedFrvp } from '@baron/db/schema';
 import { createPredefinedFrvpSchema } from '@baron/schema';
 import { getDataFromTradingView } from '@baron/tradingview-volume-profile';
 import { protectedProcedure } from '@baron/trpc-server';
 import { TRPCError } from '@trpc/server';
+import { env } from 'cloudflare:workers';
 import { isAfter } from 'date-fns';
 import { and, count, desc, eq, ilike, SQL } from 'drizzle-orm';
 import { z } from 'zod';
@@ -159,31 +160,42 @@ export const frvpRouter = {
 		return deletedFRVP[0];
 	}),
 
-	fetchFromCode: protectedProcedure.input(z.object({ fetchCode: z.string() })).mutation(async ({ input }) => {
-		try {
-			const fetchCode = input.fetchCode.trim();
+	fetchFromCode: protectedProcedure
+		.input(z.object({ fetchCode: z.string(), pair: z.nativeEnum(TradingPair) }))
+		.mutation(async ({ input }) => {
+			try {
+				const fetchCode = input.fetchCode.trim();
 
-			if (!fetchCode.startsWith('fetch(')) {
+				if (!fetchCode.startsWith('fetch(')) {
+					throw new TRPCError({
+						code: 'BAD_REQUEST',
+						message: 'Code must start with fetch(',
+					});
+				}
+
+				const response = await getDataFromTradingView(() => fetchFromSnippet(fetchCode), {
+					pair: input.pair,
+					alpaca: {
+						keyId: env.ALPACA_KEY_ID,
+						secretKey: env.ALPACA_SECRET_KEY,
+					},
+					polygon: {
+						keyId: env.POLYGON_API_KEY_ID,
+					},
+				});
+
+				return response;
+			} catch (error) {
+				if (error instanceof TRPCError) {
+					throw error;
+				}
+
 				throw new TRPCError({
 					code: 'BAD_REQUEST',
-					message: 'Code must start with fetch(',
+					message: `Failed to execute fetch code: ${error instanceof Error ? error.message : 'Unknown error'}`,
 				});
 			}
-
-			const response = await getDataFromTradingView(() => fetchFromSnippet(fetchCode));
-
-			return response;
-		} catch (error) {
-			if (error instanceof TRPCError) {
-				throw error;
-			}
-
-			throw new TRPCError({
-				code: 'BAD_REQUEST',
-				message: `Failed to execute fetch code: ${error instanceof Error ? error.message : 'Unknown error'}`,
-			});
-		}
-	}),
+		}),
 };
 
 export async function fetchFromSnippet(snippet: string): Promise<Response> {

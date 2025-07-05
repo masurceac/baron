@@ -136,12 +136,17 @@ export function ItemForm(props: {
     }
   };
 
+  const tradingPair = form.watch('pair');
+
   const handleFetchFromCode = () => {
     if (!fetchCodeInput.trim()) {
       toast.error('Please enter fetch code');
       return;
     }
-    fetchFromCode.mutate({ fetchCode: fetchCodeInput.trim() });
+    fetchFromCode.mutate({
+      fetchCode: fetchCodeInput.trim(),
+      pair: tradingPair,
+    });
   };
 
   return (

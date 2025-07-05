@@ -409,11 +409,11 @@ export const liveTradingRoomRouter = {
 				timeframeUnit: TimeUnit.Min,
 				pair: signal.liveTradingRoom.pair,
 				alpaca: {
-					keyId: env.ALPACA_KEY_ID!,
-					secretKey: env.ALPACA_SECRET_KEY!,
+					keyId: env.ALPACA_KEY_ID,
+					secretKey: env.ALPACA_SECRET_KEY,
 				},
 				polygon: {
-					keyId: '',
+					keyId: env.POLYGON_API_KEY_ID,
 				},
 			});
 
@@ -517,11 +517,11 @@ export const liveTradingRoomRouter = {
 						timeframeUnit: TimeUnit.Min,
 						pair: signalItem.liveTradingRoom.pair,
 						alpaca: {
-							keyId: env.ALPACA_KEY_ID!,
-							secretKey: env.ALPACA_SECRET_KEY!,
+							keyId: env.ALPACA_KEY_ID,
+							secretKey: env.ALPACA_SECRET_KEY,
 						},
 						polygon: {
-							keyId: '',
+							keyId: env.POLYGON_API_KEY_ID,
 						},
 					});
 
