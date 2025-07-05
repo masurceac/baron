@@ -23,7 +23,7 @@ const tradingViewLayoutDataSchema = z.object({
   }),
 });
 
-const tradingViewSourceDataSchema = z.record(
+export const tradingViewSourceDataSchema = z.record(
   z.string(),
   tradingViewLayoutDataSchema,
 );
@@ -135,7 +135,7 @@ function getChildAmountForFRVP(interval: string): {
   }
 }
 
-async function getFrvpProfilesFromData<T extends TradingViewSourceData>(
+export async function getFrvpProfilesFromData<T extends TradingViewSourceData>(
   data: T,
   config: Config,
 ) {

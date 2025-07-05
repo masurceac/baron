@@ -8,6 +8,10 @@ import { TRPCError } from '@trpc/server';
 import { env } from 'cloudflare:workers';
 import { isAfter } from 'date-fns';
 import { and, count, desc, eq, ilike, SQL } from 'drizzle-orm';
+import {
+	getFrvpProfilesFromData,
+	tradingViewSourceDataSchema,
+} from 'node_modules/@baron/tradingview-volume-profile/src/get-frvp-from-trading-view';
 import { z } from 'zod';
 
 export const frvpRouter = {
@@ -185,6 +189,42 @@ export const frvpRouter = {
 				});
 
 				return response;
+			} catch (error) {
+				if (error instanceof TRPCError) {
+					throw error;
+				}
+
+				throw new TRPCError({
+					code: 'BAD_REQUEST',
+					message: `Failed to execute fetch code: ${error instanceof Error ? error.message : 'Unknown error'}`,
+				});
+			}
+		}),
+	fetchFromTradingviewJson: protectedProcedure
+		.input(z.object({ json: z.any({}), pair: z.nativeEnum(TradingPair) }))
+		.mutation(async ({ input }) => {
+			try {
+				const parsed = z
+					.object({
+						success: z.boolean(),
+						payload: z.object({
+							sources: tradingViewSourceDataSchema,
+						}),
+					})
+					.parse(input.json);
+
+				const frvpResult = await getFrvpProfilesFromData(parsed.payload.sources, {
+					pair: input.pair,
+					alpaca: {
+						keyId: env.ALPACA_KEY_ID,
+						secretKey: env.ALPACA_SECRET_KEY,
+					},
+					polygon: {
+						keyId: env.POLYGON_API_KEY_ID,
+					},
+				});
+
+				return frvpResult;
 			} catch (error) {
 				if (error instanceof TRPCError) {
 					throw error;

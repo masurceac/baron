@@ -23,7 +23,7 @@ import { NumericInput } from '@baron/ui/components/numeric-input';
 import { Separator } from '@baron/ui/components/separator';
 import { Textarea } from '@baron/ui/components/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Globe, Plus, Trash2, Upload } from 'lucide-react';
+import { Globe, Plus, Trash2 } from 'lucide-react';
 import { ForwardedRef, useImperativeHandle, useState } from 'react';
 import {
   SubmitHandler,
@@ -36,19 +36,6 @@ import { z } from 'zod';
 
 type FormSchema = z.infer<typeof createPredefinedFrvpSchema>;
 
-type FrvpResultProfile = {
-  startDate: string;
-  endDate: string;
-  VAL: number;
-  VAH: number;
-  POC: number;
-};
-
-type FrvpResult = {
-  label: string;
-  profiles: FrvpResultProfile[];
-};
-
 export type VPCFormRef = {
   form: UseFormReturn<FormSchema>;
 };
@@ -58,10 +45,10 @@ export function ItemForm(props: {
   ref?: ForwardedRef<VPCFormRef>;
   onSubmit: SubmitHandler<FormSchema>;
 }) {
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isFetchDialogOpen, setIsFetchDialogOpen] = useState(false);
-  const [jsonInput, setJsonInput] = useState('');
+  const [isFetchJsonDialogOpen, setIsFetchJsonDialogOpen] = useState(false);
   const [fetchCodeInput, setFetchCodeInput] = useState('');
+  const [tradingViewJsonInput, setTradingViewJsonInput] = useState('');
 
   const form = useForm<FormSchema>({
     defaultValues: props.defaultValues,
@@ -101,21 +88,11 @@ export function ItemForm(props: {
     },
   });
 
-  useImperativeHandle(props.ref, () => ({
-    form,
-  }));
-
-  const parseAndImportJson = () => {
-    try {
-      const data: FrvpResult = JSON.parse(jsonInput);
-
-      if (!data.label || !Array.isArray(data.profiles)) {
-        throw new Error('Invalid JSON format: missing label or profiles array');
-      }
-
+  const fetchFromJson = trpc.frvp.fetchFromTradingviewJson.useMutation({
+    onSuccess: (data) => {
       const newProfile = {
         label: data.label,
-        zones: data.profiles.map((profile) => ({
+        zones: data.profiles.map((profile: any) => ({
           zoneStartAt: new Date(profile.startDate),
           zoneEndAt: new Date(profile.endDate),
           volumeAreaLow: profile.VAL,
@@ -125,16 +102,20 @@ export function ItemForm(props: {
       };
 
       profiles.append(newProfile);
-      setJsonInput('');
-      setIsImportDialogOpen(false);
+      setTradingViewJsonInput('');
+      setIsFetchJsonDialogOpen(false);
       toast.success(
-        `Profile "${data.label}" imported successfully with ${data.profiles.length} zones`,
+        `Profile "${data.label}" fetched successfully with ${data.profiles.length} zones`,
       );
-    } catch (error) {
-      console.error('Failed to parse JSON:', error);
-      toast.error('Invalid JSON format. Please check your input.');
-    }
-  };
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to execute fetch code');
+    },
+  });
+
+  useImperativeHandle(props.ref, () => ({
+    form,
+  }));
 
   const tradingPair = form.watch('pair');
 
@@ -145,6 +126,17 @@ export function ItemForm(props: {
     }
     fetchFromCode.mutate({
       fetchCode: fetchCodeInput.trim(),
+      pair: tradingPair,
+    });
+  };
+
+  const handleFetchFromJson = () => {
+    if (!tradingViewJsonInput.trim()) {
+      toast.error('Please enter JSON');
+      return;
+    }
+    fetchFromJson.mutate({
+      json: JSON.parse(tradingViewJsonInput),
       pair: tradingPair,
     });
   };
@@ -179,49 +171,6 @@ export function ItemForm(props: {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium">Profiles</h3>
               <div className="flex gap-2">
-                <Dialog
-                  open={isImportDialogOpen}
-                  onOpenChange={setIsImportDialogOpen}
-                >
-                  <DialogTrigger asChild>
-                    <Button type="button" variant="outline" size="sm">
-                      <Upload className="w-4 h-4 mr-2" />
-                      Import JSON
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Import Profile from JSON</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <Textarea
-                        placeholder="Paste your frvp-result JSON here..."
-                        value={jsonInput}
-                        onChange={(e) => setJsonInput(e.target.value)}
-                        className="min-h-[200px]"
-                      />
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            setJsonInput('');
-                            setIsImportDialogOpen(false);
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={parseAndImportJson}
-                          disabled={!jsonInput.trim()}
-                        >
-                          Import
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
                 <Dialog
                   open={isFetchDialogOpen}
                   onOpenChange={setIsFetchDialogOpen}
@@ -262,6 +211,54 @@ export function ItemForm(props: {
                           }
                         >
                           {fetchFromCode.isPending ? 'Executing...' : 'Import'}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <Dialog
+                  open={isFetchJsonDialogOpen}
+                  onOpenChange={setIsFetchJsonDialogOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button type="button" variant="outline" size="sm">
+                      <Globe className="w-4 h-4 mr-2" />
+                      TradingView JSON
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Import from TradingView</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <Textarea
+                        placeholder="JSON"
+                        value={tradingViewJsonInput}
+                        onChange={(e) =>
+                          setTradingViewJsonInput(e.target.value)
+                        }
+                        className="min-h-[200px] max-w-full break-all"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setTradingViewJsonInput('');
+                            setIsFetchJsonDialogOpen(false);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={handleFetchFromJson}
+                          disabled={
+                            !tradingViewJsonInput.trim() ||
+                            fetchFromJson.isPending
+                          }
+                        >
+                          {fetchFromJson.isPending ? 'Executing...' : 'Import'}
                         </Button>
                       </div>
                     </div>
