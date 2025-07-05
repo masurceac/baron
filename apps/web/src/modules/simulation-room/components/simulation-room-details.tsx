@@ -279,6 +279,7 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
                       <TableHead className="text-right">
                         Total Balance
                       </TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -301,6 +302,21 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
                             ${Number(group.totalBalance ?? 0).toFixed(2)}
                           </span>
                         </TableCell>
+                        <TableCell>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button size="sm" variant="outline">
+                                Non-Intersecting Trades
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-3xl">
+                              <DialogHeader>
+                                <DialogTitle>Non-Intersecting Trades for Group</DialogTitle>
+                              </DialogHeader>
+                              <NonIntersectingTradesList groupIdentifier={group.groupIdentifier} />
+                            </DialogContent>
+                          </Dialog>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -317,6 +333,171 @@ function SimulationRoomDetailsContent(props: { simulationRoomId: string }) {
     </Card>
   );
 }
+
+function NonIntersectingTradesList({ groupIdentifier }: { groupIdentifier: string }) {
+  const { data, isLoading, error } = trpc.simulationExecution.listNonIntersectingTrades.useQuery({ groupIdentifier });
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading trades</div>;
+  if (!data || data.length === 0) return <div>No non-intersecting trades found.</div>;
+  const endBalance = data.reduce((sum, trade) => sum + Number(trade.balanceResult ?? 0), 0);
+  return (
+    <div>
+      <ExecutionTradeHistoryItemsCustom trades={data} />
+      <div className="mt-4 text-right">
+        <span className={`font-semibold text-lg ${endBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>End Balance: ${endBalance.toFixed(2)}</span>
+      </div>
+    </div>
+  );
+}
+
+// Custom table to display trades (copy columns from ExecutionTradeHistoryItems, but use props.trades as data)
+import { DataTable } from '@baron/ui/components/data-table';
+import { RedGreenHighlight } from '@/modules/shared';
+import { TradeDirection } from '@baron/common';
+import { ColumnDef } from '@tanstack/react-table';
+import { useMemo } from 'react';
+
+function ExecutionTradeHistoryItemsCustom({ trades }: { trades: any[] }) {
+  const columns = useMemo<ColumnDef<any>[]>(
+    () => [
+      {
+        id: 'index',
+        enableSorting: false,
+        header: '#',
+        cell: ({ row: { index } }) => `${trades.length - index}`,
+      },
+      {
+        accessorKey: 'createdAt',
+        enableSorting: false,
+        header: 'Created At',
+        cell: ({ row: { original } }) => (
+          <div>
+            <FormatDate date={original.createdAt} format="long" />
+            <p className="text-xs text-muted-foreground">{original.id}</p>
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'entryDate',
+        enableSorting: false,
+        header: 'Trade Dates',
+        cell: ({ row: { original } }) => (
+          <div>
+            <FormatDate date={original.entryDate} utc />
+            <br />
+            <FormatDate date={original.exitDate} utc />
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'direction',
+        enableSorting: false,
+        header: 'Direction',
+        cell: ({ row: { original } }) => (
+          <div>
+            <RedGreenHighlight
+              variant={
+                original.direction === TradeDirection.Buy ? 'green' : 'red'
+              }
+            >
+              {original.direction === TradeDirection.Buy ? 'BUY' : 'SELL'}
+            </RedGreenHighlight>
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'entryPrice',
+        enableSorting: false,
+        header: 'Entry Price',
+        cell: ({ row: { original } }) => (
+          <div>${original.entryPrice.toFixed(2)}</div>
+        ),
+      },
+      {
+        accessorKey: 'takeProfitPrice',
+        enableSorting: false,
+        header: 'TP/SL',
+        cell: ({ row: { original } }) => (
+          <div>
+            <div>
+              ${original.takeProfitPrice.toFixed(2)}&nbsp;/ $
+              {original.stopLossPrice.toFixed(2)}
+            </div>
+            <div>
+              $
+              {Math.abs(original.entryPrice - original.takeProfitPrice).toFixed(
+                2,
+              )}
+              &nbsp;/ $
+              {Math.abs(original.entryPrice - original.stopLossPrice).toFixed(
+                2,
+              )}
+            </div>
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'exitPrice',
+        enableSorting: false,
+        header: 'Exit Price',
+        cell: ({ row: { original } }) => (
+          <RedGreenHighlight
+            variant={
+              original.direction === TradeDirection.Buy
+                ? original.exitPrice < original.entryPrice
+                  ? 'red'
+                  : 'green'
+                : original.exitPrice > original.entryPrice
+                  ? 'red'
+                  : 'green'
+            }
+          >
+            ${original.exitPrice.toFixed(2)}
+          </RedGreenHighlight>
+        ),
+      },
+      {
+        accessorKey: 'balanceResult',
+        enableSorting: false,
+        header: 'Result',
+        cell: ({ row: { original } }) => (
+          <div>
+            <RedGreenHighlight
+              variant={original.balanceResult >= 0 ? 'green' : 'red'}
+            >
+              $
+              {original.balanceResult >= 0
+                ? `+${original.balanceResult.toFixed(2)}`
+                : `-${Math.abs(original.balanceResult).toFixed(2)}`}
+            </RedGreenHighlight>
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'reason',
+        enableSorting: false,
+        header: 'Reason',
+        cell: ({ row: { original } }) => (
+          <div>
+            <DetailedTextDialog
+              title="This is the reason AI gave for this trade"
+              content={original.reason}
+              label="Reason"
+            />
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'status',
+        header: 'Status',
+        cell: ({ row: { original } }) => <div>{original.status}</div>,
+      },
+    ],
+    [trades],
+  );
+  return <DataTable columns={columns} data={trades} />;
+}
+
 export function SimulationRoomDetails(props: { simulationRoomId: string }) {
   return (
     <Suspense>

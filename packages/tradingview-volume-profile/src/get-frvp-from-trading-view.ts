@@ -140,12 +140,12 @@ async function getFrvpProfilesFromData<T extends TradingViewSourceData>(
   config: Config,
 ) {
   const values = Object.values(data);
-  const label = intervalToTimeLabel(
-    values[0]?.state.points?.[0]?.interval ?? '',
-  );
 
   const frvpProfiles = values.filter(
     (v) => v.state.type === 'LineToolFixedRangeVolumeProfile',
+  );
+  const label = intervalToTimeLabel(
+    frvpProfiles[0]?.state.points?.[0]?.interval ?? '',
   );
 
   const frvpProfilesResult = await Promise.all(

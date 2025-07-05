@@ -1,16 +1,17 @@
 import { getDatabase } from '@/database';
 import { paginate, paginatedSchema, SimulationExecutionStatus } from '@baron/common';
 import { queryJoin, queryJoinOne } from '@baron/db/client';
-import {
-	simulationExecutionToInformativeBarConfig,
-	simulationExecutionTrade,
-	simulationRoom,
-	simulationExecution,
-} from '@baron/db/schema';
+import { simulationExecutionToInformativeBarConfig, simulationExecutionTrade, simulationRoom, simulationExecution } from '@baron/db/schema';
 import { protectedProcedure } from '@baron/trpc-server';
 import { TRPCError } from '@trpc/server';
-import { and, count, desc, eq, SQL } from 'drizzle-orm';
+import { and, count, desc, eq, SQL, sql } from 'drizzle-orm';
 import { z } from 'zod';
+import { InferModel } from 'drizzle-orm';
+
+// Add type alias for Trade
+// This is the type for a row in simulationExecutionTrade
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type Trade = InferModel<typeof simulationExecutionTrade>;
 
 export const simulationRoomExecutionRouter = {
 	list: protectedProcedure.input(z.object({ simulationRoomId: z.string() }).merge(paginatedSchema)).query(async ({ input }) => {
@@ -52,7 +53,11 @@ export const simulationRoomExecutionRouter = {
 					})
 					.from(simulationExecution)
 					.where(and(...where))
-					.orderBy(desc(simulationExecution.createdAt))
+					.orderBy(
+						desc(sql`MIN(${simulationExecution.createdAt}) OVER (PARTITION BY ${simulationExecution.groupIdentifier})`),
+						simulationExecution.groupIdentifier,
+						simulationExecution.startDate,
+					)
 					.limit(take)
 					.offset(skip);
 			},
@@ -76,8 +81,7 @@ export const simulationRoomExecutionRouter = {
 						id: simulationExecutionTrade.id,
 						balanceResult: simulationExecutionTrade.balanceResult,
 					},
-					(query) =>
-						query.from(simulationExecutionTrade).where(eq(simulationExecutionTrade.simulationExecutionId, simulationExecution.id)),
+					(query) => query.from(simulationExecutionTrade).where(eq(simulationExecutionTrade.simulationExecutionId, simulationExecution.id)),
 				),
 				infoBars: queryJoin(
 					db,
@@ -165,5 +169,33 @@ export const simulationRoomExecutionRouter = {
 		}
 
 		return stats;
+	}),
+
+	listNonIntersectingTrades: protectedProcedure.input(z.object({ groupIdentifier: z.string() })).query(async ({ input }) => {
+		const db = getDatabase();
+		// Get all trades for all executions with the given groupIdentifier
+		const trades = await db
+			.select()
+			.from(simulationExecutionTrade)
+			.innerJoin(simulationExecution, eq(simulationExecutionTrade.simulationExecutionId, simulationExecution.id))
+			.where(eq(simulationExecution.groupIdentifier, input.groupIdentifier));
+
+		// Flatten the result to just the trade objects
+		const tradeList: Trade[] = trades.map((row) => row.simulation_execution_trade);
+
+		// Sort trades by entryDate (or exitDate)
+		const sorted = [...tradeList].sort((a, b) => a.entryDate.getTime() - b.entryDate.getTime());
+
+		// Greedily select a maximal set of non-overlapping trades
+		const linearHistory: Trade[] = [];
+		let lastExit: Date | null = null;
+		for (const trade of sorted) {
+			if (!lastExit || trade.entryDate > lastExit) {
+				linearHistory.push(trade);
+				lastExit = trade.exitDate;
+			}
+		}
+
+		return linearHistory;
 	}),
 };

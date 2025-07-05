@@ -47,10 +47,7 @@ export async function fetchBinanceBars(input: {
       symbol,
       interval,
       startTime: currentTime.toString(),
-      endTime: Math.min(
-        currentTime + limit * 1000 * 60 * 60 * 24,
-        endTime,
-      ).toString(), // Cap at endTime
+      endTime: endTime.toString(),
       limit: limit.toString(),
     });
 

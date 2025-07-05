@@ -31,18 +31,18 @@ export const fetchPolygonBars: FetchBarsFunction = async (
   }
 
   const bars: ChartBar[] = [];
-  const limit = 10_000; // Binance max limit per request
+  const limit = 10_000;
   let currentTime = startTime;
   const headers = new Headers();
   headers.set('Authorization', `Bearer ${input.polygon.keyId}`);
 
   while (currentTime < endTime) {
     const start = currentTime;
-    const end = Math.min(currentTime + limit * 1000 * 60 * 60 * 24, endTime);
+    const end = endTime;
 
     try {
       const response = await fetch(
-        `https://api.polygon.io/v2/aggs/ticker/C:${input.pair}/range/${input.timeframeAmount}/${unit}/${start}/${end}`,
+        `https://api.polygon.io/v2/aggs/ticker/C:${input.pair}/range/${input.timeframeAmount}/${unit}/${start}/${end}?limit=${limit}`,
         {
           headers,
         },
@@ -80,19 +80,26 @@ export const fetchPolygonBars: FetchBarsFunction = async (
         } satisfies ChartBar;
       });
 
-      bars.push(...newBars);
+      if (
+        newBars.length === 1 &&
+        Math.abs(new Date(newBars.at(0)!.Timestamp).getTime() - currentTime) <
+          1000
+      ) {
+        break;
+      } else {
+        bars.push(...newBars);
 
-      // Update currentTime to the last kline's close time + 1ms
-      currentTime = data.results[data.results.length - 1]!.t + 1;
+        currentTime = new Date(newBars.at(-1)!.Timestamp).getTime() + 1;
+      }
     } catch (error: any) {
       console.log(error);
       console.log(error.message);
-      throw new Error(`Failed to fetch bars: ${error}`);
+      throw new Error(`[Polygon] Failed to fetch bars: ${error}`);
     }
   }
 
   if (bars.length === 0) {
-    throw new Error(`No bars found for pair ${input.pair}`);
+    throw new Error(`[Polygon] No bars found for pair ${input.pair}`);
   }
 
   return bars;
